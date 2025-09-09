@@ -1,4 +1,5 @@
-import styles from "./globals.css";
+
+import "./globals.css";
 
 export default function Home() {
   return (
