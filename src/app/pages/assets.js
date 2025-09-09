@@ -1,5 +1,3 @@
-
-import "./globals.css";
 import React, { useState, useEffect } from "react";
 
 export default function AssetsPage() {
@@ -40,11 +38,5 @@ export default function AssetsPage() {
         ))}
       </ul>
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <div>Strona głowna sdasdasd</div>
   );
 }
