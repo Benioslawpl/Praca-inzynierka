@@ -3,6 +3,8 @@ body {
   font-family: Arial, sans-serif;
   background: #fafafa;
   color: #333;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -11,13 +13,22 @@ body {
   color: white;
 }
 
-.menu {
+.menu1{
   list-style: none;
   display: flex;
   gap: 20px;
   margin: 0;
   padding: 0;
 }
+
+.menu2{
+  list-style: none;
+  display: flex;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+}
+
 
 .menu li a {
   color: white;
@@ -44,4 +55,8 @@ body {
   text-align: center;
   font-size: 14px;
   margin-top: 30px;
+}
+
+.p{
+    color: black;
 }
