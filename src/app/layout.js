@@ -1,5 +1,6 @@
 import "./globals.css";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 export const metadata = {
   title: "Aplikacja Maszyny",
@@ -16,9 +17,7 @@ export default function RootLayout({ children }) {
         <main className="main">{children}</main>
 
         {/* Stopka */}
-        <footer className="footer">
-          <p>© 2025 Moja Firma – Wszystkie prawa zastrzeżone</p>
-        </footer>
+          <Footer />
       </body>
     </html>
   );
