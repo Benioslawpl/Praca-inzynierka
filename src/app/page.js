@@ -10,7 +10,7 @@ export default function HomePage() {
   const checkDb = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/dbtest");
+      const res = await fetch("/api/resources");
       const data = await res.json();
       setResult(data);
     } catch (err) {
