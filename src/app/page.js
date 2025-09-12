@@ -2,19 +2,11 @@
 import "./globals.css";
 import { useRouter } from "next/navigation";
 
-
 export default function Home() {
-  return (
-    <div>Strona głowna sdasdasd</div>
-  )
-}
-
-
-export default function HomePage() {
   const router = useRouter();
 
   const goToApi = () => {
-    router.push("/api/machines"); // przekierowanie do route.js
+    router.push("/api/resources"); // przekierowanie do route.js
   };
 
   return (
