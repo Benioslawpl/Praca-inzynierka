@@ -11,10 +11,10 @@ const Header = () => {
           </div>
 
           <div className="menu">
-            <Link href="/machines"> Maszyny</Link>
-            <Link href="/Brygady">Brygady</Link>
-            <Link href="/Sprzet">Sprzęt</Link>
-            <Link href="/login"> Login</Link>
+            <Link href="/pages/maszyny"> Maszyny</Link>
+            <Link href="/pages/brygady">Brygady</Link>
+            <Link href="/pages/sprzet">Sprzęt</Link>
+            <Link href="/pages/login"> Login</Link>
           </div>
         </header>
     )
