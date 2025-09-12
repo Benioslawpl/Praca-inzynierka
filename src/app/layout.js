@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Moja aplikacja",
-  description: "Test DB",
+  title: "Test DB App",
+  description: "Next.js + Supabase test",
 };
 
 export default function RootLayout({ children }) {

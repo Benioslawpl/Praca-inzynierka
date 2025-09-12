@@ -1,8 +1,10 @@
-import { Pool } from "pg";
+
+import pkg from "pg";
+const { Pool } = pkg;
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // Supabase wymaga SSL
+  ssl: { rejectUnauthorized: false }, // wymagane przez Supabase
 });
 
 export default pool;

@@ -1,8 +1,7 @@
+"use client"; 
 
-import "./globals.css";
-
-"use client";
 import { useState } from "react";
+
 
 export default function HomePage() {
   const [result, setResult] = useState(null);
@@ -11,7 +10,7 @@ export default function HomePage() {
   const checkDb = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/resources");
+      const res = await fetch("/api/dbtest");
       const data = await res.json();
       setResult(data);
     } catch (err) {
