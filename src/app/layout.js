@@ -1,5 +1,6 @@
 import "./globals.css";
 import Link from "next/link";
+import Header from "./components/Header";
 
 export const metadata = {
   title: "Aplikacja Maszyny",
