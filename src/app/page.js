@@ -4,7 +4,6 @@ import "./globals.css";
 "use client";
 import { useState } from "react";
 
-
 export default function HomePage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
