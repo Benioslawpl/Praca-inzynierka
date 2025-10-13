@@ -170,36 +170,36 @@ export default function MaszynyPage() {
         ) : (
           <table className="table">
             <thead>
-              <tr>
-                <th>ID</th>
-                <th>Rozdaj</th>
-                <th>Marka</th>
-                <th>Typ</th>
-                <th>Przebieg [km]</th>
-                <th>Ostatni serwis (km)</th>
-                <th>Data kupna</th>
-                <th>Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td>{r.Rozdaj}</td>
-                  <td>{r.Marka}</td>
-                  <td>{r.Typ}</td>
-                  <td>{r.Przebieg}</td>
-                  <td>{r.Ostatni_Serwix}</td>
-                  <td>{r.Data_Kupna ? String(r.Data_Kupna).slice(0, 10) : ""}</td>
-                  <td className="actionsCell">
-                    <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
-                    <button className="danger" onClick={() => handleDelete(r.id)}>
-                      🗑 Usuń
-                    </button>
-                  </td>
+                <tr>
+                  <th>Nr</th> {/* zamiast ID */}
+                  <th>Rozdaj</th>
+                  <th>Marka</th>
+                  <th>Typ</th>
+                  <th>Przebieg [km]</th>
+                  <th>Ostatni serwis (km)</th>
+                  <th>Data kupna</th>
+                  <th>Akcje</th>
                 </tr>
-              ))}
-            </tbody>
+              </thead>
+              <tbody>
+                {rows.map((r, index) => (
+                  <tr key={r.id}>
+                    <td>{index + 1}</td> {/* numer porządkowy */}
+                    <td>{r.Rozdaj}</td>
+                    <td>{r.Marka}</td>
+                    <td>{r.Typ}</td>
+                    <td>{r.Przebieg}</td>
+                    <td>{r.Ostatni_Serwix}</td>
+                    <td>{r.Data_Kupna ? String(r.Data_Kupna).slice(0, 10) : ""}</td>
+                    <td className="actionsCell">
+                      <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
+                      <button className="danger" onClick={() => handleDelete(r.id)}>
+                        🗑 Usuń
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
           </table>
         )}
       </div>
