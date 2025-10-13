@@ -6,7 +6,7 @@ export async function GET() {
     const { rows } = await pool.query(
       `SELECT id, "Rozdaj", "Marka", "Typ", "Przebieg", "Ostatni_Serwix", "Data_Kupna", created_at
        FROM maszyny
-       ORDER BY id DESC`
+       ORDER BY id ASC`
     );
     return new Response(JSON.stringify(rows), {
       headers: { "Content-Type": "application/json" },
