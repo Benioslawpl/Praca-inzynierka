@@ -79,7 +79,7 @@ export default function MaszynyPage() {
 
   const handleDelete = async (id) => {
     if (!confirm("Na pewno usunąć?")) return;
-    const res = await fetch(`/api/maszyny/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/resources/${id}`, { method: "DELETE" });
     if (res.ok) fetchRows();
   };
 
