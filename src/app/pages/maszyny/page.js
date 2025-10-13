@@ -38,7 +38,7 @@ export default function MaszynyPage() {
     setError("");
 
     try {
-      const url = editId ? `/api/resources/${editId}` : "/api/resources";
+      const url = editId ? `/api/resources/route${editId}` : "/api/resources";
       const method = editId ? "PUT" : "POST";
 
       const payload = {
@@ -79,7 +79,7 @@ export default function MaszynyPage() {
 
   const handleDelete = async (id) => {
     if (!confirm("Na pewno usunąć?")) return;
-    const res = await fetch(`/api/resources/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/resources/route${id}`, { method: "DELETE" });
     if (res.ok) fetchRows();
   };
 
