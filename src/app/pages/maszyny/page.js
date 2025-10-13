@@ -18,7 +18,7 @@ export default function MaszynyPage() {
 
   const fetchRows = async () => {
     setError("");
-    const res = await fetch("/api/maszyny", { cache: "no-store" });
+    const res = await fetch("/api/resources", { cache: "no-store" });
     const data = await res.json();
     setRows(Array.isArray(data) ? data : []);
   };
@@ -38,7 +38,7 @@ export default function MaszynyPage() {
     setError("");
 
     try {
-      const url = editId ? `/api/maszyny/${editId}` : "/api/maszyny";
+      const url = editId ? `/api/resources/${editId}` : "/api/resources";
       const method = editId ? "PUT" : "POST";
 
       const payload = {
