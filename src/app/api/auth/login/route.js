@@ -2,7 +2,7 @@ import pool from "../../../../../db";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET || "super_tajne_haslo";
+const SECRET = process.env.JWT_SECRET || "Benbenek123123";
 
 export async function POST(req) {
   try {
