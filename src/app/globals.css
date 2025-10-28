@@ -153,3 +153,21 @@ thead th {
   display: flex;
   gap: 8px;
 }
+
+/* Styl dla strony logowania */
+.login-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+
+.login-container {
+  background: white;
+  padding: 40px 50px;
+  border-radius: 12px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
