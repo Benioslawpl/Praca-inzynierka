@@ -1,101 +1,91 @@
+/* ========== RESET & PODSTAWY ========== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
 body {
   margin: 0;
-  min-width: 1024px;
   font-family: Arial, sans-serif;
   background: #fafafa;
   color: #333;
   display: flex;
   flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.header {
-  background: #0070f3;
-  padding: 15px;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* ========== LAYOUT GŁÓWNY ========== */
+main {
+  width: 100%;
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 20px;
 }
-
-.menu{
-  list-style: none;
-  display: flex;
-  gap: 20px;
-  margin: 0;
-  padding: 0;
-}
-
-.menu{
-  list-style: none;
-  display: flex;
-  gap: 20px;
-  margin: 0;
-  padding: 0;
-}
-
-.main {
-  min-height: 450px;
-  margin: 20px auto;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: center;
-  
-}
-
-.home{
-    margin: 20px auto;
-}
-
 .footer {
   background: #eee;
   padding: 15px;
   text-align: center;
   font-size: 14px;
-  margin-top: 30px;
+  margin-top: auto; /* stopka dociśnięta na dół */
 }
 
-.p{
-    color: black;
-}
-
-/* === Maszyny Page Styles === */
-.card {
-  margin: 16px 0 24px;
-  padding: 12px;
-  background: #f7f8fa;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-}
-
-.grid {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-label {
+/* ========== NAGŁÓWEK ========== */
+/* Używamy <header>, nie .header (usunąłem konflikt z wcześniejszym .header) */
+header {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 14px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #222;
+  color: #fff;
 }
+.menu {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.menu a {
+  color: #fff;
+  text-decoration: none;
+  transition: color .2s ease;
+}
+.menu a:hover { color: #66b3ff; }
+.logout-btn {
+  background: #d33;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color .2s ease, opacity .2s ease;
+}
+.logout-btn:hover { background: #b91c1c; }
 
-input {
+/* ========== SEKCJE / STRONY ========== */
+.main {
+  min-height: 450px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  display: block;            /* było flex – niepotrzebne tu globalnie */
+}
+.home { margin: 20px auto; }
+p { color: #000; }           /* było .p – poprawione na element */
+
+/* ========== FORMULARZE / PRZYCISKI ========== */
+input, select, textarea {
   padding: 8px 10px;
   border: 1px solid #cfd4dc;
   border-radius: 6px;
   background: #fff;
+  outline: none;
 }
-
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 12px;
+input:focus, select:focus, textarea:focus {
+  border-color: #0070f3;
+  box-shadow: 0 0 0 3px rgba(0,112,243,.15);
 }
-
 button {
   padding: 8px 12px;
   border: none;
@@ -103,58 +93,73 @@ button {
   background: #0070f3;
   color: #fff;
   cursor: pointer;
-  transition: 0.2s;
+  transition: opacity .2s ease, transform .02s ease-in;
 }
+button:hover { opacity: .9; }
+button:active { transform: translateY(1px); }
+button.secondary { background: #6b7280; }
+button.danger { background: #dc2626; }
 
-button:hover {
-  opacity: 0.9;
+/* ========== KARTY / GRID (Maszyny) ========== */
+.card {
+  margin: 16px 0 24px;
+  padding: 12px;
+  background: #f7f8fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
 }
-
-button.secondary {
-  background: #6b7280;
+.grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
-button.danger {
-  background: #dc2626;
+@media (max-width: 900px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
+@media (max-width: 600px) {
+  .grid { grid-template-columns: 1fr; }
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
 .error {
   margin-top: 8px;
   color: #dc2626;
 }
 
-.tableWrap {
-  overflow-x: auto;
-}
-
+/* ========== TABELA ========== */
+.tableWrap { overflow-x: auto; }
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: collapse;   /* przy border-radius i collapse – trzymaj w kontenerze .tableWrap */
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   overflow: hidden;
 }
-
-th,
-td {
+th, td {
   padding: 10px 12px;
   border-bottom: 1px solid #eef0f3;
   font-size: 14px;
   text-align: left;
+  vertical-align: middle;
 }
-
 thead th {
   background: #f3f4f6;
   font-weight: 700;
 }
+tbody tr:hover { background: #fafafa; }
+.actionsCell { display: flex; gap: 8px; }
 
-.actionsCell {
-  display: flex;
-  gap: 8px;
-}
-
-/* Styl dla strony logowania */
+/* ========== LOGOWANIE ========== */
 .login-body {
   display: flex;
   align-items: center;
@@ -162,12 +167,23 @@ thead th {
   min-height: 100vh;
   background: #f0f2f5;
 }
-
 .login-container {
-  background: white;
+  background: #fff;
   padding: 40px 50px;
   border-radius: 12px;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 25px rgba(0,0,0,.1);
   width: 100%;
   max-width: 400px;
+}
+.login-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.login-container input {
+  width: 100%;
+  margin: 8px 0;
+}
+.login-container button {
+  width: 100%;
+  margin-top: 10px;
 }
