@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET || "super_tajne_haslo"; // dodaj w .env.local
+const SECRET = process.env.JWT_SECRET || "Test123!"; // dodaj w .env.local
 
 export function middleware(req) {
   const { pathname } = req.nextUrl;
