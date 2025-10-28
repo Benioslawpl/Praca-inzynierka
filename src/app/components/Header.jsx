@@ -18,9 +18,9 @@ export default function Header({ user }) {
     <header>
       <div className="menu">
         <Link href="/">Home</Link>
-        <Link href="/maszyny">Maszyny</Link>
-        <Link href="/brygady">Brygady</Link>
-        <Link href="/sprzet">Sprzęt</Link>
+        <Link href="/pages/maszyny">Maszyny</Link>
+        <Link href="/pages/brygady">Brygady</Link>
+        <Link href="/pages/sprzet">Sprzęt</Link>
       </div>
       <div className="menu">
         {user ? (
