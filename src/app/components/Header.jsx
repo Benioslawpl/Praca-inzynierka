@@ -24,7 +24,7 @@ export default function Header({ user }) {
       </div>
       <div className="menu">
         <span>
-          👤 Zalogowany: <b>{user?.username || "Użytkownik"}</b>
+          👤 <b>{user?.username || "Użytkownik"}</b>
         </span>
         <button onClick={handleLogout} className="logout-btn">
           Wyloguj
