@@ -21,6 +21,7 @@ export default function Header({ user }) {
         <Link href="/pages/maszyny">Maszyny</Link>
         <Link href="/pages/brygady">Brygady</Link>
         <Link href="/pages/sprzet">Sprzęt</Link>
+        {user?.role === "admin" && <Link href="/uzytkownicy">Użytkownicy</Link>}
       </div>
       <div className="menu">
         <span>
