@@ -85,38 +85,29 @@ export default function UsersPage() {
       <h1>Użytkownicy 👥</h1>
 
       <form className="card" onSubmit={addUser}>
-        <div className="grid">
-          <label>
+    <div className="grid">
+        <label>
             <span>Login*</span>
-            <input value={form.username} onChange={(e)=>setForm({...form, username: e.target.value})} required />
-          </label>
-          <label>
+                <input value={form.username} onChange={(e)=>setForm({...form, username: e.target.value})} required />
+        </label>
+        <label>
             <span>Hasło*</span>
-            <input type="password" value={form.password} onChange={(e)=>setForm({...form, password: e.target.value})} required />
-          </label>
-          <label>
-            <span>Email</span>
-            <input type="email" value={form.email} onChange={(e)=>setForm({...form, email: e.target.value})} />
-          </label>
-          <label>
+                <input type="password" value={form.password} onChange={(e)=>setForm({...form, password: e.target.value})} required />
+        </label>
+        <label>
             <span>Rola</span>
-            <select value={form.role} onChange={(e)=>setForm({...form, role: e.target.value})}>
-              <option value="user">user</option>
-              <option value="admin">admin</option>
-            </select>
-          </label>
-          <label>
-            <span>Aktywne</span>
-            <select value={form.is_active ? "1" : "0"} onChange={(e)=>setForm({...form, is_active: e.target.value === "1"})}>
-              <option value="1">tak</option>
-              <option value="0">nie</option>
-            </select>
-          </label>
-        </div>
+                <select value={form.role} onChange={(e)=>setForm({...form, role: e.target.value})}>
+                    <option value="user">user</option>
+                    <option value="admin">admin</option>
+                </select>
+        </label>
+  </div>
 
-        <div className="actions">
-          <button type="submit" disabled={saving}>{saving ? "Zapisywanie..." : "Dodaj użytkownika"}</button>
-        </div>
+  <div className="actions">
+    <button type="submit" disabled={saving}>{saving ? "Zapisywanie..." : "Dodaj użytkownika"}</button>
+  </div>
+
+
 
         {error && <p className="error">⚠ {error}</p>}
       </form>
@@ -128,12 +119,10 @@ export default function UsersPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>Nr</th>
+                <th>ID</th>
                 <th>Login</th>
-                <th>Email</th>
                 <th>Rola</th>
-                <th>Aktywny</th>
-                <th>Ostatnie logowanie</th>
+                <th>Data utworzenia</th>
                 <th>Akcje</th>
               </tr>
             </thead>
