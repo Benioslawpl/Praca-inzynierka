@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.JWT_SECRET || "super_tajne_haslo";
+const SECRET = process.env.JWT_SECRET || "Test123!";
 
 export function getUserFromCookies(cookies) {
   const token = cookies.get("token")?.value;

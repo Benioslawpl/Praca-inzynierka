@@ -6,7 +6,7 @@ export default function Header({ user }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // 🔸 Nie pokazuj nagłówka na /login
+  // ukryj header tylko na stronie logowania
   if (pathname === "/login") return null;
 
   const handleLogout = async () => {
@@ -23,14 +23,12 @@ export default function Header({ user }) {
         <Link href="/pages/sprzet">Sprzęt</Link>
       </div>
       <div className="menu">
-        {user ? (
-          <>
-            <span>Zalogowany: <b>{user.username}</b></span>
-            <button onClick={handleLogout} className="logout-btn">Wyloguj</button>
-          </>
-        ) : (
-          <Link href="/login">Login</Link>
-        )}
+        <span>
+          👤 Zalogowany: <b>{user?.username || "Użytkownik"}</b>
+        </span>
+        <button onClick={handleLogout} className="logout-btn">
+          Wyloguj
+        </button>
       </div>
     </header>
   );
