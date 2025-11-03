@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function BrygadyPage() {
   const [rows, setRows] = useState([]);
-  const [form, setForm] = useState({ Numer: "", Brygadzista: "" });
+  const [form, setForm] = useState({ numer: "", brygadzista: "" });
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -19,7 +19,7 @@ export default function BrygadyPage() {
 
   useEffect(() => { load(); }, []);
 
-  const reset = () => { setForm({ Numer:"", Brygadzista:"" }); setEditId(null); };
+  const reset = () => { setForm({ numer:"", brygadzista:"" }); setEditId(null); };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -57,11 +57,11 @@ export default function BrygadyPage() {
         <div className="grid">
           <label>
             <span>Numer*</span>
-            <input value={form.Numer} onChange={e=>setForm({ ...form, Numer: e.target.value })} required placeholder="np. B-01" />
+            <input value={form.numer} onChange={e=>setForm({ ...form, Numer: e.target.value })} required placeholder="np. B-01" />
           </label>
           <label>
             <span>Brygadzista*</span>
-            <input value={form.Brygadzista} onChange={e=>setForm({ ...form, Brygadzista: e.target.value })} required placeholder="Imię i nazwisko" />
+            <input value={form.brygadzista} onChange={e=>setForm({ ...form, Brygadzista: e.target.value })} required placeholder="Imię i nazwisko" />
           </label>
         </div>
         <div className="actions">

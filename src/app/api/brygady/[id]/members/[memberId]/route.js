@@ -8,9 +8,9 @@ export async function PUT(req, { params }) {
     const { Imie, Nazwisko, Rola, Telefon } = await req.json();
     const { rows } = await pool.query(
       `UPDATE brygada_czlonkowie
-       SET "Imie"=$1,"Nazwisko"=$2,"Rola"=$3,"Telefon"=$4
+       SET "imie"=$1,"nazwisko"=$2,"rola"=$3,"telefon"=$4
        WHERE id=$5 AND brygada_id=$6
-       RETURNING id, brygada_id, "Imie","Nazwisko","Rola","Telefon"`,
+       RETURNING id, brygada_id, "imie","nazwisko","rola","telefon"`,
       [Imie, Nazwisko, Rola || null, Telefon || null, memberId, id]
     );
     if (!rows.length) return Response.json({ error: "Not found" }, { status: 404 });

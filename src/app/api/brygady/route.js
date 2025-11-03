@@ -4,7 +4,7 @@ import pool from "../../../../db";
 export async function GET() {
   try {
     const { rows } = await pool.query(
-      `SELECT id, "Numer", "Brygadzista", created_at
+      `SELECT id, "numer", "brygadzista", created_at
        FROM brygady
        ORDER BY id ASC`
     );
@@ -22,9 +22,9 @@ export async function POST(req) {
       return Response.json({ error: "Wymagane: Numer, Brygadzista" }, { status: 400 });
     }
     const { rows } = await pool.query(
-      `INSERT INTO brygady ("Numer","Brygadzista")
+      `INSERT INTO brygady ("numer","brygadzista")
        VALUES ($1,$2)
-       RETURNING id, "Numer","Brygadzista", created_at`,
+       RETURNING id, "numer","brygadzista", created_at`,
       [Numer, Brygadzista]
     );
     return Response.json(rows[0], { status: 201 });
