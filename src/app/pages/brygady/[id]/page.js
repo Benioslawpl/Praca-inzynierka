@@ -1,26 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 
 export default function BrygadaDetails() {
-  const params = useParams();
-  const id = params.id;
-  const router = useRouter();
-
-  const [header, setHeader] = useState(null);      // dane brygady
-  const [members, setMembers] = useState([]);      // członkowie
-  const [form, setForm] = useState({ imie:"", nazwisko:"", rola:"", telefon:"" });
+  const { id } = useParams();
+  const [header, setHeader] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [form, setForm] = useState({ Imie:"", Nazwisko:"", Rola:"", Telefon:"" });
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState("");
 
   const loadHeader = async () => {
-    // pobierz nagłówek z listy (lub zrób osobny endpoint jeśli chcesz)
     const list = await fetch("/api/brygady").then(r=>r.json()).catch(()=>[]);
     const found = Array.isArray(list) ? list.find(x => String(x.id) === String(id)) : null;
     setHeader(found || null);
   };
-
   const loadMembers = async () => {
     const res = await fetch(`/api/brygady/${id}/members`, { cache: "no-store" });
     const data = await res.json();
@@ -30,7 +25,7 @@ export default function BrygadaDetails() {
 
   useEffect(() => { loadHeader(); loadMembers(); }, [id]);
 
-  const reset = () => { setForm({ imie:"", nazwisko:"", rola:"", telefon:"" }); setEditId(null); };
+  const reset = () => { setForm({ Imie:"", Nazwisko:"", Rola:"", Telefon:"" }); setEditId(null); };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -43,7 +38,7 @@ export default function BrygadaDetails() {
     reset(); loadMembers();
   };
 
-  const edit = (m) => { setEditId(m.id); setForm({ imie:m.imie, nazwisko:m.nazwisko, rola:m.rola||"", telefon:m.telefon||"" }); };
+  const edit = (m) => { setEditId(m.id); setForm({ Imie:m.Imie, Nazwisko:m.Nazwisko, Rola:m.Rola||"", Telefon:m.Telefon||"" }); };
   const del  = async (memberId) => {
     if (!confirm("Usunąć członka?")) return;
     const res = await fetch(`/api/brygady/${id}/members/${memberId}`, { method: "DELETE" });
@@ -52,11 +47,11 @@ export default function BrygadaDetails() {
 
   return (
     <div>
-      <p><Link href="/brygady">← Wróć do listy brygad</Link></p>
+      <p><Link href="/brygady">← Wróć do listy</Link></p>
       <h1>Szczegóły brygady</h1>
       {header ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <b>Numer:</b> {header.Numer} &nbsp;&nbsp; | &nbsp;&nbsp; <b>Brygadzista:</b> {header.brygadzista}
+          <b>Numer:</b> {header.numer} &nbsp;|&nbsp; <b>Brygadzista:</b> {header.brygadzista}
         </div>
       ) : <p>Ładowanie...</p>}
 
@@ -64,16 +59,16 @@ export default function BrygadaDetails() {
       <form className="card" onSubmit={submit}>
         <div className="grid">
           <label><span>Imię*</span>
-            <input value={form.imie} onChange={e=>setForm({...form, imie:e.target.value})} required />
+            <input value={form.Imie} onChange={e=>setForm({...form, Imie:e.target.value})} required />
           </label>
           <label><span>Nazwisko*</span>
-            <input value={form.nazwisko} onChange={e=>setForm({...form, nazwisko:e.target.value})} required />
+            <input value={form.Nazwisko} onChange={e=>setForm({...form, Nazwisko:e.target.value})} required />
           </label>
           <label><span>Rola</span>
-            <input value={form.rola} onChange={e=>setForm({...form, rola:e.target.value})} placeholder="np. Operator" />
+            <input value={form.Rola} onChange={e=>setForm({...form, Rola:e.target.value})} placeholder="np. Operator" />
           </label>
           <label><span>Telefon</span>
-            <input value={form.telefon} onChange={e=>setForm({...form, telefon:e.target.value})} placeholder="+48 ..." />
+            <input value={form.Telefon} onChange={e=>setForm({...form, Telefon:e.target.value})} placeholder="+48 ..." />
           </label>
         </div>
         <div className="actions">
@@ -97,10 +92,10 @@ export default function BrygadaDetails() {
               {members.map(m => (
                 <tr key={m.id}>
                   <td>{m.id}</td>
-                  <td>{m.imie}</td>
-                  <td>{m.nazwisko}</td>
-                  <td>{m.rola || "-"}</td>
-                  <td>{m.telefon || "-"}</td>
+                  <td>{m.Imie}</td>
+                  <td>{m.Nazwisko}</td>
+                  <td>{m.Rola || "-"}</td>
+                  <td>{m.Telefon || "-"}</td>
                   <td className="actionsCell">
                     <button onClick={() => edit(m)}>✏️</button>
                     <button className="danger" onClick={() => del(m.id)}>🗑</button>

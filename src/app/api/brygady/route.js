@@ -1,10 +1,10 @@
 import pool from "../../../../db";
 
-// GET list
+// LISTA
 export async function GET() {
   try {
     const { rows } = await pool.query(
-      `SELECT id, "numer", "brygadzista", created_at
+      `SELECT id, numer, brygadzista, created_at
        FROM brygady
        ORDER BY id ASC`
     );
@@ -14,18 +14,18 @@ export async function GET() {
   }
 }
 
-// POST create
+// DODAJ
 export async function POST(req) {
   try {
-    const { Numer, Brygadzista } = await req.json();
-    if (!Numer || !Brygadzista) {
-      return Response.json({ error: "Wymagane: Numer, Brygadzista" }, { status: 400 });
+    const { numer, brygadzista } = await req.json();
+    if (!numer || !brygadzista) {
+      return Response.json({ error: "Wymagane: numer, brygadzista" }, { status: 400 });
     }
     const { rows } = await pool.query(
-      `INSERT INTO brygady ("numer","brygadzista")
+      `INSERT INTO brygady (numer, brygadzista)
        VALUES ($1,$2)
-       RETURNING id, "numer","brygadzista", created_at`,
-      [Numer, Brygadzista]
+       RETURNING id, numer, brygadzista, created_at`,
+      [numer, brygadzista]
     );
     return Response.json(rows[0], { status: 201 });
   } catch (e) {

@@ -1,15 +1,16 @@
 import pool from "../../../../../db";
 
-// PUT update
+// EDYTUJ
 export async function PUT(req, { params }) {
   try {
     const id = Number(params.id);
-    const { Numer, Brygadzista } = await req.json();
+    const { numer, brygadzista } = await req.json();
     const { rows } = await pool.query(
-      `UPDATE brygady SET numer"=$1, "brygadzista"=$2
+      `UPDATE brygady
+       SET numer=$1, brygadzista=$2
        WHERE id=$3
-       RETURNING id, "numer","brygadzista", created_at`,
-      [Numer, Brygadzista, id]
+       RETURNING id, numer, brygadzista, created_at`,
+      [numer, brygadzista, id]
     );
     if (!rows.length) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(rows[0]);
@@ -18,8 +19,8 @@ export async function PUT(req, { params }) {
   }
 }
 
-// DELETE
-export async function DELETE(req, { params }) {
+// USUŃ
+export async function DELETE(_req, { params }) {
   try {
     const id = Number(params.id);
     const { rowCount } = await pool.query(`DELETE FROM brygady WHERE id=$1`, [id]);
