@@ -1,174 +1,108 @@
-export default function PepolePage() {
-  return (
-    <div>
-      <h1>Brygady</h1>
-      <p>
-        To jest przykładowa strona <b>/machines</b>. 
-        Tutaj w kolejnym etapie dodamy listę maszyn (CRUD z bazy Supabase).
-      </p>
-    </div>
-  );
-}
+"use client";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
-/*"use client";
-import { useState, useEffect } from "react";
-
-export default function MaszynyPage() {
-  const [maszyny, setMaszyny] = useState([]);
-  const [form, setForm] = useState({
-    Rozdaj: "",
-    Marka: "",
-    Typ: "",
-    Przebieg: "",
-    Ostatni_Serwix: "",
-    Data_Kupna: "",
-  });
+export default function BrygadyPage() {
+  const [rows, setRows] = useState([]);
+  const [form, setForm] = useState({ Numer: "", Brygadzista: "" });
   const [editId, setEditId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  // 🔹 Pobieranie rekordów
-  const fetchMaszyny = async () => {
-    try {
-      const res = await fetch("/api/resources");
-      const data = await res.json();
-      console.log("✅ API GET:", data);
-      setMaszyny(data); // <-- bez sprawdzania Array.isArray
-    } catch (err) {
-      console.error("❌ FetchMaszyny error:", err);
-    }
+  const load = async () => {
+    setError("");
+    const res = await fetch("/api/brygady", { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok) return setError(data?.error || "Błąd pobierania");
+    setRows(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => {
-    fetchMaszyny();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  // 🔹 Dodawanie / Edycja
-  const handleSubmit = async (e) => {
+  const reset = () => { setForm({ Numer:"", Brygadzista:"" }); setEditId(null); };
+
+  const submit = async (e) => {
     e.preventDefault();
-
-    const url = editId ? `/api/resources/${editId}` : "/api/resources";
-    const method = editId ? "PUT" : "POST";
-
-    console.log("➡️ Sending:", { url, method, form });
-
+    setSaving(true); setError("");
     try {
+      const url = editId ? `/api/brygady/${editId}` : "/api/brygady";
+      const method = editId ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-
-      const data = await res.json();
-      console.log("⬅️ API RESPONSE:", data);
-
-      if (!res.ok) {
-        alert("Błąd API: " + (data.error || res.status));
-        return;
-      }
-
-      // Reset formularza
-      setForm({
-        Rozdaj: "",
-        Marka: "",
-        Typ: "",
-        Przebieg: "",
-        Ostatni_Serwix: "",
-        Data_Kupna: "",
-      });
-      setEditId(null);
-
-      // Odśwież listę
-      fetchMaszyny();
-    } catch (err) {
-      console.error("❌ Submit error:", err);
+      const data = await res.json().catch(()=> ({}));
+      if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
+      reset(); load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
     }
   };
 
-  // 🔹 Usuwanie
+  const handleEdit = (r) => { setEditId(r.id); setForm({ Numer: r.Numer, Brygadzista: r.Brygadzista }); };
   const handleDelete = async (id) => {
-    try {
-      const res = await fetch(`/api/resources/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      console.log("🗑 Delete:", data);
-      fetchMaszyny();
-    } catch (err) {
-      console.error("❌ Delete error:", err);
-    }
-  };
-
-  // 🔹 Edytowanie – wczytaj dane do formularza
-  const handleEdit = (m) => {
-    setForm({
-      Rozdaj: m.Rozdaj,
-      Marka: m.Marka,
-      Typ: m.Typ,
-      Przebieg: m.Przebieg,
-      Ostatni_Serwix: m.Ostatni_Serwix,
-      Data_Kupna: m.Data_Kupna ? m.Data_Kupna.slice(0, 10) : "",
-    });
-    setEditId(m.id);
+    if (!confirm("Usunąć brygadę?")) return;
+    const res = await fetch(`/api/brygady/${id}`, { method: "DELETE" });
+    if (res.ok) load();
   };
 
   return (
     <div>
-      <h1>Maszyny 🚜</h1>
+      <h1>Brygady 👷‍♂️</h1>
 
-      {/* Formularz *//*}/*
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Rodzaj"
-          value={form.Rozdaj}
-          onChange={(e) => setForm({ ...form, Rozdaj: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Marka"
-          value={form.Marka}
-          onChange={(e) => setForm({ ...form, Marka: e.target.value })}
-        />
-        <input
-          type="text"
-          placeholder="Typ"
-          value={form.Typ}
-          onChange={(e) => setForm({ ...form, Typ: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Przebieg"
-          value={form.Przebieg}
-          onChange={(e) =>
-            setForm({ ...form, Przebieg: Number(e.target.value) })
-          }
-        />
-        <input
-          type="number"
-          placeholder="Ostatni serwis (km)"
-          value={form.Ostatni_Serwix}
-          onChange={(e) =>
-            setForm({ ...form, Ostatni_Serwix: Number(e.target.value) })
-          }
-        />
-        <input
-          type="date"
-          placeholder="Data kupna"
-          value={form.Data_Kupna}
-          onChange={(e) => setForm({ ...form, Data_Kupna: e.target.value })}
-        />
-        <button type="submit">{editId ? "Zapisz" : "Dodaj"}</button>
+      <form className="card" onSubmit={submit}>
+        <div className="grid">
+          <label>
+            <span>Numer*</span>
+            <input value={form.Numer} onChange={e=>setForm({ ...form, Numer: e.target.value })} required placeholder="np. B-01" />
+          </label>
+          <label>
+            <span>Brygadzista*</span>
+            <input value={form.Brygadzista} onChange={e=>setForm({ ...form, Brygadzista: e.target.value })} required placeholder="Imię i nazwisko" />
+          </label>
+        </div>
+        <div className="actions">
+          <button type="submit" disabled={saving}>{saving ? "Zapisywanie..." : (editId ? "Zapisz" : "Dodaj")}</button>
+          {editId && <button type="button" className="secondary" onClick={reset}>Anuluj</button>}
+        </div>
+        {error && <p className="error">⚠ {error}</p>}
       </form>
 
-      {/* Lista maszyn *//*}
-      <ul>
-        {maszyny.map((m) => (
-          <li key={m.id}>
-            <b>{m.Rozdaj}</b> – {m.Marka}, {m.Typ}, {m.Przebieg} km | Serwis:{" "}
-            {m.Ostatni_Serwix} km | Kupiono: {m.Data_Kupna}
-            <button onClick={() => handleEdit(m)}>✏️</button>
-            <button onClick={() => handleDelete(m.id)}>🗑</button>
-          </li>
-        ))}
-      </ul>
+      <div className="tableWrap">
+        {rows.length === 0 ? (
+          <p>Brak danych</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Numer</th>
+                <th>Brygadzista</th>
+                <th>Utworzono</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map(r => (
+                <tr key={r.id}>
+                  <td>{r.id}</td>
+                  <td><Link href={`/brygady/${r.id}`}>{r.Numer}</Link></td>
+                  <td>{r.Brygadzista}</td>
+                  <td>{String(r.created_at).slice(0,19).replace("T"," ")}</td>
+                  <td className="actionsCell">
+                    <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
+                    <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
+                    <Link href={`/brygady/${r.id}`} style={{ marginLeft: 8 }}>Szczegóły →</Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
-*/
