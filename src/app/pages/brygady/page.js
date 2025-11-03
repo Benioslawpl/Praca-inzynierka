@@ -1,4 +1,4 @@
-import pool from "../../../../../db";
+import pool from "../../../../db";
 
 // EDYTUJ
 export async function PUT(req, { params }) {
