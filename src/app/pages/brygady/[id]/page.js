@@ -10,7 +10,7 @@ export default function BrygadaDetails() {
 
   const [header, setHeader] = useState(null);      // dane brygady
   const [members, setMembers] = useState([]);      // członkowie
-  const [form, setForm] = useState({ Imie:"", Nazwisko:"", Rola:"", Telefon:"" });
+  const [form, setForm] = useState({ imie:"", nazwisko:"", rola:"", telefon:"" });
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState("");
 
@@ -30,7 +30,7 @@ export default function BrygadaDetails() {
 
   useEffect(() => { loadHeader(); loadMembers(); }, [id]);
 
-  const reset = () => { setForm({ Imie:"", Nazwisko:"", Rola:"", Telefon:"" }); setEditId(null); };
+  const reset = () => { setForm({ imie:"", nazwisko:"", rola:"", telefon:"" }); setEditId(null); };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -43,7 +43,7 @@ export default function BrygadaDetails() {
     reset(); loadMembers();
   };
 
-  const edit = (m) => { setEditId(m.id); setForm({ Imie:m.Imie, Nazwisko:m.Nazwisko, Rola:m.Rola||"", Telefon:m.Telefon||"" }); };
+  const edit = (m) => { setEditId(m.id); setForm({ imie:m.imie, nazwisko:m.nazwisko, rola:m.rola||"", telefon:m.telefon||"" }); };
   const del  = async (memberId) => {
     if (!confirm("Usunąć członka?")) return;
     const res = await fetch(`/api/brygady/${id}/members/${memberId}`, { method: "DELETE" });
@@ -56,7 +56,7 @@ export default function BrygadaDetails() {
       <h1>Szczegóły brygady</h1>
       {header ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <b>Numer:</b> {header.Numer} &nbsp;&nbsp; | &nbsp;&nbsp; <b>Brygadzista:</b> {header.Brygadzista}
+          <b>Numer:</b> {header.Numer} &nbsp;&nbsp; | &nbsp;&nbsp; <b>Brygadzista:</b> {header.brygadzista}
         </div>
       ) : <p>Ładowanie...</p>}
 
@@ -64,16 +64,16 @@ export default function BrygadaDetails() {
       <form className="card" onSubmit={submit}>
         <div className="grid">
           <label><span>Imię*</span>
-            <input value={form.Imie} onChange={e=>setForm({...form, Imie:e.target.value})} required />
+            <input value={form.imie} onChange={e=>setForm({...form, imie:e.target.value})} required />
           </label>
           <label><span>Nazwisko*</span>
-            <input value={form.Nazwisko} onChange={e=>setForm({...form, Nazwisko:e.target.value})} required />
+            <input value={form.nazwisko} onChange={e=>setForm({...form, nazwisko:e.target.value})} required />
           </label>
           <label><span>Rola</span>
-            <input value={form.Rola} onChange={e=>setForm({...form, Rola:e.target.value})} placeholder="np. Operator" />
+            <input value={form.rola} onChange={e=>setForm({...form, rola:e.target.value})} placeholder="np. Operator" />
           </label>
           <label><span>Telefon</span>
-            <input value={form.Telefon} onChange={e=>setForm({...form, Telefon:e.target.value})} placeholder="+48 ..." />
+            <input value={form.telefon} onChange={e=>setForm({...form, telefon:e.target.value})} placeholder="+48 ..." />
           </label>
         </div>
         <div className="actions">
@@ -97,10 +97,10 @@ export default function BrygadaDetails() {
               {members.map(m => (
                 <tr key={m.id}>
                   <td>{m.id}</td>
-                  <td>{m.Imie}</td>
-                  <td>{m.Nazwisko}</td>
-                  <td>{m.Rola || "-"}</td>
-                  <td>{m.Telefon || "-"}</td>
+                  <td>{m.imie}</td>
+                  <td>{m.nazwisko}</td>
+                  <td>{m.rola || "-"}</td>
+                  <td>{m.telefon || "-"}</td>
                   <td className="actionsCell">
                     <button onClick={() => edit(m)}>✏️</button>
                     <button className="danger" onClick={() => del(m.id)}>🗑</button>
