@@ -106,14 +106,14 @@ export default function BrygadyPage() {
                 <tr key={r.id}>
                   <td>{r.id}</td>
                   <td>
-                    <Link href={`/brygady/${r.id}`}>{r.numer}</Link>
+                    <Link href={`/pages/brygady/${r.id}`}>{r.numer}</Link>
                   </td>
                   <td>{r.brygadzista}</td>
                   <td>{r.created_at ? String(r.created_at).slice(0, 19).replace("T", " ") : "-"}</td>
                   <td className="actionsCell">
                     <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
                     <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
-                    <Link href={`/brygady/${r.id}`} style={{ marginLeft: 8 }}>Szczegóły →</Link>
+                    <Link href={`/pages/brygady/${r.id}`} style={{ marginLeft: 8 }}>Szczegóły →</Link>
                   </td>
                 </tr>
               ))}

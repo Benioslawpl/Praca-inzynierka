@@ -47,7 +47,7 @@ export default function BrygadaDetails() {
 
   return (
     <div>
-      <p><Link href="/brygady">← Wróć do listy</Link></p>
+      <p><Link href="/pages/brygady">← Wróć do listy</Link></p>
       <h1>Szczegóły brygady</h1>
       {header ? (
         <div className="card" style={{ marginBottom: 16 }}>
