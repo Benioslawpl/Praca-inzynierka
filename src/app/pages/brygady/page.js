@@ -42,7 +42,7 @@ export default function BrygadyPage() {
     }
   };
 
-  const handleEdit = (r) => { setEditId(r.id); setForm({ Numer: r.Numer, Brygadzista: r.Brygadzista }); };
+  const handleEdit = (r) => { setEditId(r.id); setForm({ numer: r.numer, brygadzista: r.brygadzista }); };
   const handleDelete = async (id) => {
     if (!confirm("Usunąć brygadę?")) return;
     const res = await fetch(`/api/brygady/${id}`, { method: "DELETE" });
@@ -57,11 +57,11 @@ export default function BrygadyPage() {
         <div className="grid">
           <label>
             <span>Numer*</span>
-            <input value={form.numer} onChange={e=>setForm({ ...form, Numer: e.target.value })} required placeholder="np. B-01" />
+            <input value={form.numer} onChange={e=>setForm({ ...form, numer: e.target.value })} required placeholder="np. B-01" />
           </label>
           <label>
             <span>Brygadzista*</span>
-            <input value={form.brygadzista} onChange={e=>setForm({ ...form, Brygadzista: e.target.value })} required placeholder="Imię i nazwisko" />
+            <input value={form.brygadzista} onChange={e=>setForm({ ...form, brygadzista: e.target.value })} required placeholder="Imię i nazwisko" />
           </label>
         </div>
         <div className="actions">
@@ -89,8 +89,8 @@ export default function BrygadyPage() {
               {rows.map(r => (
                 <tr key={r.id}>
                   <td>{r.id}</td>
-                  <td><Link href={`/brygady/${r.id}`}>{r.Numer}</Link></td>
-                  <td>{r.Brygadzista}</td>
+                  <td><Link href={`/brygady/${r.id}`}>{r.numer}</Link></td>
+                  <td>{r.brygadzista}</td>
                   <td>{String(r.created_at).slice(0,19).replace("T"," ")}</td>
                   <td className="actionsCell">
                     <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
