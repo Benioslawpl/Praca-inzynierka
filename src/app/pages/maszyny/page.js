@@ -151,9 +151,11 @@ export default function MaszynyPage() {
                     <td>{r.model}</td>
                     <td>{r.operator}</td>
                     <td className="actionsCell">
+                      <Link href={`/pages/maszyny/${r.id}`} className="info-btn">
+                          🛈
+                      </Link>
                       <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
                       <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
-                      <a href={`/pages/maszyny/${r.id}`} className="info-btn" title="Informacje">ℹ️</a>
                     </td>
                   </tr>
                 );
