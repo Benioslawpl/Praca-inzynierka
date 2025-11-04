@@ -1,13 +1,13 @@
 import pool from "../../../../../../db";
 
-// GET członkowie danej brygady
+// LISTA członków brygady
 export async function GET(_req, { params }) {
   try {
     const id = Number(params.id);
     const { rows } = await pool.query(
-      `SELECT id, brygada_id, "imie","nazwisko","rola","telefon"
+      `SELECT id, brygada_id, imie, nazwisko, rola, telefon
        FROM brygada_czlonkowie
-       WHERE brygada_id=$1
+       WHERE brygada_id = $1
        ORDER BY id ASC`,
       [id]
     );
@@ -17,19 +17,19 @@ export async function GET(_req, { params }) {
   }
 }
 
-// POST dodanie członka
+// DODAJ członka
 export async function POST(req, { params }) {
   try {
     const id = Number(params.id);
-    const { Imie, Nazwisko, Rola, Telefon } = await req.json();
-    if (!Imie || !Nazwisko) {
-      return Response.json({ error: "Wymagane: Imie, Nazwisko" }, { status: 400 });
+    const { imie, nazwisko, rola, telefon } = await req.json();
+    if (!imie || !nazwisko) {
+      return Response.json({ error: "Wymagane: imie, nazwisko" }, { status: 400 });
     }
     const { rows } = await pool.query(
-      `INSERT INTO brygada_czlonkowie (brygada_id,"imie","nazwisko","rola","telefon")
+      `INSERT INTO brygada_czlonkowie (brygada_id, imie, nazwisko, rola, telefon)
        VALUES ($1,$2,$3,$4,$5)
-       RETURNING id, brygada_id, "imie","nazwisko","rola","telefon"`,
-      [id, Imie, Nazwisko, Rola || null, Telefon || null]
+       RETURNING id, brygada_id, imie, nazwisko, rola, telefon`,
+      [id, imie, nazwisko, rola || null, telefon || null]
     );
     return Response.json(rows[0], { status: 201 });
   } catch (e) {

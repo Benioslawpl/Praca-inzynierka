@@ -1,17 +1,17 @@
 import pool from "../../../../../../../db";
 
-// PUT edycja członka
 export async function PUT(req, { params }) {
   try {
     const id = Number(params.id);
     const memberId = Number(params.memberId);
-    const { Imie, Nazwisko, Rola, Telefon } = await req.json();
+    const { imie, nazwisko, rola, telefon } = await req.json();
+
     const { rows } = await pool.query(
       `UPDATE brygada_czlonkowie
-       SET "imie"=$1,"nazwisko"=$2,"rola"=$3,"telefon"=$4
+       SET imie=$1, nazwisko=$2, rola=$3, telefon=$4
        WHERE id=$5 AND brygada_id=$6
-       RETURNING id, brygada_id, "imie","nazwisko","rola","telefon"`,
-      [Imie, Nazwisko, Rola || null, Telefon || null, memberId, id]
+       RETURNING id, brygada_id, imie, nazwisko, rola, telefon`,
+      [imie, nazwisko, rola || null, telefon || null, memberId, id]
     );
     if (!rows.length) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(rows[0]);
@@ -20,7 +20,7 @@ export async function PUT(req, { params }) {
   }
 }
 
-// DELETE usunięcie członka
+// USUŃ członka
 export async function DELETE(_req, { params }) {
   try {
     const id = Number(params.id);
