@@ -1,4 +1,28 @@
 import pool from "../../../../../db";
+import pool from "../../../../../db";
+
+// USUŃ
+export async function DELETE(_req, { params }) {
+  try {
+    const id = Number(params.id);
+    if (!id) {
+      return Response.json({ error: "Brak id" }, { status: 400 });
+    }
+
+    const { rowCount } = await pool.query(
+      "DELETE FROM maszyny WHERE id = $1",
+      [id]
+    );
+
+    if (!rowCount) {
+      return Response.json({ error: "Nie znaleziono" }, { status: 404 });
+    }
+
+    return Response.json({ success: true });
+  } catch (e) {
+    return Response.json({ error: e.message }, { status: 500 });
+  }
+}
 
 // EDYTUJ (nie zmieniamy nr)
 export async function PUT(req, { params }) {
