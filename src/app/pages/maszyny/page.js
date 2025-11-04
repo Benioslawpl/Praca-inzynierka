@@ -137,7 +137,6 @@ export default function MaszynyPage() {
                 <th>Marka</th>
                 <th>Model</th>
                 <th>Operator</th>
-                <th>Akcje</th>
               </tr>
             </thead>
             <tbody>

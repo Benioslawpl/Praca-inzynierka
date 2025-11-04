@@ -177,7 +177,7 @@ thead th {
   font-weight: 700;
 }
 tbody tr:hover { background: #fafafa; }
-.actionsCell { display: flex; gap: 8px; }
+.actionsCell { display: flex; gap: 8px; justify-content: flex-end;}
 
 /* ========== LOGOWANIE ========== */
 .login-body {
