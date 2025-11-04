@@ -111,9 +111,9 @@ export default function BrygadyPage() {
                   <td>{r.brygadzista}</td>
                   <td>{r.created_at ? String(r.created_at).slice(0, 19).replace("T", " ") : "-"}</td>
                   <td className="actionsCell">
-                    <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
-                    <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
-                    <Link href={`/pages/brygady/${r.id}`} style={{ marginLeft: 8 }}>Szczegóły →</Link>
+                      <Link href={`/brygady/${r.id}`} className="info-btn">ℹ️</Link>
+                      <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
+                      <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>   
                   </td>
                 </tr>
               ))}
