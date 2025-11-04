@@ -137,7 +137,6 @@ export default function MaszynyPage() {
                 <th>Marka</th>
                 <th>Model</th>
                 <th>Operator</th>
-                <th>Utworzono</th>
                 <th>Akcje</th>
               </tr>
             </thead>
@@ -152,7 +151,6 @@ export default function MaszynyPage() {
                     <td>{r.marka}</td>
                     <td>{r.model}</td>
                     <td>{r.operator}</td>
-                    <td>{r.created_at ? String(r.created_at).slice(0,19).replace("T"," ") : "-"}</td>
                     <td className="actionsCell">
                       <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
                       <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
