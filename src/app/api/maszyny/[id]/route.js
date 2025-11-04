@@ -1,5 +1,4 @@
 import pool from "../../../../../db";
-import pool from "../../../../../db";
 
 // USUŃ
 export async function DELETE(_req, { params }) {
