@@ -1,63 +1,40 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function MaszynyPage() {
   const [rows, setRows] = useState([]);
+  const [form, setForm] = useState({ nr: "", rodzaj: "", marka: "", model: "", operator: "" });
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const empty = {
-    Rozdaj: "",
-    Marka: "",
-    Typ: "",
-    Przebieg: "",
-    Ostatni_Serwix: "",
-    Data_Kupna: "",
-  };
-  const [form, setForm] = useState(empty);
 
-  const fetchRows = async () => {
+  const load = async () => {
     setError("");
-    const res = await fetch("/api/resources", { cache: "no-store" });
+    const res = await fetch("/api/maszyny", { cache: "no-store" });
     const data = await res.json();
+    if (!res.ok) return setError(data?.error || "Błąd pobierania");
     setRows(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => {
-    fetchRows();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  const reset = () => {
-    setForm(empty);
-    setEditId(null);
-  };
+  const reset = () => { setForm({ nr: "", rodzaj: "", marka: "", model: "", operator: "" }); setEditId(null); };
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setSaving(true);
-    setError("");
-
+    setSaving(true); setError("");
     try {
-      const url = editId ? `/api/resources/${editId}` : "/api/resources";
+      const url = editId ? `/api/maszyny/${editId}` : "/api/maszyny";
       const method = editId ? "PUT" : "POST";
-
-      const payload = {
-        ...form,
-        Przebieg: form.Przebieg === "" ? null : Number(form.Przebieg),
-        Ostatni_Serwix:
-          form.Ostatni_Serwix === "" ? null : Number(form.Ostatni_Serwix),
-      };
-
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(form),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
-
-      reset();
-      fetchRows();
+      reset(); load();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -65,146 +42,83 @@ export default function MaszynyPage() {
     }
   };
 
-  const handleEdit = (r) => {
-    setEditId(r.id);
-    setForm({
-      Rozdaj: r.Rozdaj ?? "",
-      Marka: r.Marka ?? "",
-      Typ: r.Typ ?? "",
-      Przebieg: r.Przebieg ?? "",
-      Ostatni_Serwix: r.Ostatni_Serwix ?? "",
-      Data_Kupna: r.Data_Kupna ? String(r.Data_Kupna).slice(0, 10) : "",
-    });
-  };
-
+  const handleEdit = (r) => { setEditId(r.id); setForm({ nr: r.nr, rodzaj: r.rodzaj, marka: r.marka, model: r.model, operator: r.operator }); };
   const handleDelete = async (id) => {
-    if (!confirm("Na pewno usunąć?")) return;
-    const res = await fetch(`/api/resources/${id}`, { method: "DELETE" });
-    if (res.ok) fetchRows();
+    if (!confirm("Usunąć maszynę?")) return;
+    const res = await fetch(`/api/maszyny/${id}`, { method: "DELETE" });
+    if (res.ok) load();
   };
 
   return (
     <div>
       <h1>Maszyny 🚜</h1>
 
-      {/* Formularz */}
-      <form className="card" onSubmit={handleSubmit}>
+      <form className="card" onSubmit={submit}>
         <div className="grid">
-          <label>
-            <span>Rozdaj*</span>
-            <input
-              value={form.Rozdaj}
-              onChange={(e) => setForm({ ...form, Rozdaj: e.target.value })}
-              required
-              placeholder="np. Koparka"
-            />
+          <label><span>Nr*</span>
+            <input value={form.nr} onChange={e=>setForm({ ...form, nr: e.target.value })} required placeholder="np. M-01" />
           </label>
-          <label>
-            <span>Marka*</span>
-            <input
-              value={form.Marka}
-              onChange={(e) => setForm({ ...form, Marka: e.target.value })}
-              required
-              placeholder="np. CAT"
-            />
+          <label><span>Rodzaj*</span>
+            <input value={form.rodzaj} onChange={e=>setForm({ ...form, rodzaj: e.target.value })} required placeholder="np. Koparka" />
           </label>
-          <label>
-            <span>Typ*</span>
-            <input
-              value={form.Typ}
-              onChange={(e) => setForm({ ...form, Typ: e.target.value })}
-              required
-              placeholder="np. 320D"
-            />
+          <label><span>Marka*</span>
+            <input value={form.marka} onChange={e=>setForm({ ...form, marka: e.target.value })} required placeholder="np. CAT" />
           </label>
-          <label>
-            <span>Przebieg [km]</span>
-            <input
-              type="number"
-              value={form.Przebieg}
-              onChange={(e) => setForm({ ...form, Przebieg: e.target.value })}
-              placeholder="np. 12000"
-              min="0"
-            />
+          <label><span>Model*</span>
+            <input value={form.model} onChange={e=>setForm({ ...form, model: e.target.value })} required placeholder="np. 320D" />
           </label>
-          <label>
-            <span>Ostatni serwis (km od)</span>
-            <input
-              type="number"
-              value={form.Ostatni_Serwix}
-              onChange={(e) =>
-                setForm({ ...form, Ostatni_Serwix: e.target.value })
-              }
-              placeholder="np. 300"
-              min="0"
-            />
-          </label>
-          <label>
-            <span>Data kupna</span>
-            <input
-              type="date"
-              value={form.Data_Kupna}
-              onChange={(e) => setForm({ ...form, Data_Kupna: e.target.value })}
-            />
+          <label><span>Operator (Imię i nazwisko)*</span>
+            <input value={form.operator} onChange={e=>setForm({ ...form, operator: e.target.value })} required placeholder="np. Jan Kowalski" />
           </label>
         </div>
 
         <div className="actions">
           <button type="submit" disabled={saving}>
-            {saving ? "Zapisywanie..." : editId ? "Zapisz zmiany" : "Dodaj"}
+            {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
           </button>
-          {editId && (
-            <button type="button" className="secondary" onClick={reset}>
-              Anuluj edycję
-            </button>
-          )}
+          {editId && <button type="button" className="secondary" onClick={reset}>Anuluj</button>}
         </div>
-
         {error && <p className="error">⚠ {error}</p>}
       </form>
 
-      {/* Tabela */}
       <div className="tableWrap">
         {rows.length === 0 ? (
           <p>Brak danych</p>
         ) : (
           <table className="table">
             <thead>
-                <tr>
-                  <th>Nr</th> {/* zamiast ID */}
-                  <th>Rozdaj</th>
-                  <th>Marka</th>
-                  <th>Typ</th>
-                  <th>Przebieg [km]</th>
-                  <th>Ostatni serwis (km)</th>
-                  <th>Data kupna</th>
-                  <th>Akcje</th>
+              <tr>
+                <th>ID</th>
+                <th>Nr</th>
+                <th>Rodzaj</th>
+                <th>Marka</th>
+                <th>Model</th>
+                <th>Operator</th>
+                <th>Utworzono</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  <td>{r.id}</td>
+                  <td>{r.nr}</td>
+                  <td>{r.rodzaj}</td>
+                  <td>{r.marka}</td>
+                  <td>{r.model}</td>
+                  <td>{r.operator}</td>
+                  <td>{r.created_at ? String(r.created_at).slice(0,19).replace("T"," ") : "-"}</td>
+                  <td className="actionsCell">
+                    <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
+                    <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
+                    <Link href={`/pages/maszyny/${r.id}`} className="info-btn" title="Informacje">ℹ️</Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, index) => (
-                  <tr key={r.id}>
-                    <td>{index + 1}</td> {/* numer porządkowy */}
-                    <td>{r.Rozdaj}</td>
-                    <td>{r.Marka}</td>
-                    <td>{r.Typ}</td>
-                    <td>{r.Przebieg}</td>
-                    <td>{r.Ostatni_Serwix}</td>
-                    <td>{r.Data_Kupna ? String(r.Data_Kupna).slice(0, 10) : ""}</td>
-                    <td className="actionsCell">
-                      <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
-                      <button className="danger" onClick={() => handleDelete(r.id)}>
-                        🗑 Usuń
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              ))}
+            </tbody>
           </table>
         )}
       </div>
-
-      
     </div>
   );
 }
