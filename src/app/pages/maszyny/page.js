@@ -132,7 +132,7 @@ export default function MaszynyPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>Nr</th>
+                <th>Lp.</th>
                 <th>Rodzaj</th>
                 <th>Marka</th>
                 <th>Model</th>
@@ -142,36 +142,25 @@ export default function MaszynyPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.nr}>
-                  <td>{r.nr}</td>
-                  <td>{r.rodzaj}</td>
-                  <td>{r.marka}</td>
-                  <td>{r.model}</td>
-                  <td>{r.operator}</td>
-                  <td>
-                    {r.created_at
-                      ? String(r.created_at).slice(0, 19).replace("T", " ")
-                      : "-"}
-                  </td>
-                  <td className="actionsCell">
-                    <Link
-                      href={`/pages/maszyny/${r.id}`}
-                      className="info-btn"
-                      title="Informacje"
-                    >
-                      ℹ️
-                    </Link>
-                    <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
-                    <button
-                      className="danger"
-                      onClick={() => handleDelete(r.id)}
-                    >
-                      🗑 Usuń
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {rows.map((r, i) => {
+                const lp = i + 1;                                 // 1..n
+                const uiNr = `M-${String(lp).padStart(2, "0")}`;  // M-01, M-02...
+                return (
+                  <tr key={r.id}>
+                    <td>{uiNr}</td>
+                    <td>{r.rodzaj}</td>
+                    <td>{r.marka}</td>
+                    <td>{r.model}</td>
+                    <td>{r.operator}</td>
+                    <td>{r.created_at ? String(r.created_at).slice(0,19).replace("T"," ") : "-"}</td>
+                    <td className="actionsCell">
+                      <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
+                      <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
+                      <a href={`/pages/maszyny/${r.id}`} className="info-btn" title="Informacje">ℹ️</a>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
