@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function MaszynyPage() {
   const [rows, setRows] = useState([]);
-  const [form, setForm] = useState({ nr: "", rodzaj: "", marka: "", model: "", operator: "" });
+  const [form, setForm] = useState({ rodzaj: "", marka: "", model: "", operator: "" });
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -17,13 +17,19 @@ export default function MaszynyPage() {
     setRows(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
-  const reset = () => { setForm({ nr: "", rodzaj: "", marka: "", model: "", operator: "" }); setEditId(null); };
+  const reset = () => {
+    setForm({ rodzaj: "", marka: "", model: "", operator: "" });
+    setEditId(null);
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    setSaving(true); setError("");
+    setSaving(true);
+    setError("");
     try {
       const url = editId ? `/api/maszyny/${editId}` : "/api/maszyny";
       const method = editId ? "PUT" : "POST";
@@ -34,7 +40,8 @@ export default function MaszynyPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
-      reset(); load();
+      reset();
+      load();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -42,7 +49,16 @@ export default function MaszynyPage() {
     }
   };
 
-  const handleEdit = (r) => { setEditId(r.id); setForm({ nr: r.nr, rodzaj: r.rodzaj, marka: r.marka, model: r.model, operator: r.operator }); };
+  const handleEdit = (r) => {
+    setEditId(r.id);
+    setForm({
+      rodzaj: r.rodzaj,
+      marka: r.marka,
+      model: r.model,
+      operator: r.operator,
+    });
+  };
+
   const handleDelete = async (id) => {
     if (!confirm("Usunąć maszynę?")) return;
     const res = await fetch(`/api/maszyny/${id}`, { method: "DELETE" });
@@ -53,22 +69,44 @@ export default function MaszynyPage() {
     <div>
       <h1>Maszyny 🚜</h1>
 
+      
       <form className="card" onSubmit={submit}>
         <div className="grid">
-          <label><span>Nr*</span>
-            <input value={form.nr} onChange={e=>setForm({ ...form, nr: e.target.value })} required placeholder="np. M-01" />
+          <label>
+            <span>Rodzaj*</span>
+            <input
+              value={form.rodzaj}
+              onChange={(e) => setForm({ ...form, rodzaj: e.target.value })}
+              required
+              placeholder="np. Koparka"
+            />
           </label>
-          <label><span>Rodzaj*</span>
-            <input value={form.rodzaj} onChange={e=>setForm({ ...form, rodzaj: e.target.value })} required placeholder="np. Koparka" />
+          <label>
+            <span>Marka*</span>
+            <input
+              value={form.marka}
+              onChange={(e) => setForm({ ...form, marka: e.target.value })}
+              required
+              placeholder="np. CAT"
+            />
           </label>
-          <label><span>Marka*</span>
-            <input value={form.marka} onChange={e=>setForm({ ...form, marka: e.target.value })} required placeholder="np. CAT" />
+          <label>
+            <span>Model*</span>
+            <input
+              value={form.model}
+              onChange={(e) => setForm({ ...form, model: e.target.value })}
+              required
+              placeholder="np. 320D"
+            />
           </label>
-          <label><span>Model*</span>
-            <input value={form.model} onChange={e=>setForm({ ...form, model: e.target.value })} required placeholder="np. 320D" />
-          </label>
-          <label><span>Operator (Imię i nazwisko)*</span>
-            <input value={form.operator} onChange={e=>setForm({ ...form, operator: e.target.value })} required placeholder="np. Jan Kowalski" />
+          <label>
+            <span>Operator*</span>
+            <input
+              value={form.operator}
+              onChange={(e) => setForm({ ...form, operator: e.target.value })}
+              required
+              placeholder="np. Jan Kowalski"
+            />
           </label>
         </div>
 
@@ -76,11 +114,17 @@ export default function MaszynyPage() {
           <button type="submit" disabled={saving}>
             {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
           </button>
-          {editId && <button type="button" className="secondary" onClick={reset}>Anuluj</button>}
+          {editId && (
+            <button type="button" className="secondary" onClick={reset}>
+              Anuluj
+            </button>
+          )}
         </div>
+
         {error && <p className="error">⚠ {error}</p>}
       </form>
 
+      
       <div className="tableWrap">
         {rows.length === 0 ? (
           <p>Brak danych</p>
@@ -88,7 +132,6 @@ export default function MaszynyPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Nr</th>
                 <th>Rodzaj</th>
                 <th>Marka</th>
@@ -100,18 +143,32 @@ export default function MaszynyPage() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
+                <tr key={r.nr}>
                   <td>{r.nr}</td>
                   <td>{r.rodzaj}</td>
                   <td>{r.marka}</td>
                   <td>{r.model}</td>
                   <td>{r.operator}</td>
-                  <td>{r.created_at ? String(r.created_at).slice(0,19).replace("T"," ") : "-"}</td>
+                  <td>
+                    {r.created_at
+                      ? String(r.created_at).slice(0, 19).replace("T", " ")
+                      : "-"}
+                  </td>
                   <td className="actionsCell">
+                    <Link
+                      href={`/pages/maszyny/${r.id}`}
+                      className="info-btn"
+                      title="Informacje"
+                    >
+                      ℹ️
+                    </Link>
                     <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
-                    <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
-                    <Link href={`/pages/maszyny/${r.id}`} className="info-btn" title="Informacje">ℹ️</Link>
+                    <button
+                      className="danger"
+                      onClick={() => handleDelete(r.id)}
+                    >
+                      🗑 Usuń
+                    </button>
                   </td>
                 </tr>
               ))}
