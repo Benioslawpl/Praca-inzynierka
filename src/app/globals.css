@@ -6,7 +6,7 @@ body {
   font-family: Arial, sans-serif;
   background: #fafafa;
   background: #00000033;
-  color: #333;
+  color: #000000;
   display: flex;
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
@@ -171,10 +171,31 @@ label {
   border-spacing: 0;
   background: #fff;
 }
-.table tbody td {
-  border-top: 1px solid #eef0f3;
-  padding: 12px;
+
+.table tbody tr {
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
+
+.table tbody tr:hover {
+  background-color: #e8f1ff;          /* jaśniejszy niebieski */
+  transform: scale(1.01);             /* subtelne powiększenie */
+  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.15); /* lekki cień */
+  z-index: 1;                         /* unosi wiersz ponad inne */
+  position: relative;
+}
+
+.table tbody tr:active {
+  background-color: #dce9ff;
+  transform: scale(1.005);
+}
+
+.table tbody td {
+  padding: 12px 14px;
+  border-top: 1px solid #eef0f3;
+  background-clip: padding-box;
+}
+
 .table thead th {
   background: #f6f8fb;
   color: #2a2f3a;
