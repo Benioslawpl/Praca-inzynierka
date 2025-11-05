@@ -1,4 +1,4 @@
-import pool from "../../../../../../../";
+import pool from "../../../../../../../db";
 
 // EDYCJA wpisu
 export async function PUT(req, { params }) {
@@ -19,7 +19,7 @@ export async function PUT(req, { params }) {
         RETURNING id, maszyna_id, przebieg, awaria, wykonawca, uwagi, data_zdarzenia, created_at`,
         [przebieg ?? null, awaria || null, wykonawca || null, uwagi || null, data_zdarzenia || new Date(), detailId, maszynaId]
     );
-    
+
     if (!rows.length) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(rows[0]);
   } catch (e) {
