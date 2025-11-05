@@ -1,0 +1,171 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+
+export default function MaszynaDetails() {
+  const { id } = useParams();
+  const router = useRouter();
+
+  const [header, setHeader] = useState(null); // dane maszyny
+  const [items, setItems] = useState([]);     // historia/szczegóły
+  const [form, setForm] = useState({ przebieg: "", awaria: "", wykonawca: "", uwagi: "" });
+  const [editId, setEditId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const loadHeader = async () => {
+    const list = await fetch("/api/maszyny", { cache: "no-store" })
+      .then(r => r.json()).catch(() => []);
+    const found = Array.isArray(list) ? list.find(x => String(x.id) === String(id)) : null;
+    setHeader(found || null);
+  };
+
+  const loadDetails = async () => {
+    const res = await fetch(`/api/maszyny/${id}/details`, { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok) { setErr(data?.error || "Błąd pobierania"); return; }
+    setItems(Array.isArray(data) ? data : []);
+  };
+
+  useEffect(() => { loadHeader(); loadDetails(); }, [id]);
+
+  const reset = () => { setForm({ przebieg: "", awaria: "", wykonawca: "", uwagi: "" }); setEditId(null); };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true); setErr("");
+    try {
+      const body = {
+        przebieg: form.przebieg === "" ? null : Number(form.przebieg),
+        awaria: form.awaria?.trim() || null,
+        wykonawca: form.wykonawca?.trim() || null,
+        uwagi: form.uwagi?.trim() || null,
+      };
+      const url = editId ? `/api/maszyny/${id}/details/${editId}` : `/api/maszyny/${id}/details`;
+      const method = editId ? "PUT" : "POST";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
+      reset(); loadDetails();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const edit = (it) => {
+    setEditId(it.id);
+    setForm({
+      przebieg: it.przebieg ?? "",
+      awaria: it.awaria ?? "",
+      wykonawca: it.wykonawca ?? "",
+      uwagi: it.uwagi ?? "",
+    });
+  };
+
+  const del = async (detailId) => {
+    if (!confirm("Usunąć wpis?")) return;
+    const res = await fetch(`/api/maszyny/${id}/details/${detailId}`, { method: "DELETE" });
+    if (res.ok) loadDetails();
+  };
+
+  return (
+    <div>
+      <button className="secondary" onClick={() => router.push("/pages/maszyny")}>← Wróć do listy</button>
+      <h1>Szczegóły maszyny</h1>
+
+      {header ? (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <b>Nr:</b> {header.nr} &nbsp;|&nbsp; <b>Rodzaj:</b> {header.rodzaj}
+          &nbsp;|&nbsp; <b>Marka/Model:</b> {header.marka} {header.model}
+          &nbsp;|&nbsp; <b>Operator:</b> {header.operator}
+        </div>
+      ) : <p>Ładowanie...</p>}
+
+      <h2>Nowe zdarzenie</h2>
+      <form className="card" onSubmit={submit}>
+        <div className="grid">
+          <label>
+            <span>Przebieg (km)</span>
+            <input
+              type="number"
+              value={form.przebieg}
+              onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
+              min="0"
+              placeholder="np. 12500"
+            />
+          </label>
+          <label>
+            <span>Awaria (max 30)</span>
+            <input
+              value={form.awaria}
+              onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 30) })}
+              placeholder="np. Uszk. wąż"
+            />
+          </label>
+          <label>
+            <span>Wykonawca</span>
+            <input
+              value={form.wykonawca}
+              onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
+              placeholder="np. Serwis XYZ"
+            />
+          </label>
+          <label style={{ gridColumn: "1 / -1" }}>
+            <span>Uwagi (max 200)</span>
+            <textarea
+              value={form.uwagi}
+              onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
+              rows={3}
+              placeholder="Krótki opis zdarzenia..."
+              style={{ width: "100%", resize: "vertical", padding: 8, borderRadius: 6, border: "1px solid #cfd4dc", background: "#fff" }}
+            />
+          </label>
+        </div>
+
+        <div className="actions">
+          <button type="submit" disabled={saving}>{saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}</button>
+          {editId && <button type="button" className="secondary" onClick={reset}>Anuluj</button>}
+        </div>
+        {err && <p className="error">⚠ {err}</p>}
+      </form>
+
+      <h2>Historia zdarzeń</h2>
+      <div className="tableWrap">
+        {items.length === 0 ? (
+          <p>Brak wpisów</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Przebieg</th>
+                <th>Awaria</th>
+                <th>Wykonawca</th>
+                <th>Uwagi</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((it) => (
+                <tr key={it.id}>
+                  <td>{String(it.created_at).slice(0,19).replace("T"," ")}</td>
+                  <td>{it.przebieg ?? "-"}</td>
+                  <td>{it.awaria || "-"}</td>
+                  <td>{it.wykonawca || "-"}</td>
+                  <td style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}>{it.uwagi || "-"}</td>
+                  <td className="actionsCell">
+                    <button onClick={() => edit(it)}>✏️</button>
+                    <button className="danger" onClick={() => del(it.id)}>🗑</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
