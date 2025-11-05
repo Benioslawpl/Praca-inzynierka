@@ -1,34 +1,37 @@
 import pool from "../../../../db";
 
-// LISTA
+// POBIERZ WSZYSTKIE
 export async function GET() {
   try {
-    const { rows } = await pool.query(
-      `SELECT id, numer, brygadzista, created_at
-       FROM brygady
-       ORDER BY id ASC`
-    );
+    const { rows } = await pool.query(`
+      SELECT id, numer, brygadzista, created_at
+      FROM brygady
+      ORDER BY CAST(SUBSTRING(numer FROM 3) AS INTEGER) ASC
+    `);
     return Response.json(rows);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
-// DODAJ
+// DODAJ NOWĄ
 export async function POST(req) {
   try {
-    const { numer, brygadzista } = await req.json();
-    if (!numer || !brygadzista) {
-      return Response.json({ error: "Wymagane: numer, brygadzista" }, { status: 400 });
+    const { brygadzista } = await req.json();
+
+    if (!brygadzista) {
+      return Response.json({ error: "Wymagane: brygadzista" }, { status: 400 });
     }
+
     const { rows } = await pool.query(
-      `INSERT INTO brygady (numer, brygadzista)
-       VALUES ($1,$2)
+      `INSERT INTO brygady (brygadzista)
+       VALUES ($1)
        RETURNING id, numer, brygadzista, created_at`,
-      [numer, brygadzista]
+      [brygadzista]
     );
-    return Response.json(rows[0], { status: 201 });
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+
+    return Response.json(rows[0]);
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }

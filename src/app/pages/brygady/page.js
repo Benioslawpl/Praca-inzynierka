@@ -94,29 +94,26 @@ export default function BrygadyPage() {
           <table className="table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Numer</th>
+                <th>Numer brygady</th>
                 <th>Brygadzista</th>
-                <th>Utworzono</th>
+                <th>Akcje</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.id}</td>
-                  <td>
-                    <Link href={`/pages/brygady/${r.id}`}>{r.numer}</Link>
-                  </td>
-                  <td>{r.brygadzista}</td>
-                  <td>{r.created_at ? String(r.created_at).slice(0, 19).replace("T", " ") : "-"}</td>
-                  <td className="actionsCell">
-                    <Link href={`/pages/brygady/${r.id}`} className="info-btn">
+              {rows
+                .sort((a, b) => parseInt(a.numer.split("-")[1]) - parseInt(b.numer.split("-")[1]))
+                .map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.numer}</td>
+                    <td>{r.brygadzista}</td>
+                    <td className="actionsCell">
+                      <button onClick={() => handleEdit(r)}>✏️</button>
+                      <button className="danger" onClick={() => handleDelete(r.id)}>🗑</button>
+                      <Link href={`/pages/maszyny/${r.id}`} className="info-btn">
                           🛈
-                    </Link>
-                      <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
-                      <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>                       
-                  </td>
-                </tr>
+                      </Link>
+                    </td>
+                  </tr>
               ))}
             </tbody>
           </table>
