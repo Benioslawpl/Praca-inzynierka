@@ -136,7 +136,6 @@ export default function BrygadaDetails() {
 
         {error && <p className="error">⚠ {error}</p>}
       </form>
-
       <div className="tableWrap">
         {members.length === 0 ? (
           <p>Brak członków</p>
@@ -144,26 +143,27 @@ export default function BrygadaDetails() {
           <table className="table">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Lp.</th>
                 <th>Imię</th>
                 <th>Nazwisko</th>
                 <th>Rola</th>
                 <th>Telefon</th>
+                <th>Akcje</th>
               </tr>
             </thead>
             <tbody>
-              {members.map((m) => (
-                <tr key={m.id}>
-                  <td>{m.id}</td>
-                  <td>{m.imie}</td>
-                  <td>{m.nazwisko}</td>
-                  <td>{m.rola || "-"}</td>
-                  <td>{m.telefon || "-"}</td>
-                  <td className="actionsCell">
-                    <button onClick={() => edit(m)}>✏️</button>
-                    <button className="danger" onClick={() => del(m.id)}>🗑</button>
-                  </td>
-                </tr>
+              {members.slice().sort((a,b)=>a.id-b.id).map((m, i) => (
+                  <tr key={m.id}>
+                    <td>{i + 1}</td>              
+                    <td>{m.imie}</td>
+                    <td>{m.nazwisko}</td>
+                    <td>{m.rola || "-"}</td>
+                    <td>{m.telefon || "-"}</td>
+                    <td className="actionsCell">
+                      <button onClick={() => edit(m)}>✏️</button>
+                      <button className="danger" onClick={() => del(m.id)}>🗑</button>
+                    </td>
+                  </tr>
               ))}
             </tbody>
           </table>
