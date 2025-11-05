@@ -69,6 +69,7 @@ export default function MaszynaDetails() {
         });
     };
 
+    
   const del = async (detailId) => {
     if (!confirm("Usunąć wpis?")) return;
     const res = await fetch(`/api/maszyny/${id}/details/${detailId}`, { method: "DELETE" });
