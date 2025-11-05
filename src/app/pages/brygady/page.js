@@ -106,7 +106,7 @@ export default function BrygadyPage() {
                     <td>{r.numer}</td>
                     <td>{r.brygadzista}</td>
                     <td className="actionsCell">
-                      <Link href={`/pages/maszyny/${r.id}`} className="info-btn">
+                      <Link href={`/pages/brygady/${r.id}`} className="info-btn">
                           🛈
                       </Link>
                       <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
