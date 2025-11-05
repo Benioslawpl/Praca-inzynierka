@@ -207,3 +207,79 @@ tbody tr:hover { background: #fafafa; }
   width: 100%;
   margin-top: 10px;
 }
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e4e7ee;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(20, 24, 40, 0.06);
+  padding: 16px;
+}
+
+.grid label span {
+  font-weight: 600;
+  color: #2a2f3a;
+}
+
+/* inputy czytelniejsze i ładniejszy focus */
+input, textarea, select {
+  background: #fff;
+  border: 1px solid #cfd4dc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #0070f3;
+  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.15);
+  outline: none;
+}
+
+/* tabela wyraźniejsza, ale wciąż lekka */
+.table {
+  border: 1px solid #e4e7ee;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(20, 24, 40, 0.05);
+}
+.table thead th {
+  background: #f6f8fb;
+  color: #2a2f3a;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.table tbody tr:nth-child(even) {
+  background: #fbfcff;      /* delikatny „zebra” */
+}
+.table tbody tr:hover {
+  background: #f2f7ff;      /* lekki hover, ułatwia śledzenie wiersza */
+}
+
+/* komórka z akcjami – większy odstęp */
+.actionsCell {
+  display: flex;
+  gap: 10px;
+}
+
+/* przyciski nieco bardziej „mięsiste” */
+button, .info-btn {
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(20, 24, 40, 0.08);
+}
+button:hover, .info-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* sekcja strony, by nie „pływało” na całej szerokości */
+.section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* nagłówki sekcji – trochę oddechu */
+h1, h2 {
+  color: #1f2937;
+  margin: 6px 0 14px;
+}
