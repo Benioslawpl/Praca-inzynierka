@@ -17,8 +17,8 @@ export async function PUT(req, { params }) {
         SET przebieg=$1, awaria=$2, wykonawca=$3, uwagi=$4, data_zdarzenia=$5
         WHERE id=$6 AND maszyna_id=$7
         RETURNING id, maszyna_id, przebieg, awaria, wykonawca, uwagi, data_zdarzenia, created_at`,
-        [przebieg ?? null, awaria || null, wykonawca || null, uwagi || null, data_zdarzenia || new Date(), detailId, maszynaId]
-    );
+        [przebieg ?? null, awaria || null, wykonawca || null, uwagi || null, data_zdarzenia || null, detailId, maszynaId]
+        );
 
     if (!rows.length) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(rows[0]);

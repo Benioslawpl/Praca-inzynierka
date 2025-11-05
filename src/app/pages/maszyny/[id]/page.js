@@ -36,12 +36,13 @@ export default function MaszynaDetails() {
     e.preventDefault();
     setSaving(true); setErr("");
     try {
-      const body = {
+        const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
         awaria: form.awaria?.trim() || null,
         wykonawca: form.wykonawca?.trim() || null,
         uwagi: form.uwagi?.trim() || null,
-      };
+        data_zdarzenia: form.data_zdarzenia || null, // ← kluczowe
+        };
       const url = editId ? `/api/maszyny/${id}/details/${editId}` : `/api/maszyny/${id}/details`;
       const method = editId ? "PUT" : "POST";
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -55,15 +56,18 @@ export default function MaszynaDetails() {
     }
   };
 
-  const edit = (it) => {
+    const edit = (it) => {
     setEditId(it.id);
     setForm({
-      przebieg: it.przebieg ?? "",
-      awaria: it.awaria ?? "",
-      wykonawca: it.wykonawca ?? "",
-      uwagi: it.uwagi ?? "",
-    });
-  };
+        przebieg: it.przebieg ?? "",
+        awaria: it.awaria ?? "",
+        wykonawca: it.wykonawca ?? "",
+        uwagi: it.uwagi ?? "",
+        data_zdarzenia: it.data_zdarzenia
+        ? String(it.data_zdarzenia).slice(0,10)  
+        : new Date().toISOString().slice(0,10),
+        });
+    };
 
   const del = async (detailId) => {
     if (!confirm("Usunąć wpis?")) return;
