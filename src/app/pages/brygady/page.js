@@ -96,7 +96,6 @@ export default function BrygadyPage() {
               <tr>
                 <th>Numer brygady</th>
                 <th>Brygadzista</th>
-                <th>Akcje</th>
               </tr>
             </thead>
             <tbody>
@@ -107,11 +106,11 @@ export default function BrygadyPage() {
                     <td>{r.numer}</td>
                     <td>{r.brygadzista}</td>
                     <td className="actionsCell">
-                      <button onClick={() => handleEdit(r)}>✏️</button>
-                      <button className="danger" onClick={() => handleDelete(r.id)}>🗑</button>
                       <Link href={`/pages/maszyny/${r.id}`} className="info-btn">
                           🛈
                       </Link>
+                      <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
+                      <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
                     </td>
                   </tr>
               ))}
