@@ -76,15 +76,16 @@ p { color: #000; }           /* było .p – poprawione na element */
 
 /* ========== FORMULARZE / PRZYCISKI ========== */
 input, select, textarea {
-  padding: 8px 10px;
-  border: 1px solid #cfd4dc;
-  border-radius: 6px;
   background: #fff;
-  outline: none;
+  border: 1px solid #cfd4dc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: border-color .15s, box-shadow .15s, background-color .15s;
 }
 input:focus, select:focus, textarea:focus {
   border-color: #0070f3;
   box-shadow: 0 0 0 3px rgba(0,112,243,.15);
+  outline: none;
 }
 button {
   padding: 8px 12px;
@@ -95,7 +96,7 @@ button {
   cursor: pointer;
   transition: opacity .2s ease, transform .02s ease-in;
 }
-button:hover { opacity: .9; }
+button:hover, .info-btn:hover { transform: translateY(-1px); }
 button:active { transform: translateY(1px); }
 button.secondary { background: #6b7280; }
 button.danger { background: #dc2626; }
@@ -113,7 +114,7 @@ button.danger { background: #dc2626; }
   font-size: 18px;
   margin-left: 8px;
   transition: background-color 0.2s ease, transform 0.15s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(20, 24, 40, 0.08);
 }
 
 .info-btn:hover {
@@ -156,26 +157,33 @@ label {
 }
 
 /* ========== TABELA ========== */
-.tableWrap { overflow-x: auto; }
+.tableWrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e4e7ee;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(20, 24, 40, 0.05);
+}
 .table {
   width: 100%;
-  border-collapse: collapse;   /* przy border-radius i collapse – trzymaj w kontenerze .tableWrap */
+  border-collapse: separate;   /* ważne: pozwala działać radiusowi */
+  border-spacing: 0;
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  overflow: hidden;
 }
-th, td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #eef0f3;
-  font-size: 14px;
-  text-align: left;
-  vertical-align: middle;
+.table tbody td {
+  border-top: 1px solid #eef0f3;
+  padding: 12px;
 }
-thead th {
-  background: #f3f4f6;
+.table thead th {
+  background: #f6f8fb;
+  color: #2a2f3a;
   font-weight: 700;
+  letter-spacing: .2px;
+  padding: 12px;
 }
+.table tbody tr:nth-child(even) { background: #fbfcff; }
+.table tbody tr:hover { background: #f2f7ff; }
+
 tbody tr:hover { background: #fafafa; }
 .actionsCell { display: flex; gap: 8px; justify-content: flex-end;}
 
@@ -209,11 +217,12 @@ tbody tr:hover { background: #fafafa; }
 }
 
 .card {
-  background: #ffffff;
+  margin: 16px 0 24px;
+  padding: 16px;
+  background: #fff;
   border: 1px solid #e4e7ee;
   border-radius: 12px;
   box-shadow: 0 6px 18px rgba(20, 24, 40, 0.06);
-  padding: 16px;
 }
 
 .grid label span {
@@ -221,65 +230,3 @@ tbody tr:hover { background: #fafafa; }
   color: #2a2f3a;
 }
 
-/* inputy czytelniejsze i ładniejszy focus */
-input, textarea, select {
-  background: #fff;
-  border: 1px solid #cfd4dc;
-  border-radius: 8px;
-  padding: 10px 12px;
-  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
-}
-input:focus, textarea:focus, select:focus {
-  border-color: #0070f3;
-  box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.15);
-  outline: none;
-}
-
-/* tabela wyraźniejsza, ale wciąż lekka */
-.table {
-  border: 1px solid #e4e7ee;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 4px 14px rgba(20, 24, 40, 0.05);
-}
-.table thead th {
-  background: #f6f8fb;
-  color: #2a2f3a;
-  font-weight: 700;
-  letter-spacing: .2px;
-}
-.table tbody tr:nth-child(even) {
-  background: #fbfcff;      /* delikatny „zebra” */
-}
-.table tbody tr:hover {
-  background: #f2f7ff;      /* lekki hover, ułatwia śledzenie wiersza */
-}
-
-/* komórka z akcjami – większy odstęp */
-.actionsCell {
-  display: flex;
-  gap: 10px;
-}
-
-/* przyciski nieco bardziej „mięsiste” */
-button, .info-btn {
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(20, 24, 40, 0.08);
-}
-button:hover, .info-btn:hover {
-  transform: translateY(-1px);
-}
-
-/* sekcja strony, by nie „pływało” na całej szerokości */
-.section {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 16px;
-}
-
-/* nagłówki sekcji – trochę oddechu */
-h1, h2 {
-  color: #1f2937;
-  margin: 6px 0 14px;
-}
