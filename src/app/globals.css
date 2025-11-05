@@ -159,43 +159,43 @@ label {
 
 /* ========== TABELA ========== */
 .tableWrap {
-  overflow-x: auto;
+  overflow-x: auto;                 /* zostaw auto, jeśli masz szerokie tabele */
   background: #fff;
   border: 1px solid #e4e7ee;
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(20, 24, 40, 0.05);
 }
+
 .table {
   width: 100%;
-  border-collapse: separate;   /* ważne: pozwala działać radiusowi */
+  border-collapse: separate;        /* potrzebne dla radiusa */
   border-spacing: 0;
   background: #fff;
 }
 
+/* wiersze */
 .table tbody tr {
-  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  transition: background-color .2s ease, box-shadow .2s ease;
   cursor: pointer;
 }
 
 .table tbody tr:hover {
-  background-color: #e8f1ff;          /* jaśniejszy niebieski */
-  transform: scale(1.01);             /* subtelne powiększenie */
-  box-shadow: 0 2px 8px rgba(0, 112, 243, 0.15); /* lekki cień */
-  z-index: 1;                         /* unosi wiersz ponad inne */
-  position: relative;
+  background-color: #e8f1ff;        /* wyraźniejsze tło */
+  box-shadow: inset 0 2px 8px rgba(0, 112, 243, .12);
 }
 
 .table tbody tr:active {
   background-color: #dce9ff;
-  transform: scale(1.005);
 }
 
+/* komórki */
 .table tbody td {
   padding: 12px 14px;
   border-top: 1px solid #eef0f3;
   background-clip: padding-box;
 }
 
+/* nagłówek */
 .table thead th {
   background: #f6f8fb;
   color: #2a2f3a;
@@ -203,11 +203,18 @@ label {
   letter-spacing: .2px;
   padding: 12px;
 }
-.table tbody tr:nth-child(even) { background: #fbfcff; }
-.table tbody tr:hover { background: #f2f7ff; }
 
-tbody tr:hover { background: #fafafa; }
-.actionsCell { display: flex; gap: 8px; justify-content: flex-end;}
+/* zebra */
+.table tbody tr:nth-child(even) {
+  background: #fbfcff;
+}
+
+/* akcje */
+.actionsCell {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
 
 /* ========== LOGOWANIE ========== */
 .login-body {
