@@ -149,7 +149,6 @@ export default function BrygadaDetails() {
                 <th>Nazwisko</th>
                 <th>Rola</th>
                 <th>Telefon</th>
-                <th>Akcje</th>
               </tr>
             </thead>
             <tbody>

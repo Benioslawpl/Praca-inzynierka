@@ -98,7 +98,6 @@ export default function BrygadyPage() {
                 <th>Numer</th>
                 <th>Brygadzista</th>
                 <th>Utworzono</th>
-                <th>Akcje</th>
               </tr>
             </thead>
             <tbody>
