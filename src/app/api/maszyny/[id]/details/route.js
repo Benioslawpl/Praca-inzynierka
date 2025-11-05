@@ -21,7 +21,7 @@ export async function GET(_req, { params }) {
 export async function POST(req, { params }) {
   try {
     const id = Number(params.id);
-    const { przebieg, awaria, wykonawca, uwagi } = await req.json();
+    const { przebieg, awaria, wykonawca, uwagi, data_zdarzenia } = await req.json();
 
     if (awaria && awaria.length > 30)
       return Response.json({ error: "Awaria max 30 znaków" }, { status: 400 });
@@ -29,11 +29,11 @@ export async function POST(req, { params }) {
       return Response.json({ error: "Uwagi max 200 znaków" }, { status: 400 });
 
     const { rows } = await pool.query(
-      `INSERT INTO maszyny_details (maszyna_id, przebieg, awaria, wykonawca, uwagi)
-       VALUES ($1,$2,$3,$4,$5)
-       RETURNING id, maszyna_id, przebieg, awaria, wykonawca, uwagi, created_at`,
-      [id, przebieg ?? null, awaria || null, wykonawca || null, uwagi || null]
-    );
+    `INSERT INTO maszyny_details (maszyna_id, przebieg, awaria, wykonawca, uwagi, data_zdarzenia)
+    VALUES ($1,$2,$3,$4,$5,$6)
+    RETURNING id, maszyna_id, przebieg, awaria, wykonawca, uwagi, data_zdarzenia, created_at`,
+    [id, przebieg ?? null, awaria || null, wykonawca || null, uwagi || null, data_zdarzenia || new Date()]
+);
     return Response.json(rows[0], { status: 201 });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });

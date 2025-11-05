@@ -9,7 +9,7 @@ export default function MaszynaDetails() {
 
   const [header, setHeader] = useState(null); // dane maszyny
   const [items, setItems] = useState([]);     // historia/szczegóły
-  const [form, setForm] = useState({ przebieg: "", awaria: "", wykonawca: "", uwagi: "" });
+  const [form, setForm] = useState({przebieg: "", awaria: "", wykonawca: "", uwagi: "", data_zdarzenia: new Date().toISOString().slice(0,10),});
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
@@ -87,8 +87,17 @@ export default function MaszynaDetails() {
       <h2>Nowe zdarzenie</h2>
       <form className="card" onSubmit={submit}>
         <div className="grid">
+            <label>
+            <span>Data zdarzenia</span>
+            <input
+                type="date"
+                value={form.data_zdarzenia}
+                onChange={(e) => setForm({ ...form, data_zdarzenia: e.target.value })}
+                required
+            />
+            </label>
           <label>
-            <span>Przebieg (km)</span>
+            <span>Przebieg (mth)</span>
             <input
               type="number"
               value={form.przebieg}
@@ -98,7 +107,7 @@ export default function MaszynaDetails() {
             />
           </label>
           <label>
-            <span>Awaria (max 30)</span>
+            <span>Awaria</span>
             <input
               value={form.awaria}
               onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 30) })}
@@ -114,7 +123,7 @@ export default function MaszynaDetails() {
             />
           </label>
           <label style={{ gridColumn: "1 / -1" }}>
-            <span>Uwagi (max 200)</span>
+            <span>Uwagi</span>
             <textarea
               value={form.uwagi}
               onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
@@ -140,7 +149,7 @@ export default function MaszynaDetails() {
           <table className="table">
             <thead>
               <tr>
-                <th>Data</th>
+                <th>Data zdarzenia</th>
                 <th>Przebieg</th>
                 <th>Awaria</th>
                 <th>Wykonawca</th>
@@ -151,7 +160,7 @@ export default function MaszynaDetails() {
             <tbody>
               {items.map((it) => (
                 <tr key={it.id}>
-                  <td>{String(it.created_at).slice(0,19).replace("T"," ")}</td>
+                  <td>{it.data_zdarzenia ? it.data_zdarzenia.slice(0,10) : "-"}</td>
                   <td>{it.przebieg ?? "-"}</td>
                   <td>{it.awaria || "-"}</td>
                   <td>{it.wykonawca || "-"}</td>
