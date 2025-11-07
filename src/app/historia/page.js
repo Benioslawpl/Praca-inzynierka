@@ -2,7 +2,7 @@ import { getUserFromCookie } from "../../lib/auth";  // wspólna funkcja JWT
 import LogsClient from "./LogsClient";
 
 export default async function HistoriaPage() {
-  const user = getUserFromCookie(); // odczyt tokena z cookies
+  const user = getUserFromCookies(); // odczyt tokena z cookies
 
   if (!user.isAdmin) {
     return (
