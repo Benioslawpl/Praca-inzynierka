@@ -1,6 +1,6 @@
 import pool from "../../../../../db";
 import { cookies } from "next/headers";
-import { getUserFromCookies, requireAdmin } from "../../../../lib/auth";
+import { getUserFromCookie, requireAdmin } from "../../../../lib/auth";
 import bcrypt from "bcryptjs";
 
 export async function PUT(req, { params }) {
