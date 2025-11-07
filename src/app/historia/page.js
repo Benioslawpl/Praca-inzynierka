@@ -1,22 +1,14 @@
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { getUserFromCookie } from "../../lib/auth";  // wspólna funkcja JWT
 import LogsClient from "./LogsClient";
 
-const SECRET = process.env.JWT_SECRET || "Test123!";
-
 export default async function HistoriaPage() {
-  const token = cookies().get("token")?.value || "";
-  let isAdmin = false;
-  try {
-    const payload = jwt.verify(token, SECRET);
-    isAdmin = payload.role === "admin" || payload.username === "admin";
-  } catch {}
+  const user = getUserFromCookie(); // odczyt tokena z cookies
 
-  if (!isAdmin) {
+  if (!user.isAdmin) {
     return (
       <div className="card">
         <h2>Brak dostępu</h2>
-        <p>Ta sekcja jest tylko dla administratora.</p>
+        <p>Ta sekcja jest dostępna tylko dla administratora.</p>
       </div>
     );
   }
