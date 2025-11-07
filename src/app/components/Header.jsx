@@ -22,7 +22,7 @@ export default function Header({ user }) {
         <Link href="/pages/brygady">Brygady</Link>
         <Link href="/pages/sprzet">Sprzęt</Link>
         {user?.role === "admin" && <Link href="/uzytkownicy">Użytkownicy</Link>}
-        {user?.role === "admin" && <Link href="/pages/historia">Historia</Link>}
+        {user?.role === "admin" && <Link href="/historia">Historia</Link>}
       </div>
       <div className="menu">
         <span>
