@@ -1,25 +1,36 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-const SECRET = process.env.JWT_SECRET || "Test123!";
+export const JWT_SECRET = process.env.JWT_SECRET || "Test123!";
 
-// ✅ uniwersalna funkcja – zgodna z Twoimi importami
+export function signJwt(payload, opts = {}) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "8h", ...opts });
+}
+
+export function verifyJwt(token) {
+  return jwt.verify(token, JWT_SECRET);
+}
+
 export function getUserFromCookies() {
   try {
     const token = cookies().get("token")?.value;
     if (!token) return null;
-    const decoded = jwt.verify(token, SECRET);
-    return decoded; // { id, username, role, ... }
+    const p = verifyJwt(token);
+    // upewniamy się, że rola jest stringiem
+    const role = p.role || (p.username === "admin" ? "admin" : "user");
+    return { id: p.id ?? null, username: p.username ?? null, role };
   } catch {
     return null;
   }
 }
 
-// 🔐 opcjonalny strażnik dostępu dla administratora
 export function requireAdmin() {
   const user = getUserFromCookies();
   if (!user || user.role !== "admin") {
-    throw new Error("Forbidden");
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
   }
   return user;
 }
