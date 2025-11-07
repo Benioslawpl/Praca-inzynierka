@@ -11,7 +11,7 @@ export function verifyJwt(token) {
   return jwt.verify(token, JWT_SECRET);
 }
 
-export function getUserFromCookie() {
+export function getUserFromCookies() {
   try {
     const token = cookies().get("token")?.value;
     if (!token) return null;
