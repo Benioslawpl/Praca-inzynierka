@@ -1,42 +1,25 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-export const JWT_SECRET = process.env.JWT_SECRET || "Test123!";
+const SECRET = process.env.JWT_SECRET || "Test123!";
 
-export function signJwt(payload, opts = {}) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "8h", ...opts });
-}
-
-export function verifyJwt(token) {
-  return jwt.verify(token, JWT_SECRET);
-}
-
+// ✅ uniwersalna funkcja – zgodna z Twoimi importami
 export function getUserFromCookies() {
   try {
     const token = cookies().get("token")?.value;
     if (!token) return null;
-    const p = verifyJwt(token);
-    return {
-      id: p.id ?? null,
-      username: p.username ?? null,
-      role: p.role ?? (p.username === "admin" ? "admin" : "user"),
-    };
+    const decoded = jwt.verify(token, SECRET);
+    return decoded; // { id, username, role, ... }
   } catch {
     return null;
   }
 }
 
-/**
- * Helper middleware do endpointów tylko dla admina
- * Zwraca Response 403 jeśli brak dostępu
- */
+// 🔐 opcjonalny strażnik dostępu dla administratora
 export function requireAdmin() {
-  const user = getUserFromCookie();
+  const user = getUserFromCookies();
   if (!user || user.role !== "admin") {
-    return new Response(JSON.stringify({ error: "Forbidden" }), {
-      status: 403,
-      headers: { "Content-Type": "application/json" },
-    });
+    throw new Error("Forbidden");
   }
-  return user; // zwracamy dane usera jeśli admin
+  return user;
 }
