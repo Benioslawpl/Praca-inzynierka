@@ -1,9 +1,9 @@
 import pool from "../../../../db";
-import { getUserFromCookie } from "../../../lib/auth";
+import { getUserFromCookies } from "../../../lib/auth";
 
 export async function GET(req) {
   try {
-    const u = getUserFromCookie();
+    const u = getUserFromCookies();
     if (!u.isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
 
     const { searchParams } = new URL(req.url);
