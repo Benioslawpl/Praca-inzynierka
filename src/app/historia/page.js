@@ -1,4 +1,4 @@
-import { getUserFromCookie } from "../../lib/auth";  // wspólna funkcja JWT
+import { getUserFromCookies } from "../../lib/auth";  // wspólna funkcja JWT
 import LogsClient from "./LogsClient";
 
 export default async function HistoriaPage() {
