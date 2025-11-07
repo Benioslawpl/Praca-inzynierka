@@ -4,20 +4,37 @@ import { useEffect, useState } from "react";
 export default function LogsClient() {
   const [rows, setRows] = useState([]);
   const [filters, setFilters] = useState({ entity: "", action: "" });
+  const [error, setError] = useState("");
 
   const load = async () => {
+    setError("");
     const p = new URLSearchParams();
     if (filters.entity) p.set("entity", filters.entity);
     if (filters.action) p.set("action", filters.action);
     p.set("limit", "200");
+
     const res = await fetch("/api/logs?" + p.toString(), { cache: "no-store" });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setRows([]);
+      setError(data?.error || `Błąd ${res.status}`);
+      return;
+    }
     setRows(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => {
-    load();
-  }, [filters]);
+  useEffect(() => { load(); }, []);        // start
+  useEffect(() => { load(); }, [filters]); // przy zmianie filtrów
+
+  const fmtDate = (v) => {
+    if (!v) return "-";
+    try {
+      return new Date(v).toLocaleString("pl-PL");
+    } catch {
+      return String(v).slice(0, 19).replace("T", " ");
+    }
+  };
 
   return (
     <>
@@ -51,6 +68,7 @@ export default function LogsClient() {
             </select>
           </label>
         </div>
+        {error && <p className="error" style={{ marginTop: 8 }}>⚠ {error}</p>}
       </div>
 
       <div className="tableWrap">
@@ -66,29 +84,28 @@ export default function LogsClient() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.id}>
-                <td>{String(r.at).slice(0, 19).replace("T", " ")}</td>
-                <td>{r.username}</td>
-                <td>{r.action}</td>
-                <td>
-                  {r.entity}
-                  {r.entity_id ? `#${r.entity_id}` : ""}
-                </td>
-                <td>
-                  {Array.isArray(r.changes) && r.changes.length ? (
-                    r.changes.map((c, i) => (
-                      <div key={i}>
-                        <b>{c.field}</b>: {String(c.from)} → {String(c.to)}
-                      </div>
-                    ))
-                  ) : (
-                    "-"
-                  )}
-                </td>
-                <td>{r.ip || "-"}</td>
-              </tr>
-            ))}
+            {rows.length === 0 ? (
+              <tr><td colSpan={6} style={{ textAlign: "center", padding: 16 }}>Brak danych</td></tr>
+            ) : (
+              rows.map((r, i) => (
+                <tr key={i}>
+                  <td>{fmtDate(r?.date)}</td>
+                  <td>{r?.username ?? "-"}</td>
+                  <td>{r?.action ?? "-"}</td>
+                  <td>{r?.entity}{r?.entityId ? `#${r.entityId}` : ""}</td>
+                  <td>
+                    {Array.isArray(r?.changes) && r.changes.length
+                      ? r.changes.map((c, j) => (
+                          <div key={j}>
+                            <b>{c.field}</b>: {String(c.from)} → {String(c.to)}
+                          </div>
+                        ))
+                      : "-"}
+                  </td>
+                  <td>{r?.ip ?? "-"}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

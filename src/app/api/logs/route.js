@@ -1,35 +1,54 @@
 import pool from "../../../../db";
-import { audit } from "../../../lib/audit";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
-// GET list
-export async function GET() {
-  try {
-    const { rows } = await pool.query(
-      `SELECT id, numer, brygadzista, created_at
-       FROM brygady
-       ORDER BY CAST(SUBSTRING(numer FROM 3) AS INTEGER) ASC`
-    );
-    return Response.json(rows);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
-  }
-}
+const SECRET = process.env.JWT_SECRET || "super_tajne_haslo";
 
-// POST create (jeśli numer nadaje trigger w DB – nie wysyłamy numeru)
-export async function POST(req) {
+export async function GET(req) {
   try {
-    const { brygadzista } = await req.json();
-    if (!brygadzista) {
-      return Response.json({ error: "Wymagane: brygadzista" }, { status: 400 });
+    // autoryzacja (tylko admin)
+    const token = cookies().get("token")?.value || "";
+    let isAdmin = false;
+    try {
+      const p = jwt.verify(token, SECRET);
+      isAdmin = p.role === "admin" || p.username === "admin";
+    } catch {}
+    if (!isAdmin) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    // filtry
+    const { searchParams } = new URL(req.url);
+    const limit  = Math.min(Number(searchParams.get("limit") || 200), 500);
+    const entity = searchParams.get("entity");
+    const action = searchParams.get("action");
+
+    const where = [];
+    const vals  = [];
+    if (entity) { vals.push(entity); where.push(`entity = $${vals.length}`); }
+    if (action) { vals.push(action); where.push(`action = $${vals.length}`); }
+    const WHERE = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    vals.push(limit);
+
+    // aliasy => to co frontend ma czytać
     const { rows } = await pool.query(
-      `INSERT INTO brygady (brygadzista)
-       VALUES ($1)
-       RETURNING *`,
-      [brygadzista]
+      `SELECT
+         at                 AS "date",
+         username           AS "username",
+         action             AS "action",
+         entity             AS "entity",
+         entity_id          AS "entityId",
+         changes            AS "changes",
+         ip                 AS "ip"
+       FROM audit_logs
+       ${WHERE}
+       ORDER BY at DESC
+       LIMIT $${vals.length}`,
+      vals
     );
-    await audit({ action: "create", entity: "brygady", entityId: rows[0].id, after: rows[0], req });
-    return Response.json(rows[0], { status: 201 });
+
+    return Response.json(rows);
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
