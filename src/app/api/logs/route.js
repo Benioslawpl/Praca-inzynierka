@@ -13,8 +13,10 @@ export async function GET(req) {
 
     const where = [];
     const vals  = [];
+
     if (entity) { vals.push(entity); where.push(`entity = $${vals.length}`); }
     if (action) { vals.push(action); where.push(`action = $${vals.length}`); }
+
     const WHERE = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
     vals.push(limit);
@@ -22,16 +24,16 @@ export async function GET(req) {
     const { rows } = await pool.query(
       `
       SELECT
-        COALESCE(at, created_at, now()) AS "date",
-        username                        AS "username",
-        action                          AS "action",
-        entity                          AS "entity",
-        entity_id                       AS "entityId",
-        changes                         AS "changes",
-        ip                              AS "ip"
+        COALESCE(at, now())        AS "date",
+        username                   AS "username",
+        action                     AS "action",
+        entity                     AS "entity",
+        entity_id                  AS "entityId",
+        changes                    AS "changes",
+        ip                         AS "ip"
       FROM audit_logs
       ${WHERE}
-      ORDER BY COALESCE(at, created_at, now()) DESC, id DESC
+      ORDER BY COALESCE(at, now()) DESC, id DESC
       LIMIT $${vals.length}
       `,
       vals
@@ -39,6 +41,7 @@ export async function GET(req) {
 
     return Response.json(rows);
   } catch (e) {
+    console.error("API /logs error:", e);
     return Response.json({ error: e.message }, { status: 500 });
   }
 }
