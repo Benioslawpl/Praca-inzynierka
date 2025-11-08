@@ -27,15 +27,11 @@ export default function LogsClient() {
   useEffect(() => { load(); }, []);        // start
   useEffect(() => { load(); }, [filters]); // przy zmianie filtrów
 
-  const fmtDate = (v) => {
-    if (!v) return "-";
-    try {
-      return new Date(v).toLocaleString("pl-PL");
-    } catch {
-      return String(v).slice(0, 19).replace("T", " ");
-    }
-  };
-
+const fmtDate = (v) => {
+  if (!v) return "-";
+  try { return new Date(v).toLocaleString("pl-PL"); }
+  catch { return String(v).slice(0, 19).replace("T", " "); }
+};
   return (
     <>
       <div className="card" style={{ marginBottom: 12 }}>
@@ -96,9 +92,7 @@ export default function LogsClient() {
                   <td>
                     {Array.isArray(r?.changes) && r.changes.length
                       ? r.changes.map((c, j) => (
-                          <div key={j}>
-                            <b>{c.field}</b>: {String(c.from)} → {String(c.to)}
-                          </div>
+                          <div key={j}><b>{c.field}</b>: {String(c.from)} → {String(c.to)}</div>
                         ))
                       : "-"}
                   </td>
