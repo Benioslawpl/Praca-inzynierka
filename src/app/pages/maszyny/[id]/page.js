@@ -166,16 +166,16 @@ export default function BrygadaDetails() {
               </tr>
             </thead>
             <tbody>
-              {members.map((m, index) => (
+              {members.map((m, i) => (
                 <tr key={m.id}>
-                  <td>{index + 1}</td>
-                  <td>{m.Imie || "-"}</td>
-                  <td>{m.Nazwisko || "-"}</td>
-                  <td>{m.Rola || "-"}</td>
-                  <td>{m.Telefon || "-"}</td>
+                  <td>{i + 1}</td>
+                  <td>{m.Imie ?? m.imie ?? "-"}</td>
+                  <td>{m.Nazwisko ?? m.nazwisko ?? "-"}</td>
+                  <td>{m.Rola ?? m.rola ?? "-"}</td>
+                  <td>{m.Telefon ?? m.telefon ?? "-"}</td>
                   <td className="actionsCell">
-                    <button onClick={() => handleEdit(m)}>✏️</button>
-                    <button className="danger" onClick={() => handleDelete(m.id)}>🗑</button>
+                    <button onClick={() => edit(m)}>✏️</button>
+                    <button className="danger" onClick={() => del(m.id)}>🗑</button>
                   </td>
                 </tr>
               ))}
