@@ -121,7 +121,7 @@ const handleDelete = async (memberId) => {
 };
   return (
     <div>
-      <button className="secondary" onClick={() => router.push("/brygady")}>
+      <button className="secondary" onClick={() => router.push("/pages/brygady")}>
   ← Wróć do listy
 </button>
 
