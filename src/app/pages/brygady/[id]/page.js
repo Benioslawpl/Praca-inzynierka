@@ -48,44 +48,67 @@ export default function BrygadaDetails() {
   };
 
   // 🔹 Zapis (dodanie / edycja)
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+const handleEdit = (m) => {
+  setEditId(Number(m.id));
+  setForm({
+    imie: m.imie ?? m.Imie ?? "",
+    nazwisko: m.nazwisko ?? m.Nazwisko ?? "",
+    rola: m.rola ?? m.Rola ?? "",
+    telefon: m.telefon ?? m.Telefon ?? "",
+  });
+};
 
-    const url = editId
-      ? `/api/brygady/${id}/members/${editId}`
-      : `/api/brygady/${id}/members`;
-    const method = editId ? "PUT" : "POST";
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+  const url = editId
+    ? `/api/brygady/${id}/members/${editId}`
+    : `/api/brygady/${id}/members`;
+  const method = editId ? "PUT" : "POST";
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return setError(data?.error || "Błąd zapisu");
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      imie: form.imie,
+      nazwisko: form.nazwisko,
+      rola: form.rola || null,
+      telefon: form.telefon || null,
+    }),
+  });
 
-    resetForm();
-    loadMembers();
-  };
+  let data = {};
+  try { data = await res.json(); } catch {}
 
-  const handleEdit = (m) => {
-    setEditId(m.id);
-    setForm({
-      imie: m.Imie || "",
-      nazwisko: m.Nazwisko || "",
-      rola: m.Rola || "",
-      telefon: m.Telefon || "",
-    });
-  };
+  if (!res.ok) {
+    setError(data?.error || `Błąd ${res.status}`);
+    return;
+  }
 
-  const handleDelete = async (memberId) => {
-    if (!confirm("Czy na pewno usunąć członka?")) return;
-    const res = await fetch(`/api/brygady/${id}/members/${memberId}`, { method: "DELETE" });
-    if (res.ok) loadMembers();
-  };
+  // ok
+  setEditId(null);
+  setForm({ imie: "", nazwisko: "", rola: "", telefon: "" });
+  loadMembers();
+};
 
+const handleDelete = async (memberId) => {
+  if (!confirm("Czy na pewno usunąć członka?")) return;
+
+  const res = await fetch(`/api/brygady/${id}/members/${memberId}`, {
+    method: "DELETE",
+  });
+
+  let data = {};
+  try { data = await res.json(); } catch {}
+
+  if (!res.ok) {
+    setError(data?.error || `Błąd ${res.status}`);
+    return;
+  }
+
+  loadMembers();
+};
   return (
     <div>
       <button className="secondary" onClick={() => router.push("/pages/brygady")}>
