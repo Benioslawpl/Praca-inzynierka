@@ -49,7 +49,10 @@ export default function BrygadaDetails() {
 
   // 🔹 Zapis (dodanie / edycja)
 const handleEdit = (m) => {
-  setEditId(Number(m.id));
+  // Ustalamy pewne ID (liczba), a do formularza bierzemy oba warianty kluczy
+  const idNum = Number(m.id);
+  setEditId(Number.isFinite(idNum) ? idNum : null);
+
   setForm({
     imie: m.imie ?? m.Imie ?? "",
     nazwisko: m.nazwisko ?? m.Nazwisko ?? "",
@@ -62,51 +65,58 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
 
-  const url = editId
+  const isEdit = Number.isFinite(Number(editId));
+  const url = isEdit
     ? `/api/brygady/${id}/members/${editId}`
     : `/api/brygady/${id}/members`;
-  const method = editId ? "PUT" : "POST";
+  const method = isEdit ? "PUT" : "POST";
+
+  const payload = {
+    imie: form.imie,
+    nazwisko: form.nazwisko,
+    rola: form.rola || null,
+    telefon: form.telefon || null,
+  };
+
+  // Debug (na chwilę, zobacz w konsoli)
+  console.log("[SAVE]", { method, url, payload });
 
   const res = await fetch(url, {
     method,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      imie: form.imie,
-      nazwisko: form.nazwisko,
-      rola: form.rola || null,
-      telefon: form.telefon || null,
-    }),
+    body: JSON.stringify(payload),
   });
 
   let data = {};
   try { data = await res.json(); } catch {}
 
   if (!res.ok) {
+    console.warn("[SAVE:ERR]", res.status, data);
     setError(data?.error || `Błąd ${res.status}`);
     return;
   }
 
-  // ok
   setEditId(null);
   setForm({ imie: "", nazwisko: "", rola: "", telefon: "" });
   loadMembers();
 };
 
 const handleDelete = async (memberId) => {
-  if (!confirm("Czy na pewno usunąć członka?")) return;
+  if (!confirm("Na pewno usunąć?")) return;
 
-  const res = await fetch(`/api/brygady/${id}/members/${memberId}`, {
-    method: "DELETE",
-  });
+  const url = `/api/brygady/${id}/members/${Number(memberId)}`;
+  console.log("[DELETE]", url);
+
+  const res = await fetch(url, { method: "DELETE" });
 
   let data = {};
   try { data = await res.json(); } catch {}
 
   if (!res.ok) {
+    console.warn("[DEL:ERR]", res.status, data);
     setError(data?.error || `Błąd ${res.status}`);
     return;
   }
-
   loadMembers();
 };
   return (
