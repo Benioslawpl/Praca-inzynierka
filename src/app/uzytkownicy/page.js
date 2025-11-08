@@ -82,7 +82,7 @@ export default function UsersPage() {
 
   return (
     <div>
-      <h1>Użytkownicy 👥</h1>
+      <h1>Użytkownicy </h1>
 
       <form className="card" onSubmit={addUser}>
     <div className="grid">

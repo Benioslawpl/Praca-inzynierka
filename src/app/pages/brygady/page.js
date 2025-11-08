@@ -51,7 +51,7 @@ export default function BrygadyPage() {
 
   return (
     <div>
-      <h1>Brygady 👷‍♂️</h1>
+      <h1>Brygady </h1>
 
       <form className="card" onSubmit={submit}>
         <div className="grid">

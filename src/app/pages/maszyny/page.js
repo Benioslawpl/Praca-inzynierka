@@ -67,7 +67,7 @@ export default function MaszynyPage() {
 
   return (
     <div>
-      <h1>Maszyny 🚜</h1>
+      <h1>Maszyny </h1>
 
       
       <form className="card" onSubmit={submit}>
