@@ -6,7 +6,7 @@ export async function GET(_req, { params }) {
     const id = Number(params.id);
     const { rows } = await pool.query(
       `SELECT id, imie AS "Imie", nazwisko AS "Nazwisko", rola AS "Rola", telefon AS "Telefon"
-       FROM brygada_members
+       FROM brygada_czlonkowie
        WHERE brygada_id = $1
        ORDER BY id ASC`,
       [id]
@@ -33,7 +33,7 @@ export async function POST(req, { params }) {
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO brygada_members (brygada_id, imie, nazwisko, rola, telefon)
+      `INSERT INTO brygada_czlonkowie (brygada_id, imie, nazwisko, rola, telefon)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, imie AS "Imie", nazwisko AS "Nazwisko", rola AS "Rola", telefon AS "Telefon"`,
       [id, imie, nazwisko, rola, telefon]

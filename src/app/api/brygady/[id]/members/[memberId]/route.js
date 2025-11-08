@@ -17,7 +17,7 @@ export async function PUT(req, { params }) {
     }
 
     const { rows } = await pool.query(
-      `UPDATE brygada_members
+      `UPDATE brygada_czlonkowie
        SET imie=$1, nazwisko=$2, rola=$3, telefon=$4
        WHERE id=$5 AND brygada_id=$6
        RETURNING id, imie AS "Imie", nazwisko AS "Nazwisko", rola AS "Rola", telefon AS "Telefon"`,
@@ -38,7 +38,7 @@ export async function DELETE(_req, { params }) {
     const brygadaId = Number(params.id);
 
     const { rowCount } = await pool.query(
-      `DELETE FROM brygada_members WHERE id=$1 AND brygada_id=$2`,
+      `DELETE FROM brygada_czlonkowie WHERE id=$1 AND brygada_id=$2`,
       [memberId, brygadaId]
     );
 
