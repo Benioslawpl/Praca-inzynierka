@@ -1,181 +1,177 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function BrygadaDetails() {
+export default function MaszynaDetails() {
   const { id } = useParams();
   const router = useRouter();
 
-  const [header, setHeader] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [form, setForm] = useState({ imie: "", nazwisko: "", rola: "", telefon: "" });
+  const [header, setHeader] = useState(null); // dane maszyny
+  const [items, setItems] = useState([]);     // historia/szczegóły
+  const [form, setForm] = useState({przebieg: "", awaria: "", wykonawca: "", uwagi: "", data_zdarzenia: new Date().toISOString().slice(0,10),});
   const [editId, setEditId] = useState(null);
-  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
-  // 🔹 Pobiera nagłówek (brygadę)
   const loadHeader = async () => {
-    try {
-      const list = await fetch("/api/brygady", { cache: "no-store" }).then(r => r.json());
-      const found = Array.isArray(list) ? list.find(x => String(x.id) === String(id)) : null;
-      setHeader(found || null);
-    } catch {
-      setHeader(null);
-    }
+    const list = await fetch("/api/maszyny", { cache: "no-store" })
+      .then(r => r.json()).catch(() => []);
+    const found = Array.isArray(list) ? list.find(x => String(x.id) === String(id)) : null;
+    setHeader(found || null);
   };
 
-  // 🔹 Pobiera członków
-  const loadMembers = async () => {
-    try {
-      const res = await fetch(`/api/brygady/${id}/members`, { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Błąd pobierania członków");
-      setMembers(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error(e);
-      setError("Nie udało się pobrać członków");
-    }
+  const loadDetails = async () => {
+    const res = await fetch(`/api/maszyny/${id}/details`, { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok) { setErr(data?.error || "Błąd pobierania"); return; }
+    setItems(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => {
-    loadHeader();
-    loadMembers();
-  }, [id]);
+  useEffect(() => { loadHeader(); loadDetails(); }, [id]);
 
-  // 🔹 Reset formularza
-  const resetForm = () => {
-    setForm({ imie: "", nazwisko: "", rola: "", telefon: "" });
-    setEditId(null);
-  };
+  const reset = () => { setForm({ przebieg: "", awaria: "", wykonawca: "", uwagi: "" }); setEditId(null); };
 
-  // 🔹 Zapis (dodanie / edycja)
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setError("");
-
-    const url = editId
-      ? `/api/brygady/${id}/members/${editId}`
-      : `/api/brygady/${id}/members`;
-    const method = editId ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) return setError(data?.error || "Błąd zapisu");
-
-    resetForm();
-    loadMembers();
+    setSaving(true); setErr("");
+    try {
+        const body = {
+        przebieg: form.przebieg === "" ? null : Number(form.przebieg),
+        awaria: form.awaria?.trim() || null,
+        wykonawca: form.wykonawca?.trim() || null,
+        uwagi: form.uwagi?.trim() || null,
+        data_zdarzenia: form.data_zdarzenia || null, // ← kluczowe
+        };
+      const url = editId ? `/api/maszyny/${id}/details/${editId}` : `/api/maszyny/${id}/details`;
+      const method = editId ? "PUT" : "POST";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
+      reset(); loadDetails();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleEdit = (m) => {
-    setEditId(m.id);
+    const edit = (it) => {
+    setEditId(it.id);
     setForm({
-      imie: m.Imie || "",
-      nazwisko: m.Nazwisko || "",
-      rola: m.Rola || "",
-      telefon: m.Telefon || "",
-    });
-  };
+        przebieg: it.przebieg ?? "",
+        awaria: it.awaria ?? "",
+        wykonawca: it.wykonawca ?? "",
+        uwagi: it.uwagi ?? "",
+        data_zdarzenia: it.data_zdarzenia
+        ? String(it.data_zdarzenia).slice(0,10)  
+        : new Date().toISOString().slice(0,10),
+        });
+    };
 
-  const handleDelete = async (memberId) => {
-    if (!confirm("Czy na pewno usunąć członka?")) return;
-    const res = await fetch(`/api/brygady/${id}/members/${memberId}`, { method: "DELETE" });
-    if (res.ok) loadMembers();
+
+  const del = async (detailId) => {
+    if (!confirm("Usunąć wpis?")) return;
+    const res = await fetch(`/api/maszyny/${id}/details/${detailId}`, { method: "DELETE" });
+    if (res.ok) loadDetails();
   };
 
   return (
     <div>
-      <button className="secondary" onClick={() => router.push("/brygady")}>
-        ← Wróć do listy
-      </button>
+      <button className="secondary" onClick={() => router.push("/pages/maszyny")}>← Wróć do listy</button>
+      <h1>Szczegóły maszyny</h1>
 
-      <h1>Szczegóły brygady</h1>
       {header ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <b>Numer:</b> {header.numer} &nbsp;|&nbsp; <b>Brygadzista:</b> {header.brygadzista}
+          <b>Nr:</b> {header.nr} &nbsp;|&nbsp; <b>Rodzaj:</b> {header.rodzaj}
+          &nbsp;|&nbsp; <b>Marka/Model:</b> {header.marka} {header.model}
+          &nbsp;|&nbsp; <b>Operator:</b> {header.operator}
         </div>
-      ) : (
-        <p>Ładowanie...</p>
-      )}
+      ) : <p>Ładowanie...</p>}
 
-      <h2>Członkowie</h2>
-
-      <form className="card" onSubmit={handleSubmit}>
+      <h2>Nowe zdarzenie</h2>
+      <form className="card" onSubmit={submit}>
         <div className="grid">
-          <label>
-            <span>Imię*</span>
+            <label>
+            <span>Data zdarzenia</span>
             <input
-              value={form.imie}
-              onChange={(e) => setForm({ ...form, imie: e.target.value })}
-              required
+                type="date"
+                value={form.data_zdarzenia}
+                onChange={(e) => setForm({ ...form, data_zdarzenia: e.target.value })}
+                required
+            />
+            </label>
+          <label>
+            <span>Przebieg (mth)</span>
+            <input
+              type="number"
+              value={form.przebieg}
+              onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
+              min="0"
+              placeholder="np. 12500"
             />
           </label>
           <label>
-            <span>Nazwisko*</span>
+            <span>Awaria</span>
             <input
-              value={form.nazwisko}
-              onChange={(e) => setForm({ ...form, nazwisko: e.target.value })}
-              required
+              value={form.awaria}
+              onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 30) })}
+              placeholder="np. Uszk. wąż"
             />
           </label>
           <label>
-            <span>Rola</span>
+            <span>Wykonawca</span>
             <input
-              value={form.rola}
-              onChange={(e) => setForm({ ...form, rola: e.target.value })}
-              placeholder="np. Operator"
+              value={form.wykonawca}
+              onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
+              placeholder="np. Serwis XYZ"
             />
           </label>
-          <label>
-            <span>Telefon</span>
-            <input
-              value={form.telefon}
-              onChange={(e) => setForm({ ...form, telefon: e.target.value })}
-              placeholder="+48 ..."
+          <label style={{ gridColumn: "1 / -1" }}>
+            <span>Uwagi</span>
+            <textarea
+              value={form.uwagi}
+              onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
+              rows={3}
+              placeholder="Krótki opis zdarzenia..."
+              style={{ width: "100%", resize: "vertical", padding: 8, borderRadius: 6, border: "1px solid #cfd4dc", background: "#fff" }}
             />
           </label>
         </div>
 
         <div className="actions">
-          <button type="submit">{editId ? "Zapisz" : "Dodaj"}</button>
-          {editId && (
-            <button type="button" className="secondary" onClick={resetForm}>
-              Anuluj
-            </button>
-          )}
+          <button type="submit" disabled={saving}>{saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}</button>
+          {editId && <button type="button" className="secondary" onClick={reset}>Anuluj</button>}
         </div>
-
-        {error && <p className="error">⚠ {error}</p>}
+        {err && <p className="error">⚠ {err}</p>}
       </form>
 
+      <h2>Historia zdarzeń</h2>
       <div className="tableWrap">
-        {members.length === 0 ? (
-          <p>Brak członków</p>
+        {items.length === 0 ? (
+          <p>Brak wpisów</p>
         ) : (
           <table className="table">
             <thead>
               <tr>
-                <th>Lp.</th>
-                <th>Imię</th>
-                <th>Nazwisko</th>
-                <th>Rola</th>
-                <th>Telefon</th>
+                <th>Data zdarzenia</th>
+                <th>Przebieg</th>
+                <th>Awaria</th>
+                <th>Wykonawca</th>
+                <th>Uwagi</th>
               </tr>
             </thead>
             <tbody>
-              {members.map((m, i) => (
-                <tr key={m.id}>
-                  <td>{i + 1}</td>
-                  <td>{m.Imie ?? m.imie ?? "-"}</td>
-                  <td>{m.Nazwisko ?? m.nazwisko ?? "-"}</td>
-                  <td>{m.Rola ?? m.rola ?? "-"}</td>
-                  <td>{m.Telefon ?? m.telefon ?? "-"}</td>
+              {items.map((it) => (
+                <tr key={it.id}>
+                  <td>{it.data_zdarzenia ? it.data_zdarzenia.slice(0,10) : "-"}</td>
+                  <td>{it.przebieg ?? "-"}</td>
+                  <td>{it.awaria || "-"}</td>
+                  <td>{it.wykonawca || "-"}</td>
+                  <td style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}>{it.uwagi || "-"}</td>
                   <td className="actionsCell">
-                    <button onClick={() => edit(m)}>✏️</button>
-                    <button className="danger" onClick={() => del(m.id)}>🗑</button>
+                    <button onClick={() => edit(it)}>✏️</button>
+                    <button className="danger" onClick={() => del(it.id)}>🗑</button>
                   </td>
                 </tr>
               ))}
