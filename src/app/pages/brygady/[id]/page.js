@@ -13,15 +13,19 @@ export default function BrygadaDetails() {
   const [error, setError] = useState("");
 
   // 🔹 Pobiera nagłówek (brygadę)
-  const loadHeader = async () => {
-    try {
-      const list = await fetch("/api/brygady", { cache: "no-store" }).then(r => r.json());
-      const found = Array.isArray(list) ? list.find(x => String(x.id) === String(id)) : null;
-      setHeader(found || null);
-    } catch {
-      setHeader(null);
-    }
-  };
+const loadHeader = async () => {
+  try {
+    const res = await fetch(`/api/brygady/${id}`, { cache: "no-store" });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data?.error || "Błąd pobierania brygady");
+
+    setHeader(data);
+  } catch (e) {
+    console.error(e);
+    setHeader(null);
+  }
+};
 
   // 🔹 Pobiera członków
   const loadMembers = async () => {
