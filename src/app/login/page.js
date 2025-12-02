@@ -1,11 +1,24 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function LoginPage() {
   const [username, setU] = useState("");
   const [password, setP] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+
+  // licznik czasu
+  useEffect(() => {
+    let interval;
+    if (loading) {
+      setSeconds(0);
+      interval = setInterval(() => {
+        setSeconds((s) => s + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +43,14 @@ export default function LoginPage() {
 
   return (
     <div className="login-body">
-      <form className="login-container" onSubmit={onSubmit}>
+      <form
+        className="login-container"
+        onSubmit={onSubmit}
+        style={{
+          opacity: loading ? 0.5 : 1,   // <-- wyszarzenie
+          pointerEvents: loading ? "none" : "auto", // <-- blokada całości
+        }}
+      >
         <h1>Logowanie</h1>
 
         <input
@@ -49,14 +69,8 @@ export default function LoginPage() {
         />
 
         <button type="submit" disabled={loading}>
-          {loading ? "⏳ Logowanie..." : "Zaloguj"}
+          {loading ? `⏳ Logowanie... (${seconds}s)` : "Zaloguj"}
         </button>
-
-        {loading && (
-          <div className="spinner-wrap">
-            <div className="spinner"></div>
-          </div>
-        )}
 
         {error && <p className="error">⚠ {error}</p>}
       </form>
