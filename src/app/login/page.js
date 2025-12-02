@@ -1,4 +1,5 @@
 "use client";
+import pool from "../../../db";
 import { useState, useEffect } from "react";
 
 export default function LoginPage() {
