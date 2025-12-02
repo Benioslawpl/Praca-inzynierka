@@ -13,7 +13,7 @@ export default function LogsClient() {
     if (filters.action) p.set("action", filters.action);
     p.set("limit", "200");
 
-    const res = await fetch("/api/logs?" + p.toString(), { cache: "no-store" });
+    const res = await fetch("/api/logs?" + p.toString(), { cache: "no-store", credentials: "include" });
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
