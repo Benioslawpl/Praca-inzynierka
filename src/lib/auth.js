@@ -1,18 +1,49 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-const SECRET = process.env.JWT_SECRET || "Test123!";
+export const JWT_SECRET = process.env.JWT_SECRET || "Test123!";
 
+// -------------------------
+// GENEROWANIE TOKENA
+// -------------------------
+export function signJwt(payload, opts = {}) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "8h", ...opts });
+}
+
+// -------------------------
+// WERYFIKACJA TOKENA
+// -------------------------
+export function verifyJwt(token) {
+  return jwt.verify(token, JWT_SECRET);
+}
+
+// -------------------------
+// ODCZYT UŻYTKOWNIKA Z COOKIES
+// (DZIAŁA TYLKO W SERVER COMPONENTS — NIE W ROUTE HANDLERS!)
+// -------------------------
 export function getUserFromCookies() {
   try {
     const token = cookies().get("token")?.value;
     if (!token) return null;
-    return jwt.verify(token, SECRET);
+
+    const p = verifyJwt(token);
+
+    const role = p.role || (p.username === "admin" ? "admin" : "user");
+
+    return {
+      id: p.id ?? null,
+      username: p.username ?? null,
+      role,
+      isAdmin: role === "admin",
+    };
   } catch {
     return null;
   }
 }
 
+// -------------------------
+// WYMAGAJ ADMINA (opcjonalne)
+// -------------------------
 export function requireAdmin() {
   const user = getUserFromCookies();
   if (!user || user.role !== "admin") {
