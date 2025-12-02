@@ -1,5 +1,5 @@
 "use client";
-import pool from "../../../db";
+
 import { useState, useEffect } from "react";
 
 export default function LoginPage() {
@@ -9,7 +9,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [seconds, setSeconds] = useState(0);
 
-  // licznik
+  // licznik seconds
   useEffect(() => {
     let interval;
     if (loading) {
@@ -24,20 +24,24 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (res.ok) {
+        window.location.replace("/");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Nie udało się zalogować");
+      }
+    } catch (err) {
+      setError("Błąd połączenia z serwerem");
+    }
 
     setLoading(false);
-
-    if (res.ok) {
-      window.location.replace("/");
-    } else {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error || "Nie udało się zalogować");
-    }
   };
 
   return (
