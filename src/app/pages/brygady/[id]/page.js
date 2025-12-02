@@ -15,14 +15,14 @@ export default function BrygadaDetails() {
   // 🔹 Pobiera nagłówek (brygadę)
 const loadHeader = async () => {
   try {
-    const res = await fetch(`/api/brygady/[id]/members/[memberId]`, { cache: "no-store" });
+    const res = await fetch(`/api/brygady/${id}`, { cache: "no-store" });
     const data = await res.json();
 
     if (!res.ok) throw new Error(data?.error || "Błąd pobierania brygady");
 
     setHeader(data);
   } catch (e) {
-    console.error(e);
+    console.error("LOAD HEADER ERROR:", e);
     setHeader(null);
   }
 };
