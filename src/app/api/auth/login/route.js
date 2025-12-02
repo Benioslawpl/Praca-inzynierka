@@ -1,7 +1,7 @@
 import pool from "../../../../../db";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { signJwt } from "../../../../../lib/auth";  // 🔥 poprawiona ścieżka
+import { signJwt } from "../../../../lib/auth";  // 🔥 poprawiona ścieżka
 
 export async function POST(req) {
   try {
