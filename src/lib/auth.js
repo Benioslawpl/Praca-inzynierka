@@ -1,44 +1,68 @@
+// src/lib/auth.js
+
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
 export const JWT_SECRET = process.env.JWT_SECRET || "Test123!";
 
-// ✅ Generowanie tokena JWT
-export function signJwt(payload, opts = {}) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "8h", ...opts });
+//
+// 1) Generowanie tokena
+//
+export function signJwt(payload, options = {}) {
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: "8h",
+    ...options,
+  });
 }
 
-// ✅ Weryfikacja tokena
+//
+// 2) Weryfikacja JWT — bez wywalania błędu
+//
 export function verifyJwt(token) {
-  return jwt.verify(token, JWT_SECRET);
-}
-
-// ✅ Pobieranie zalogowanego użytkownika z cookies
-export function getUserFromCookies() {
   try {
-    const token = cookies().get("token")?.value;
-    if (!token) return null;
-    const p = verifyJwt(token);
-    const role = p.role || (p.username === "admin" ? "admin" : "user");
-    return {
-      id: p.id ?? null,
-      username: p.username ?? null,
-      role,
-      isAdmin: role === "admin",
-    };
+    return jwt.verify(token, JWT_SECRET);
   } catch {
     return null;
   }
 }
 
-// ✅ Helper dla endpointów tylko dla admina
+//
+// 3) Pobieranie użytkownika BEZ wywalania błędów RSC
+//
+export function getUserFromCookies() {
+  try {
+    const cookie = cookies().get("token");
+    if (!cookie?.value) return null;
+
+    const payload = verifyJwt(cookie.value);
+    if (!payload) return null;
+
+    const role = payload.role || (payload.username === "admin" ? "admin" : "user");
+
+    return {
+      id: payload.id ?? null,
+      username: payload.username ?? null,
+      role,
+      isAdmin: role === "admin",
+    };
+  } catch (err) {
+    console.error("getUserFromCookies() error:", err);
+    return null;
+  }
+}
+
+//
+// 4) Guard dla API tylko dla administratorów
+//
 export function requireAdmin() {
   const user = getUserFromCookies();
+
   if (!user || user.role !== "admin") {
     return new Response(JSON.stringify({ error: "Forbidden" }), {
       status: 403,
       headers: { "Content-Type": "application/json" },
     });
   }
-  return user;
+
+  return user; // zwracamy usera jeśli OK
 }
