@@ -1,21 +1,10 @@
-export async function query(sql, params = []) {
-  const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/raw_sql`, {
-    method: "POST",
-    headers: {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      sql,
-      params,
-    }),
-  });
+// db.js
+import pkg from "pg";
+const { Pool } = pkg;
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Supabase error: ${res.status} - ${text}`);
-  }
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
 
-  return res.json();
-}
+export default pool;

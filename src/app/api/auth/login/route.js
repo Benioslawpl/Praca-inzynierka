@@ -1,7 +1,10 @@
 import pool from "../../../../../db";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
-import { signJwt } from "../../../../lib/auth";  // 🔥 poprawiona ścieżka
+
+
+const SECRET = process.env.JWT_SECRET || "Test123!";
 
 export async function POST(req) {
   try {
@@ -11,9 +14,8 @@ export async function POST(req) {
       return Response.json({ error: "Brak loginu lub hasła" }, { status: 400 });
     }
 
-    // 🔹 Pobieramy użytkownika z bazy
-    const rows = await query(
-      "SELECT id, username, password_hash, role FROM users WHERE username = $1",
+    const { rows } = await pool.query(
+      "SELECT id, username, password_hash, role FROM users WHERE username=$1",
       [username]
     );
 
@@ -22,33 +24,31 @@ export async function POST(req) {
       return Response.json({ error: "Nieprawidłowy login" }, { status: 401 });
     }
 
-    // 🔹 Weryfikacja hasła
     const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) {
       return Response.json({ error: "Nieprawidłowe hasło" }, { status: 401 });
     }
 
-    // 🔹 Tworzymy JWT
-    const role = user.role || "user";
-    const token = signJwt({
-      id: user.id,
-      username: user.username,
-      role,
-    });
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
+      SECRET,
+      { expiresIn: "8h" }
+    );
 
-    // 🔹 Zapisujemy cookie
     cookies().set("token", token, {
       httpOnly: true,
       sameSite: "lax",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       path: "/",
-      maxAge: 60 * 60 * 8, // 8h
     });
 
-    return Response.json({ ok: true, username: user.username, role });
-
-  } catch (e) {
-    console.error("LOGIN ERROR:", e);
-    return Response.json({ error: e.message }, { status: 500 });
+    return Response.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    return Response.json({ error: err.message }, { status: 500 });
   }
 }
