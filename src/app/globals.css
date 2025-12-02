@@ -259,28 +259,15 @@ label {
   color: #2a2f3a;
 }
 
-/* ========== SPINNER (logowanie) ========== */
-.spinner-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
+/* --- BLOKADA LOGOWANIA --- */
+
+.login-disabled {
+  opacity: 0.5 !important;      /* wyszarzenie */
+  filter: grayscale(100%) !important;
+  transition: opacity 0.3s ease;
 }
 
-.spinner {
-  width: 28px;
-  height: 28px;
-  border: 4px solid #ccc;
-  border-top-color: #0070f3;
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Zablokowane inputy podczas ładowania */
-input:disabled, button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.login-disabled input,
+.login-disabled button {
+  pointer-events: none !important;   /* pełna blokada kliknięć */
 }

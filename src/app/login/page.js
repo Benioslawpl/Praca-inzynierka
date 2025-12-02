@@ -8,14 +8,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [seconds, setSeconds] = useState(0);
 
-  // licznik czasu
+  // licznik
   useEffect(() => {
     let interval;
     if (loading) {
       setSeconds(0);
-      interval = setInterval(() => {
-        setSeconds((s) => s + 1);
-      }, 1000);
+      interval = setInterval(() => setSeconds((s) => s + 1), 1000);
     }
     return () => clearInterval(interval);
   }, [loading]);
@@ -44,12 +42,8 @@ export default function LoginPage() {
   return (
     <div className="login-body">
       <form
-        className="login-container"
+        className={`login-container ${loading ? "login-disabled" : ""}`}
         onSubmit={onSubmit}
-        style={{
-          opacity: loading ? 0.5 : 1,   // <-- wyszarzenie
-          pointerEvents: loading ? "none" : "auto", // <-- blokada całości
-        }}
       >
         <h1>Logowanie</h1>
 
