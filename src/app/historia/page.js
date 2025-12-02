@@ -1,14 +1,17 @@
-import { getUserFromCookies } from "../../lib/auth";  // wspólna funkcja JWT
+export const dynamic = "force-dynamic";
+
+import { getUserFromCookies } from "../../lib/auth";
 import LogsClient from "./LogsClient";
 
 export default async function HistoriaPage() {
-  const user = getUserFromCookies(); // odczyt tokena z cookies
+  const user = getUserFromCookies();
 
-  if (!user.isAdmin) {
+  // zabezpieczenie przed null
+  if (!user || !user.isAdmin) {
     return (
       <div className="card">
         <h2>Brak dostępu</h2>
-        <p>Ta sekcja jest dostępna tylko dla administratora.</p>
+        <p>Ta sekcja jest tylko dla administratora.</p>
       </div>
     );
   }
