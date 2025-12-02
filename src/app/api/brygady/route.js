@@ -6,14 +6,15 @@ export async function GET() {
     const { rows } = await pool.query(`
       SELECT id, numer, brygadzista, created_at
       FROM brygady
-      ORDER BY CAST(SUBSTRING(numer FROM 3) AS INTEGER) ASC
+      ORDER BY COALESCE( (regexp_matches(numer, '\\d+'))[1]::INTEGER, 0 )
     `);
+
     return Response.json(rows);
+
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
-
 // DODAJ NOWĄ
 export async function POST(req) {
   try {
