@@ -21,21 +21,23 @@ export async function POST(req) {
     );
 
     const user = rows[0];
-    if (!user) {
-      return Response.json({ error: "Nieprawidłowy login" }, { status: 401 });
-    }
+    if (!user) return Response.json({ error: "Nieprawidłowy login" }, { status: 401 });
 
     const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) {
-      return Response.json({ error: "Nieprawidłowe hasło" }, { status: 401 });
+    if (!ok) return Response.json({ error: "Nieprawidłowe hasło" }, { status: 401 });
+
+    // ROLA TYLKO Z DB
+    const role = user.role;
+    if (!role) {
+      return Response.json(
+        { error: "Użytkownik nie ma ustawionej roli w bazie (users.role)" },
+        { status: 500 }
+      );
     }
 
-    const role = user.role || (user.username === "admin" ? "admin" : "user");
     const token = signJwt({ id: user.id, username: user.username, role });
 
-    // 8h
-    const maxAge = 60 * 60 * 8;
-
+    const maxAge = 60 * 60 * 8; // 8h
     return new Response(JSON.stringify({ ok: true, username: user.username, role }), {
       status: 200,
       headers: {
