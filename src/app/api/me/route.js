@@ -1,30 +1,33 @@
-import { getUserFromCookies } from "../../../lib/auth";
 import { cookies } from "next/headers";
-import { verifyJwt } from "../../../lib/auth";
+import jwt from "jsonwebtoken";
 
-
+const SECRET = process.env.JWT_SECRET || "Test123!";
 
 export async function GET() {
-  const token = cookies().get("token")?.value;
-
-  // 1) czy w ogóle cookie dochodzi do serwera
-  if (!token) {
-    return Response.json({
-      ok: false,
-      reason: "NO_COOKIE_TOKEN",
-      cookieNames: cookies().getAll().map(c => c.name),
-    });
-  }
-
-  // 2) czy JWT się poprawnie weryfikuje
   try {
-    const payload = verifyJwt(token);
-    return Response.json({ ok: true, payload });
-  } catch (e) {
+    const token = cookies().get("token")?.value;
+
+    if (!token) {
+      return Response.json({ ok: false, reason: "NO_COOKIE" }, { status: 200 });
+    }
+
+    const payload = jwt.verify(token, SECRET);
+
+    // normalizacja roli
+    const role = payload.role || (payload.username === "admin" ? "admin" : "user");
+
     return Response.json({
-      ok: false,
-      reason: "JWT_VERIFY_FAILED",
-      error: e.message,
-    }, { status: 401 });
+      ok: true,
+      id: payload.id ?? null,
+      username: payload.username ?? null,
+      role,
+      isAdmin: role === "admin",
+    });
+  } catch (e) {
+    // tu zobaczysz dokładny powód (np. JWT secret mismatch)
+    return Response.json(
+      { ok: false, reason: "JWT_ERROR", error: e.message },
+      { status: 401 }
+    );
   }
 }
