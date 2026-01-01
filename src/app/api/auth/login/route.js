@@ -20,6 +20,7 @@ export async function POST(req) {
     if (!ok) {
       return Response.json({ error: "Złe hasło" }, { status: 401 });
     }
+    const role = user.role || (user.username === "admin" ? "admin" : "user");
 
     const token = signJwt({
       id: user.id,
