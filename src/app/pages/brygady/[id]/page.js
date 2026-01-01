@@ -207,10 +207,8 @@ export default function BrygadaDetails() {
                   <td>{m.rola ?? m.Rola ?? "-"}</td>
                   <td>{m.telefon ?? m.Telefon ?? "-"}</td>
                   <td className="actionsCell">
-                    <button onClick={() => edit(m)}>✏️</button>
-                    <button className="danger" onClick={() => del(m.id)}>
-                      🗑
-                    </button>
+                  <button type="button" onClick={() => handleEdit(m)}>✏️</button>
+                  <button type="button" className="danger" onClick={() => handleDelete(m.id)}>🗑</button>
                   </td>
                 </tr>
               ))}
