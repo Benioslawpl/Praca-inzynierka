@@ -6,38 +6,39 @@ export default function BrygadaDetails() {
   const { id } = useParams();
   const router = useRouter();
 
-  const [header, setHeader] = useState(null);
-  const [members, setMembers] = useState([]);
-  const [form, setForm] = useState({ imie: "", nazwisko: "", rola: "", telefon: "" });
+  const [header, setHeader] = useState(null); // dane brygady
+  const [items, setItems] = useState([]);     // członkowie
+  const [form, setForm] = useState({
+    imie: "",
+    nazwisko: "",
+    rola: "",
+    telefon: "",
+  });
   const [editId, setEditId] = useState(null);
-  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
-  // 🔹 Pobiera nagłówek (brygadę)
-const loadHeader = async () => {
-  try {
-    const res = await fetch(`/api/brygady/${id}`, { cache: "no-store" });
-    const data = await res.json();
+  // nagłówek: jak w maszynach – pobieramy listę i znajdujemy po id
+  const loadHeader = async () => {
+    const list = await fetch("/api/brygady", { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => []);
+    const found = Array.isArray(list)
+      ? list.find((x) => String(x.id) === String(id))
+      : null;
+    setHeader(found || null);
+  };
 
-    if (!res.ok) throw new Error(data?.error || "Błąd pobierania brygady");
-
-    setHeader(data);
-  } catch (e) {
-    console.error("LOAD HEADER ERROR:", e);
-    setHeader(null);
-  }
-};
-
-  // 🔹 Pobiera członków
+  // członkowie brygady
   const loadMembers = async () => {
-    try {
-      const res = await fetch(`/api/brygady/${id}/members`, { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Błąd pobierania członków");
-      setMembers(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error(e);
-      setError("Nie udało się pobrać członków");
+    const res = await fetch(`/api/brygady/${id}/members`, { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErr(data?.error || "Błąd pobierania członków");
+      setItems([]);
+      return;
     }
+    setItems(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => {
@@ -45,136 +46,176 @@ const loadHeader = async () => {
     loadMembers();
   }, [id]);
 
-  // 🔹 Reset formularza
-  const resetForm = () => {
+  const reset = () => {
     setForm({ imie: "", nazwisko: "", rola: "", telefon: "" });
     setEditId(null);
   };
 
-  // 🔹 Zapis (dodanie / edycja)
-const handleEdit = (m) => {
-  // Ustalamy pewne ID (liczba), a do formularza bierzemy oba warianty kluczy
-  const idNum = Number(m.id);
-  setEditId(Number.isFinite(idNum) ? idNum : null);
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setErr("");
 
-  setForm({
-    imie: m.imie ?? m.Imie ?? "",
-    nazwisko: m.nazwisko ?? m.Nazwisko ?? "",
-    rola: m.rola ?? m.Rola ?? "",
-    telefon: m.telefon ?? m.Telefon ?? "",
-  });
-};
+    try {
+      if (!form.imie?.trim() || !form.nazwisko?.trim()) {
+        throw new Error("Wymagane: imię i nazwisko");
+      }
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+      const body = {
+        imie: form.imie.trim(),
+        nazwisko: form.nazwisko.trim(),
+        rola: form.rola?.trim() || null,
+        telefon: form.telefon?.trim() || null,
+      };
 
-  const isEdit = Number.isFinite(Number(editId));
-  const url = isEdit
-    ? `/api/brygady/${id}/members/${editId}`
-    : `/api/brygady/${id}/members`;
-  const method = isEdit ? "PUT" : "POST";
+      const url = editId
+        ? `/api/brygady/${id}/members/${editId}`
+        : `/api/brygady/${id}/members`;
+      const method = editId ? "PUT" : "POST";
 
-  const payload = {
-    imie: form.imie,
-    nazwisko: form.nazwisko,
-    rola: form.rola || null,
-    telefon: form.telefon || null,
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
+
+      reset();
+      loadMembers();
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Debug (na chwilę, zobacz w konsoli)
-  console.log("[SAVE]", { method, url, payload });
+  const edit = (m) => {
+    setEditId(m.id);
+    setForm({
+      imie: m.imie ?? m.Imie ?? "",
+      nazwisko: m.nazwisko ?? m.Nazwisko ?? "",
+      rola: m.rola ?? m.Rola ?? "",
+      telefon: m.telefon ?? m.Telefon ?? "",
+    });
+  };
 
-  const res = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const del = async (memberId) => {
+    if (!confirm("Usunąć członka?")) return;
+    const res = await fetch(`/api/brygady/${id}/members/${memberId}`, {
+      method: "DELETE",
+    });
+    if (res.ok) loadMembers();
+  };
 
-  let data = {};
-  try { data = await res.json(); } catch {}
-
-  if (!res.ok) {
-    console.warn("[SAVE:ERR]", res.status, data);
-    setError(data?.error || `Błąd ${res.status}`);
-    return;
-  }
-
-  setEditId(null);
-  setForm({ imie: "", nazwisko: "", rola: "", telefon: "" });
-  loadMembers();
-};
-
-const handleDelete = async (memberId) => {
-  if (!confirm("Na pewno usunąć?")) return;
-
-  const url = `/api/brygady/${id}/members/${Number(memberId)}`;
-  console.log("[DELETE]", url);
-
-  const res = await fetch(url, { method: "DELETE" });
-
-  let data = {};
-  try { data = await res.json(); } catch {}
-
-  if (!res.ok) {
-    console.warn("[DEL:ERR]", res.status, data);
-    setError(data?.error || `Błąd ${res.status}`);
-    return;
-  }
-  loadMembers();
-};
   return (
     <div>
       <button className="secondary" onClick={() => router.push("/pages/brygady")}>
-  ← Wróć do listy
-</button>
+        ← Wróć do listy
+      </button>
 
-<h1>Szczegóły brygady</h1>
-{/* ...nagłówek bez zmian... */}
+      <h1>Szczegóły brygady</h1>
 
-<h2>Członkowie</h2>
+      {header ? (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <b>Numer:</b> {header.numer} &nbsp;|&nbsp;{" "}
+          <b>Brygadzista:</b> {header.brygadzista}
+        </div>
+      ) : (
+        <p>Ładowanie...</p>
+      )}
 
-<form className="card" onSubmit={handleSubmit}>
-  {/* ...formularz bez zmian... */}
-</form>
+      <h2>{editId ? "Edytuj członka" : "Dodaj członka"}</h2>
 
-<div className="tableWrap">
-  {members.length === 0 ? (
-    <p>Brak członków</p>
-  ) : (
-    <table className="table">
-      <thead>
-        <tr>
-          <th>Lp.</th>
-          <th>Imię</th>
-          <th>Nazwisko</th>
-          <th>Rola</th>
-          <th>Telefon</th>
-          <th>Akcje</th>
-        </tr>
-      </thead>
-      <tbody>
-        {members.map((m, i) => (
-          <tr key={m.id}>
-            <td>{i + 1}</td>
-            <td>{m.Imie ?? m.imie ?? "-"}</td>
-            <td>{m.Nazwisko ?? m.nazwisko ?? "-"}</td>
-            <td>{m.Rola ?? m.rola ?? "-"}</td>
-            <td>{m.Telefon ?? m.telefon ?? "-"}</td>
-            <td className="actionsCell">
-              <button type="button" onClick={() => handleEdit(m)}>✏️</button>
-              <button
-                type="button"
-                className="danger"
-                onClick={() => handleDelete(m.id)}
-              >
-                🗑
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+      <form className="card" onSubmit={submit}>
+        <div className="grid">
+          <label>
+            <span>Imię*</span>
+            <input
+              value={form.imie}
+              onChange={(e) => setForm({ ...form, imie: e.target.value })}
+              required
+            />
+          </label>
+
+          <label>
+            <span>Nazwisko*</span>
+            <input
+              value={form.nazwisko}
+              onChange={(e) => setForm({ ...form, nazwisko: e.target.value })}
+              required
+            />
+          </label>
+
+          <label>
+            <span>Rola</span>
+            <input
+              value={form.rola}
+              onChange={(e) => setForm({ ...form, rola: e.target.value })}
+              placeholder="np. Operator"
+            />
+          </label>
+
+          <label>
+            <span>Telefon</span>
+            <input
+              value={form.telefon}
+              onChange={(e) => setForm({ ...form, telefon: e.target.value })}
+              placeholder="+48 ..."
+            />
+          </label>
+        </div>
+
+        <div className="actions">
+          <button type="submit" disabled={saving}>
+            {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+          </button>
+          {editId && (
+            <button type="button" className="secondary" onClick={reset}>
+              Anuluj
+            </button>
+          )}
+        </div>
+
+        {err && <p className="error">⚠ {err}</p>}
+      </form>
+
+      <h2>Członkowie</h2>
+
+      <div className="tableWrap">
+        {items.length === 0 ? (
+          <p>Brak członków</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Lp.</th>
+                <th>Imię</th>
+                <th>Nazwisko</th>
+                <th>Rola</th>
+                <th>Telefon</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((m, i) => (
+                <tr key={m.id}>
+                  <td>{i + 1}</td>
+                  <td>{m.imie ?? m.Imie ?? "-"}</td>
+                  <td>{m.nazwisko ?? m.Nazwisko ?? "-"}</td>
+                  <td>{m.rola ?? m.Rola ?? "-"}</td>
+                  <td>{m.telefon ?? m.Telefon ?? "-"}</td>
+                  <td className="actionsCell">
+                    <button onClick={() => edit(m)}>✏️</button>
+                    <button className="danger" onClick={() => del(m.id)}>
+                      🗑
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>
