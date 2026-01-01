@@ -1,6 +1,11 @@
 import { getUserFromCookies } from "../../../lib/auth";
 import { cookies } from "next/headers";
-import { verifyJwt } from "../../../lib/auth";
+import { verifyJwt } from "../../lib/auth";
+
+export async function GET() {
+  const user = getUserFromCookies();
+  return Response.json(user);
+}
 
 export async function GET() {
   const token = cookies().get("token")?.value;
