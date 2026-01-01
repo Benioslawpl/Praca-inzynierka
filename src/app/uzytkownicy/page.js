@@ -149,13 +149,13 @@ export default function UsersPage() {
                       {/* zablokowany = odwrotność is_active */}
                       <td>
                         <span className={u.is_active ? "pill ok" : "pill bad"}>
-                          {u.is_active ? "NIE" : "TAK"}
+                          {u.is_active ? "TAK" : "NIE"}
                         </span>
                       </td>
 
                       <td className="actionsCell">
                         <button
-                          className="secondary"
+                          className={u.is_active ? "danger" : "secondary"}
                           onClick={() => toggleActive(u.id, u.is_active)}
                         >
                           {u.is_active ? "Zablokuj" : "Odblokuj"}
