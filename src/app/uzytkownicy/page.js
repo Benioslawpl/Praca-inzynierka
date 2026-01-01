@@ -153,9 +153,9 @@ export default function UsersPage() {
                               {u.is_active ? "Zablokuj" : "Odblokuj"}
                             </button>
 
-                        <button onClick={() => resetPassword(u.id)}>Reset hasła</button>
+                        <button type="button" onClick={() => resetPassword(u.id)}>Reset hasła</button>
 
-                        <button className="danger" onClick={() => removeUser(u.id)}>
+                        <button type="button" className="danger" onClick={() => removeUser(u.id)}>
                           Usuń
                         </button>
                       </td>
