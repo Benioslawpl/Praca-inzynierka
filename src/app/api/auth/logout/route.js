@@ -1,9 +1,13 @@
+import { cookies } from "next/headers";
+
 export async function POST() {
-  return new Response(JSON.stringify({ ok: true }), {
-    headers: {
-      "Content-Type": "application/json",
-      // wygaszenie cookie
-      "Set-Cookie": `token=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax`,
-    },
+  cookies().set("token", "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
   });
+
+  return Response.json({ ok: true });
 }

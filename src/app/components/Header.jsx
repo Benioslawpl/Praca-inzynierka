@@ -22,11 +22,13 @@ export default function Header({ user: userProp }) {
   })();
 }, [pathname]);
 
-  const handleLogout = async () => {
+ const handleLogout = async () => {
+  try {
     await fetch("/api/auth/logout", { method: "POST" });
-    setUser(null);
-    router.push("/login");
-  };
+  } finally {
+    window.location.replace("/login");
+  }
+};
 
   return (
     <header>
