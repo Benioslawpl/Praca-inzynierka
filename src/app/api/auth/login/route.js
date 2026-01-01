@@ -1,10 +1,11 @@
 import pool from "../../../../../db";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
+import { signJwt } from "../../../../lib/auth";
 
-
-const SECRET = process.env.JWT_SECRET || "Test123!";
+function cookieHeader(name, value, maxAgeSeconds) {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${name}=${value}; HttpOnly; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax${secure}`;
+}
 
 export async function POST(req) {
   try {
@@ -29,26 +30,20 @@ export async function POST(req) {
       return Response.json({ error: "Nieprawidłowe hasło" }, { status: 401 });
     }
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        username: user.username,
-        role: user.role,
+    const role = user.role || (user.username === "admin" ? "admin" : "user");
+    const token = signJwt({ id: user.id, username: user.username, role });
+
+    // 8h
+    const maxAge = 60 * 60 * 8;
+
+    return new Response(JSON.stringify({ ok: true, username: user.username, role }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Set-Cookie": cookieHeader("token", token, maxAge),
       },
-      SECRET,
-      { expiresIn: "8h" }
-    );
-
-    cookies().set("token", token, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
     });
-
-    return Response.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    return Response.json({ error: err.message }, { status: 500 });
+  } catch (e) {
+    return Response.json({ error: e.message }, { status: 500 });
   }
 }
