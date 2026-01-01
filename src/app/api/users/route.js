@@ -9,7 +9,7 @@ export async function GET() {
     requireAdmin(admin);
 
     const { rows } = await pool.query(
-      `SELECT id, username, role, created_at FROM users ORDER BY id ASC`
+      `SELECT id, username, role, is_active created_at FROM users ORDER BY id ASC`
     );
     return Response.json(rows);
   } catch (e) {

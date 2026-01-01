@@ -92,7 +92,7 @@ export default function UsersPage() {
         </label>
         <label>
             <span>Hasło*</span>
-                <input type="password" value={form.password} onChange={(e)=>setForm({...form, password: e.target.value})} required />
+                <input type="text" value={form.password} onChange={(e)=>setForm({...form, password: e.target.value})} required />
         </label>
         <label>
             <span>Rola</span>
@@ -116,36 +116,61 @@ export default function UsersPage() {
         {list.length === 0 ? (
           <p>Brak użytkowników</p>
         ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Login</th>
-                <th>Rola</th>
-                <th>Data utworzenia</th>
-                <th>Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((u, i) => (
-                <tr key={u.id}>
-                  <td>{i + 1}</td>
-                  <td>{u.username}</td>
-                  <td>{u.email || "-"}</td>
-                  <td>{u.role}</td>
-                  <td>{u.is_active ? "tak" : "nie"}</td>
-                  <td>{u.last_login ? String(u.last_login).slice(0, 19).replace("T"," ") : "-"}</td>
-                  <td className="actionsCell">
-                    <button className="secondary" onClick={() => toggleActive(u.id, u.is_active)}>
-                      {u.is_active ? "Zablokuj" : "Odblokuj"}
-                    </button>
-                    <button onClick={() => resetPassword(u.id)}>Reset hasła</button>
-                    <button className="danger" onClick={() => removeUser(u.id)}>Usuń</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <table className="table tableCenter">
+                <thead>
+                  <tr>
+                    <th style={{ width: 70 }}>Numer</th>
+                    <th>Login</th>
+                    <th style={{ width: 140 }}>Hasło</th>
+                    <th style={{ width: 120 }}>Rola</th>
+                    <th style={{ width: 180 }}>Data utworzenia</th>
+                    <th style={{ width: 140 }}>Zablokowany</th>
+                    <th style={{ width: 360 }}>Akcje</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {list.map((u, i) => (
+                    <tr key={u.id}>
+                      <td>{i + 1}</td>
+                      <td style={{ textAlign: "left" }}>{u.username}</td>
+
+                      {/* hasła NIE pokazujemy — tylko maska + reset */}
+                      <td>••••••••</td>
+
+                      <td>{u.role}</td>
+
+                      <td>
+                        {u.created_at
+                          ? String(u.created_at).slice(0, 19).replace("T", " ")
+                          : "-"}
+                      </td>
+
+                      {/* zablokowany = odwrotność is_active */}
+                      <td>
+                        <span className={u.is_active ? "pill ok" : "pill bad"}>
+                          {u.is_active ? "NIE" : "TAK"}
+                        </span>
+                      </td>
+
+                      <td className="actionsCell">
+                        <button
+                          className="secondary"
+                          onClick={() => toggleActive(u.id, u.is_active)}
+                        >
+                          {u.is_active ? "Zablokuj" : "Odblokuj"}
+                        </button>
+
+                        <button onClick={() => resetPassword(u.id)}>Reset hasła</button>
+
+                        <button className="danger" onClick={() => removeUser(u.id)}>
+                          Usuń
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
         )}
       </div>
     </div>

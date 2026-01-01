@@ -315,3 +315,33 @@ label {
   margin-top: 8px;
   color: var(--color-danger);
 }
+
+.tableCenter th,
+.tableCenter td {
+  text-align: center;
+}
+
+.tableCenter td:nth-child(2) {
+  text-align: left; /* login czytelniej po lewej */
+}
+
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.pill.ok {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.pill.bad {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
