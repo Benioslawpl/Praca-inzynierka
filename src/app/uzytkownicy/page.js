@@ -48,12 +48,13 @@ export default function UsersPage() {
     }
   };
 
-  const toggleActive = async (id, isActive) => {
-    const res = await fetch(`/api/users/${id}`, {
-      method: "PUT",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ is_active: !isActive }),
-    });
+ const toggleActive = async (id, isActive) => {
+  setError("");
+  const res = await fetch(`/api/users/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ is_active: !isActive }),
+  });
     if (res.ok) fetchUsers();
   };
 
@@ -133,33 +134,24 @@ export default function UsersPage() {
                   {list.map((u, i) => (
                     <tr key={u.id}>
                       <td>{i + 1}</td>
-                      <td style={{ textAlign: "left" }}>{u.username}</td>
-
-                      {/* hasła NIE pokazujemy — tylko maska + reset */}
-                      <td>••••••••</td>
-
+                      <td>{u.username}</td>
+                      <td>{"•".repeat(8)}</td>
                       <td>{u.role}</td>
-
+                      <td>{u.created_at ? String(u.created_at).slice(0, 19).replace("T", " ") : "-"}</td>
                       <td>
-                        {u.created_at
-                          ? String(u.created_at).slice(0, 19).replace("T", " ")
-                          : "-"}
-                      </td>
-
-                      {/* zablokowany = odwrotność is_active */}
-                      <td>
-                        <span className={u.is_active ? "pill ok" : "pill bad"}>
-                          {u.is_active ? "TAK" : "NIE"}
+                        <span className={`badge ${u.is_active ? "ok" : "bad"}`}>
+                          {u.is_active ? "NIE" : "TAK"}
                         </span>
                       </td>
 
                       <td className="actionsCell">
                         <button
-                          className={u.is_active ? "danger" : "secondary"}
-                          onClick={() => toggleActive(u.id, u.is_active)}
-                        >
-                          {u.is_active ? "Zablokuj" : "Odblokuj"}
-                        </button>
+                              type="button"
+                              className={u.is_active ? "danger" : "secondary"}
+                              onClick={() => toggleActive(u.id, u.is_active)}
+                            >
+                              {u.is_active ? "Zablokuj" : "Odblokuj"}
+                            </button>
 
                         <button onClick={() => resetPassword(u.id)}>Reset hasła</button>
 
