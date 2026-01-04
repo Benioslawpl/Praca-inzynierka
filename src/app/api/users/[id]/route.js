@@ -2,6 +2,10 @@ import pool from "../../../../../db";
 import bcrypt from "bcryptjs";
 import { getUserFromRequest } from "../../../../lib/auth";
 
+export async function GET(req, ctx) {
+  return Response.json({ ok: true, ctx });
+}
+
 export async function GET(_req, { params }) {
   const raw = params?.id;
   const parsed = Number(raw);
