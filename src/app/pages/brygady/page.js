@@ -63,7 +63,7 @@ export default function BrygadyPage() {
   };
 
   const startEdit = (b) => {
-    setEditId(b.id);
+    setEditId(Number(b.id));
     setForm({
       numer: b.numer ?? "",
       brygadzista: b.brygadzista ?? "",
@@ -72,8 +72,8 @@ export default function BrygadyPage() {
   };
 
   const remove = async (id) => {
-    if (!confirm("Na pewno usunąć brygadę?")) return;
-    setError("");
+    const realId = Number(id);
+  if (!Number.isInteger(realId)) { setError("Bad id"); return; }
 
     const res = await fetch(`/api/brygady/${id}`, { method: "DELETE" });
     const data = await res.json().catch(() => ({}));
