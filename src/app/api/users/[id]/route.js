@@ -2,6 +2,18 @@ import pool from "../../../../../db";
 import bcrypt from "bcryptjs";
 import { getUserFromRequest } from "../../../../lib/auth";
 
+export async function GET(_req, { params }) {
+  const raw = params?.id;
+  const parsed = Number(raw);
+  return Response.json({
+    ok: true,
+    params,
+    raw,
+    parsed,
+    isInteger: Number.isInteger(parsed),
+  });
+}
+
 export async function PUT(req, { params }) {
   console.log("USERS/[id] params:", params);
   const admin = getUserFromRequest(req);
