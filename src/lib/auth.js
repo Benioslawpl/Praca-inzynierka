@@ -13,12 +13,15 @@ export function verifyJwt(token) {
   return jwt.verify(token, JWT_SECRET);
 }
 
-// ================= SERVER COMPONENTS =================
-// (layout, page, middleware – cookies())
-
-export function getUserFromCookies() {
+export function getUserFromRequest(req) {
   try {
-    const token = cookies().get("token")?.value;
+    const cookieHeader = req?.headers?.get("cookie") || "";
+    const token = cookieHeader
+      .split(";")
+      .map(s => s.trim())
+      .find(s => s.startsWith("token="))
+      ?.split("=")[1];
+
     if (!token) return null;
 
     const p = verifyJwt(token);

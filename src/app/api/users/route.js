@@ -2,6 +2,8 @@ import pool from "../../../../db";
 import bcrypt from "bcryptjs";
 import { getUserFromRequest } from "../../../lib/auth";
 
+export const runtime = "nodejs";
+
 export async function GET(req) {
   const u = getUserFromRequest(req);
   if (!u?.isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
