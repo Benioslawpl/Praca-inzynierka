@@ -63,3 +63,28 @@ export function requireAdminFromRequest(req) {
   }
   return { ok: true, user: u };
 }
+
+export function getUserFromRequest(req) {
+  try {
+    const cookieHeader = req?.headers?.get("cookie") || "";
+    const token = cookieHeader
+      .split(";")
+      .map(s => s.trim())
+      .find(s => s.startsWith("token="))
+      ?.slice("token=".length);
+
+    if (!token) return null;
+
+    const p = verifyJwt(decodeURIComponent(token));
+    const role = p.role || (p.username === "admin" ? "admin" : "user");
+
+    return {
+      id: p.id ?? null,
+      username: p.username ?? null,
+      role,
+      isAdmin: role === "admin",
+    };
+  } catch {
+    return null;
+  }
+}
