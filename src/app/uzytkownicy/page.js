@@ -48,15 +48,14 @@ export default function UsersPage() {
     }
   };
 
- const toggleActive = async (id, isActive) => {
-  setError("");
+ const toggleBlocked = async (id, blocked) => {
   const res = await fetch(`/api/users/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ is_active: !isActive }),
+    body: JSON.stringify({ blocked: !blocked }),
   });
-    if (res.ok) fetchUsers();
-  };
+  if (res.ok) fetchUsers();
+};
 
   const resetPassword = async (id) => {
     const newPass = prompt("Podaj nowe hasło dla użytkownika:");
@@ -148,7 +147,7 @@ export default function UsersPage() {
                         <button
                               type="button"
                               className={u.is_active ? "danger" : "secondary"}
-                              onClick={() => toggleActive(u.id, u.is_active)}
+                              onClick={() => toggleBlocked(u.id, u.is_active)}
                             >
                               {u.is_active ? "Zablokuj" : "Odblokuj"}
                             </button>
