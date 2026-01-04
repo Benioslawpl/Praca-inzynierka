@@ -1,12 +1,11 @@
 import pool from "../../../../db";
 import bcrypt from "bcryptjs";
-import { getUserFromCookies } from "../../../lib/auth";
+import { requireAdminFromRequest } from "../../../lib/auth";
 
-// GET /api/users  (tylko admin)
-export async function GET() {
+export async function GET(req) {
   try {
-    const u = getUserFromCookies();
-    if (!u?.isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+    const guard = requireAdminFromRequest(req);
+    if (!guard.ok) return guard.res;
 
     const { rows } = await pool.query(`
       SELECT id, username, role, created_at, blocked
@@ -20,14 +19,12 @@ export async function GET() {
   }
 }
 
-// POST /api/users  (tylko admin)
 export async function POST(req) {
   try {
-    const u = getUserFromCookies();
-    if (!u?.isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+    const guard = requireAdminFromRequest(req);
+    if (!guard.ok) return guard.res;
 
     const { username, password, role } = await req.json();
-
     if (!username || !password) {
       return Response.json({ error: "Wymagane: username, password" }, { status: 400 });
     }
@@ -36,11 +33,9 @@ export async function POST(req) {
     const r = role === "admin" ? "admin" : "user";
 
     const { rows } = await pool.query(
-      `
-      INSERT INTO users (username, password_hash, role, blocked)
-      VALUES ($1, $2, $3, false)
-      RETURNING id, username, role, created_at, blocked
-      `,
+      `INSERT INTO users (username, password_hash, role, blocked)
+       VALUES ($1,$2,$3,false)
+       RETURNING id, username, role, created_at, blocked`,
       [username, hash, r]
     );
 

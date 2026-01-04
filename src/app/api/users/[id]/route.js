@@ -1,15 +1,11 @@
 import pool from "../../../../../db";
 import bcrypt from "bcryptjs";
-import { getUserFromCookies } from "../../../../lib/auth";
+import { requireAdminFromRequest } from "../../../../lib/auth";
 
-// PUT /api/users/:id  (tylko admin)
-// - toggle blocked
-// - reset hasła
-// - zmiana roli (opcjonalnie)
 export async function PUT(req, { params }) {
   try {
-    const u = getUserFromCookies();
-    if (!u?.isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+    const guard = requireAdminFromRequest(req);
+    if (!guard.ok) return guard.res;
 
     const id = Number(params.id);
     if (!Number.isFinite(id)) return Response.json({ error: "Bad id" }, { status: 400 });
@@ -20,27 +16,19 @@ export async function PUT(req, { params }) {
     if (body?.reset_password && body?.new_password) {
       const hash = await bcrypt.hash(body.new_password, 10);
       const { rows } = await pool.query(
-        `UPDATE users SET password_hash=$1 WHERE id=$2 RETURNING id, username, role, created_at, blocked`,
+        `UPDATE users SET password_hash=$1 WHERE id=$2
+         RETURNING id, username, role, created_at, blocked`,
         [hash, id]
       );
       return Response.json(rows[0] || null);
     }
 
-    // toggle blokady
+    // blokada / odblokowanie
     if (typeof body?.blocked === "boolean") {
       const { rows } = await pool.query(
-        `UPDATE users SET blocked=$1 WHERE id=$2 RETURNING id, username, role, created_at, blocked`,
+        `UPDATE users SET blocked=$1 WHERE id=$2
+         RETURNING id, username, role, created_at, blocked`,
         [body.blocked, id]
-      );
-      return Response.json(rows[0] || null);
-    }
-
-    // opcjonalnie: zmiana roli
-    if (body?.role) {
-      const role = body.role === "admin" ? "admin" : "user";
-      const { rows } = await pool.query(
-        `UPDATE users SET role=$1 WHERE id=$2 RETURNING id, username, role, created_at, blocked`,
-        [role, id]
       );
       return Response.json(rows[0] || null);
     }
@@ -51,11 +39,10 @@ export async function PUT(req, { params }) {
   }
 }
 
-// DELETE /api/users/:id  (tylko admin)
-export async function DELETE(_req, { params }) {
+export async function DELETE(req, { params }) {
   try {
-    const u = getUserFromCookies();
-    if (!u?.isAdmin) return Response.json({ error: "Forbidden" }, { status: 403 });
+    const guard = requireAdminFromRequest(req);
+    if (!guard.ok) return guard.res;
 
     const id = Number(params.id);
     if (!Number.isFinite(id)) return Response.json({ error: "Bad id" }, { status: 400 });
