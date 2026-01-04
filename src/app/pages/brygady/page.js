@@ -1,118 +1,169 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function BrygadyPage() {
-  const [rows, setRows] = useState([]);
+  const router = useRouter();
+
+  const [list, setList] = useState([]);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
   const [form, setForm] = useState({ numer: "", brygadzista: "" });
   const [editId, setEditId] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
 
-  const load = async () => {
+  const fetchBrygady = async () => {
     setError("");
     const res = await fetch("/api/brygady", { cache: "no-store" });
-    const data = await res.json();
-    if (!res.ok) return setError(data?.error || "Błąd pobierania");
-    setRows(Array.isArray(data) ? data : []);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data?.error || "Błąd pobierania brygad");
+      setList([]);
+      return;
+    }
+    setList(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { fetchBrygady(); }, []);
 
-  const reset = () => { setForm({ numer: "", brygadzista: "" }); setEditId(null); };
+  const resetForm = () => {
+    setForm({ numer: "", brygadzista: "" });
+    setEditId(null);
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    setSaving(true); setError("");
+    setSaving(true);
+    setError("");
+
     try {
-      const url = editId ? `/api/brygady/${editId}` : "/api/brygady";
-      const method = editId ? "PUT" : "POST";
+      const isEdit = Number.isInteger(Number(editId));
+      const url = isEdit ? `/api/brygady/${editId}` : "/api/brygady";
+      const method = isEdit ? "PUT" : "POST";
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          numer: form.numer,
+          brygadzista: form.brygadzista,
+        }),
       });
+
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
-      reset(); load();
-    } catch (e) {
-      setError(e.message);
+      if (!res.ok) throw new Error(data?.error || `Błąd ${res.status}`);
+
+      resetForm();
+      fetchBrygady();
+    } catch (e2) {
+      setError(e2.message);
     } finally {
       setSaving(false);
     }
   };
 
-  const handleEdit = (r) => { setEditId(r.id); setForm({ numer: r.numer, brygadzista: r.brygadzista }); };
-  const handleDelete = async (id) => {
-    if (!confirm("Usunąć brygadę?")) return;
+  const startEdit = (b) => {
+    setEditId(b.id);
+    setForm({
+      numer: b.numer ?? "",
+      brygadzista: b.brygadzista ?? "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const remove = async (id) => {
+    if (!confirm("Na pewno usunąć brygadę?")) return;
+    setError("");
+
     const res = await fetch(`/api/brygady/${id}`, { method: "DELETE" });
-    if (res.ok) load();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data?.error || `Błąd ${res.status}`);
+      return;
+    }
+    fetchBrygady();
   };
 
   return (
     <div>
-      <h1>Brygady </h1>
+      <h1>Brygady</h1>
 
       <form className="card" onSubmit={submit}>
         <div className="grid">
           <label>
             <span>Numer*</span>
             <input
+              placeholder="np. B-01"
               value={form.numer}
               onChange={(e) => setForm({ ...form, numer: e.target.value })}
               required
-              placeholder="np. B-01"
+              disabled={saving}
             />
           </label>
+
           <label>
             <span>Brygadzista*</span>
             <input
+              placeholder="Imię i nazwisko"
               value={form.brygadzista}
               onChange={(e) => setForm({ ...form, brygadzista: e.target.value })}
               required
-              placeholder="Imię i nazwisko"
+              disabled={saving}
             />
           </label>
         </div>
+
         <div className="actions">
           <button type="submit" disabled={saving}>
             {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
           </button>
           {editId && (
-            <button type="button" className="secondary" onClick={reset}>
+            <button type="button" className="secondary" onClick={resetForm} disabled={saving}>
               Anuluj
             </button>
           )}
         </div>
+
         {error && <p className="error">⚠ {error}</p>}
       </form>
 
       <div className="tableWrap">
-        {rows.length === 0 ? (
-          <p>Brak danych</p>
+        {list.length === 0 ? (
+          <p>Brak brygad</p>
         ) : (
-          <table className="table">
+          <table className="table tableCenter">
             <thead>
               <tr>
+                <th style={{ width: 90 }}>Numer</th>
                 <th>Numer brygady</th>
                 <th>Brygadzista</th>
+                <th style={{ width: 360 }}>Akcje</th>
               </tr>
             </thead>
             <tbody>
-              {rows
-                .sort((a, b) => parseInt(a.numer.split("-")[1]) - parseInt(b.numer.split("-")[1]))
-                .map((r) => (
-                  <tr key={r.id}>
-                    <td>{r.numer}</td>
-                    <td>{r.brygadzista}</td>
-                    <td className="actionsCell">
-                      <Link href={`/pages/brygady/${r.id}`} className="info-btn">
-                          🛈
-                      </Link>
-                      <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
-                      <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
-                    </td>
-                  </tr>
+              {list.map((b, i) => (
+                <tr key={b.id}>
+                  <td>{i + 1}</td>
+                  <td>{b.numer}</td>
+                  <td>{b.brygadzista}</td>
+                  <td className="actionsCell">
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => router.push(`/pages/brygady/${b.id}`)}
+                    >
+                      ℹ Szczegóły
+                    </button>
+
+                    <button type="button" onClick={() => startEdit(b)}>
+                      ✏️ Edytuj
+                    </button>
+
+                    <button type="button" className="danger" onClick={() => remove(b.id)}>
+                      🗑 Usuń
+                    </button>
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>

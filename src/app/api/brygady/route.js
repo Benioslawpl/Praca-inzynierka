@@ -1,12 +1,12 @@
 import pool from "../../../../db";
 
-// POBIERZ WSZYSTKIE
+// GET /api/brygady
 export async function GET() {
   try {
     const { rows } = await pool.query(`
       SELECT id, numer, brygadzista, created_at
       FROM brygady
-      ORDER BY CAST(SUBSTRING(numer FROM 3) AS INTEGER) ASC
+      ORDER BY CAST(regexp_replace(numer, '\\D', '', 'g') AS INTEGER) ASC NULLS LAST, numer ASC
     `);
     return Response.json(rows);
   } catch (error) {
@@ -14,20 +14,25 @@ export async function GET() {
   }
 }
 
-// DODAJ NOWĄ
+// POST /api/brygady
 export async function POST(req) {
   try {
-    const { brygadzista } = await req.json();
+    const { numer, brygadzista } = await req.json();
 
-    if (!brygadzista) {
+    if (!numer?.trim()) {
+      return Response.json({ error: "Wymagane: numer" }, { status: 400 });
+    }
+    if (!brygadzista?.trim()) {
       return Response.json({ error: "Wymagane: brygadzista" }, { status: 400 });
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO brygady (brygadzista)
-       VALUES ($1)
-       RETURNING id, numer, brygadzista, created_at`,
-      [brygadzista]
+      `
+      INSERT INTO brygady (numer, brygadzista)
+      VALUES ($1, $2)
+      RETURNING id, numer, brygadzista, created_at
+      `,
+      [numer.trim(), brygadzista.trim()]
     );
 
     return Response.json(rows[0]);
