@@ -66,3 +66,21 @@ export function getUserFromRequest(req) {
     return null;
   }
 }
+export function getUserFromCookies() {
+  try {
+    const token = cookies().get("token")?.value;
+    if (!token) return null;
+
+    const p = verifyJwt(token);
+    const role = p.role || (p.username === "admin" ? "admin" : "user");
+
+    return {
+      id: p.id ?? null,
+      username: p.username ?? null,
+      role,
+      isAdmin: role === "admin",
+    };
+  } catch {
+    return null;
+  }
+}
