@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { getUserFromRequest } from "../../../../lib/auth";
 
 export async function PUT(req, { params }) {
+  console.log("USERS/[id] params:", params);
   const admin = getUserFromRequest(req);
   if (!admin?.isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
@@ -10,7 +11,7 @@ export async function PUT(req, { params }) {
 
   const id = Number(params.id);
   if (!Number.isInteger(id) || id <= 0) {
-    return Response.json({ error: "bad id" }, { status: 400 });
+    return Response.json({ error: "bad id", received: rawId }, { status: 400 });
   }
 
   const body = await req.json();
@@ -38,6 +39,7 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
+  console.log("USERS/[id] params:", params);
   const admin = getUserFromRequest(req);
   if (!admin?.isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
