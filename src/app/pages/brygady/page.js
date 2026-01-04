@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -6,64 +7,41 @@ export default function BrygadyPage() {
   const router = useRouter();
 
   const [list, setList] = useState([]);
-  const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({ numer: "", brygadzista: "" });
-  const [editId, setEditId] = useState(null);
+  const [editId, setEditId] = useState(null); // null = dodawanie, number = edycja
+  const [error, setError] = useState("");
 
   const fetchBrygady = async () => {
     setError("");
-    const res = await fetch("/api/brygady", { cache: "no-store" });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setError(data?.error || "Błąd pobierania brygad");
+    try {
+      setLoading(true);
+      const res = await fetch("/api/brygady", { cache: "no-store" });
+      const data = await res.json().catch(() => ([]));
+      if (!res.ok) throw new Error(data?.error || "Błąd pobierania brygad");
+      setList(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setError(e.message || "Błąd pobierania");
       setList([]);
-      return;
+    } finally {
+      setLoading(false);
     }
-    setList(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => { fetchBrygady(); }, []);
+  useEffect(() => {
+    fetchBrygady();
+  }, []);
 
   const resetForm = () => {
     setForm({ numer: "", brygadzista: "" });
     setEditId(null);
-  };
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
     setError("");
-
-    try {
-      const isEdit = Number.isInteger(Number(editId));
-      const url = isEdit ? `/api/brygady/${editId}` : "/api/brygady";
-      const method = isEdit ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          numer: form.numer,
-          brygadzista: form.brygadzista,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || `Błąd ${res.status}`);
-
-      resetForm();
-      fetchBrygady();
-    } catch (e2) {
-      setError(e2.message);
-    } finally {
-      setSaving(false);
-    }
   };
 
   const startEdit = (b) => {
-    setEditId(Number(b.id));
+    setError("");
+    setEditId(Number(b.id)); // pewne ID
     setForm({
       numer: b.numer ?? "",
       brygadzista: b.brygadzista ?? "",
@@ -71,25 +49,66 @@ export default function BrygadyPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const remove = async (id) => {
-    const realId = Number(id);
-  if (!Number.isInteger(realId)) { setError("Bad id"); return; }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-    const res = await fetch(`/api/brygady/${id}`, { method: "DELETE" });
+    const isEdit = editId !== null; // ✅ najważniejsze (nie Number(editId))
+    const url = isEdit ? `/api/brygady/${editId}` : `/api/brygady`;
+    const method = isEdit ? "PUT" : "POST";
+
+    const payload = {
+      numer: form.numer?.trim(),
+      brygadzista: form.brygadzista?.trim(),
+    };
+
+    if (!payload.numer) return setError("Wymagane: numer");
+    if (!payload.brygadzista) return setError("Wymagane: brygadzista");
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       setError(data?.error || `Błąd ${res.status}`);
       return;
     }
+
+    resetForm();
     fetchBrygady();
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Na pewno usunąć brygadę?")) return;
+
+    const res = await fetch(`/api/brygady/${Number(id)}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setError(data?.error || `Błąd ${res.status}`);
+      return;
+    }
+
+    // jeśli usuwasz aktualnie edytowaną — wyczyść formularz
+    if (editId === Number(id)) resetForm();
+
+    fetchBrygady();
+  };
+
+  const goDetails = (id) => {
+    // dopasuj do swojej ścieżki szczegółów
+    router.push(`/pages/brygady/${id}`);
   };
 
   return (
     <div>
       <h1>Brygady</h1>
 
-      <form className="card" onSubmit={submit}>
-        <div className="grid">
+      <form className="card" onSubmit={handleSubmit}>
+        <div className="grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
           <label>
             <span>Numer*</span>
             <input
@@ -97,7 +116,6 @@ export default function BrygadyPage() {
               value={form.numer}
               onChange={(e) => setForm({ ...form, numer: e.target.value })}
               required
-              disabled={saving}
             />
           </label>
 
@@ -108,17 +126,14 @@ export default function BrygadyPage() {
               value={form.brygadzista}
               onChange={(e) => setForm({ ...form, brygadzista: e.target.value })}
               required
-              disabled={saving}
             />
           </label>
         </div>
 
-        <div className="actions">
-          <button type="submit" disabled={saving}>
-            {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
-          </button>
-          {editId && (
-            <button type="button" className="secondary" onClick={resetForm} disabled={saving}>
+        <div className="actions" style={{ marginTop: 12 }}>
+          <button type="submit">{editId !== null ? "Zapisz" : "Dodaj"}</button>
+          {editId !== null && (
+            <button type="button" className="secondary" onClick={resetForm}>
               Anuluj
             </button>
           )}
@@ -127,39 +142,33 @@ export default function BrygadyPage() {
         {error && <p className="error">⚠ {error}</p>}
       </form>
 
-      <div className="tableWrap">
-        {list.length === 0 ? (
+      <div className="tableWrap" style={{ marginTop: 16 }}>
+        {loading ? (
+          <p>Ładowanie...</p>
+        ) : list.length === 0 ? (
           <p>Brak brygad</p>
         ) : (
           <table className="table tableCenter">
             <thead>
               <tr>
-                <th style={{ width: 90 }}>Numer</th>
-                <th>Numer brygady</th>
+                <th style={{ width: 160 }}>Numer brygady</th>
                 <th>Brygadzista</th>
                 <th style={{ width: 360 }}>Akcje</th>
               </tr>
             </thead>
             <tbody>
-              {list.map((b, i) => (
+              {list.map((b) => (
                 <tr key={b.id}>
-                  <td>{i + 1}</td>
-                  <td>{b.numer}</td>
+                  <td style={{ fontWeight: 700 }}>{b.numer}</td>
                   <td>{b.brygadzista}</td>
                   <td className="actionsCell">
-                    <button
-                      type="button"
-                      className="secondary"
-                      onClick={() => router.push(`/pages/brygady/${b.id}`)}
-                    >
-                      ℹ Szczegóły
+                    <button type="button" className="secondary" onClick={() => goDetails(b.id)}>
+                      ℹ
                     </button>
-
                     <button type="button" onClick={() => startEdit(b)}>
                       ✏️ Edytuj
                     </button>
-
-                    <button type="button" className="danger" onClick={() => remove(b.id)}>
+                    <button type="button" className="danger" onClick={() => handleDelete(b.id)}>
                       🗑 Usuń
                     </button>
                   </td>
