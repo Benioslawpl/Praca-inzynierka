@@ -1,4 +1,4 @@
-import pool from "../../../../../db";
+import pool from "../../../../../../db";
 
 // GET /api/brygady/:id/members
 export async function GET(_req, { params }) {
