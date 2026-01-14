@@ -12,12 +12,15 @@ export default function MaszynyPage() {
   const load = async () => {
     setError("");
     const res = await fetch("/api/maszyny", { cache: "no-store" });
-    const data = await res.json();
-    if (!res.ok) return setError(data?.error || "Błąd pobierania");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setRows([]);
+      setError(data?.error || "Błąd pobierania");
+      return;
+    }
     setRows(Array.isArray(data) ? data : []);
   };
 
-  
   useEffect(() => {
     load();
   }, []);
@@ -25,26 +28,38 @@ export default function MaszynyPage() {
   const reset = () => {
     setForm({ rodzaj: "", marka: "", model: "", operator: "" });
     setEditId(null);
+    setError("");
   };
 
   const submit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError("");
+
     try {
       const url = editId ? `/api/maszyny/${editId}` : "/api/maszyny";
       const method = editId ? "PUT" : "POST";
+
+      const payload = {
+        rodzaj: form.rodzaj.trim(),
+        marka: form.marka.trim(),
+        model: form.model.trim(),
+        operator: form.operator.trim(),
+      };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
+
       reset();
       load();
-    } catch (e) {
-      setError(e.message);
+    } catch (e2) {
+      setError(e2.message || "Błąd zapisu");
     } finally {
       setSaving(false);
     }
@@ -53,11 +68,12 @@ export default function MaszynyPage() {
   const handleEdit = (r) => {
     setEditId(r.id);
     setForm({
-      rodzaj: r.rodzaj,
-      marka: r.marka,
-      model: r.model,
-      operator: r.operator,
+      rodzaj: r.rodzaj ?? "",
+      marka: r.marka ?? "",
+      model: r.model ?? "",
+      operator: r.operator ?? "",
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (id) => {
@@ -68,9 +84,8 @@ export default function MaszynyPage() {
 
   return (
     <div>
-      <h1>Maszyny </h1>
+      <h1>Maszyny 🚜</h1>
 
-      
       <form className="card" onSubmit={submit}>
         <div className="grid">
           <label>
@@ -125,25 +140,24 @@ export default function MaszynyPage() {
         {error && <p className="error">⚠ {error}</p>}
       </form>
 
-      
       <div className="tableWrap">
         {rows.length === 0 ? (
           <p>Brak danych</p>
         ) : (
-          <table className="table">
+          <table className="table tableCenter">
             <thead>
               <tr>
-                <th>Lp.</th>
+                <th style={{ width: 90 }}>Numer</th>
                 <th>Rodzaj</th>
                 <th>Marka</th>
                 <th>Model</th>
                 <th>Operator</th>
+                <th style={{ width: 320 }}>Akcje</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => {
-                const lp = i + 1;                                 // 1..n
-                const uiNr = `M-${String(lp).padStart(2, "0")}`;  // M-01, M-02...
+                const uiNr = `M-${String(i + 1).padStart(2, "0")}`; // M-01, M-02...
                 return (
                   <tr key={r.id}>
                     <td>{uiNr}</td>
@@ -151,12 +165,19 @@ export default function MaszynyPage() {
                     <td>{r.marka}</td>
                     <td>{r.model}</td>
                     <td>{r.operator}</td>
+
                     <td className="actionsCell">
-                      <Link href={`/pages/maszyny/${r.id}`} className="info-btn">
-                          🛈
+                      <Link href={`/pages/maszyny/${r.id}`} className="info-btn" title="Szczegóły">
+                        🛈
                       </Link>
-                      <button onClick={() => handleEdit(r)}>✏️ Edytuj</button>
-                      <button className="danger" onClick={() => handleDelete(r.id)}>🗑 Usuń</button>
+
+                      <button type="button" onClick={() => handleEdit(r)}>
+                        ✏️ Edytuj
+                      </button>
+
+                      <button type="button" className="danger" onClick={() => handleDelete(r.id)}>
+                        🗑 Usuń
+                      </button>
                     </td>
                   </tr>
                 );
