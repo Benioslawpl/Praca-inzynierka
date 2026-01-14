@@ -18,8 +18,11 @@ export default function BrygadaDetails() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
-  // nagłówek: jak w maszynach – pobieramy listę i znajdujemy po id
+  const validId = Number.isInteger(Number(id)) && Number(id) > 0;
+
+  // nagłówek
   const loadHeader = async () => {
+    if (!validId) return;
     const list = await fetch("/api/brygady", { cache: "no-store" })
       .then((r) => r.json())
       .catch(() => []);
@@ -31,8 +34,11 @@ export default function BrygadaDetails() {
 
   // członkowie brygady
   const loadMembers = async () => {
+    if (!validId) return;
+
     const res = await fetch(`/api/brygady/${id}/members`, { cache: "no-store" });
     const data = await res.json().catch(() => ({}));
+
     if (!res.ok) {
       setErr(data?.error || "Błąd pobierania członków");
       setItems([]);
@@ -42,8 +48,16 @@ export default function BrygadaDetails() {
   };
 
   useEffect(() => {
+    setErr("");
+    if (!validId) {
+      setItems([]);
+      setHeader(null);
+      setErr("Nieprawidłowe ID brygady w adresie URL.");
+      return;
+    }
     loadHeader();
     loadMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const reset = () => {
@@ -53,6 +67,8 @@ export default function BrygadaDetails() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!validId) return;
+
     setSaving(true);
     setErr("");
 
@@ -68,10 +84,11 @@ export default function BrygadaDetails() {
         telefon: form.telefon?.trim() || null,
       };
 
-      const url = editId
+      const isEdit = editId !== null;
+      const url = isEdit
         ? `/api/brygady/${id}/members/${editId}`
         : `/api/brygady/${id}/members`;
-      const method = editId ? "PUT" : "POST";
+      const method = isEdit ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -91,8 +108,11 @@ export default function BrygadaDetails() {
     }
   };
 
-  const edit = (m) => {
-    setEditId(m.id);
+  // ✅ EDYCJA (klik w tabeli)
+  const handleEdit = (m) => {
+    const mid = Number(m.id);
+    setEditId(Number.isInteger(mid) ? mid : null);
+
     setForm({
       imie: m.imie ?? m.Imie ?? "",
       nazwisko: m.nazwisko ?? m.Nazwisko ?? "",
@@ -101,12 +121,27 @@ export default function BrygadaDetails() {
     });
   };
 
-  const del = async (memberId) => {
+  // ✅ USUWANIE (klik w tabeli)
+  const handleDelete = async (memberId) => {
+    if (!validId) return;
     if (!confirm("Usunąć członka?")) return;
-    const res = await fetch(`/api/brygady/${id}/members/${memberId}`, {
-      method: "DELETE",
-    });
-    if (res.ok) loadMembers();
+
+    const mid = Number(memberId);
+    if (!Number.isInteger(mid) || mid <= 0) {
+      setErr("Nieprawidłowe ID członka.");
+      return;
+    }
+
+    const res = await fetch(`/api/brygady/${id}/members/${mid}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setErr(data?.error || "Błąd usuwania");
+      return;
+    }
+
+    if (editId === mid) reset();
+    loadMembers();
   };
 
   return (
@@ -126,7 +161,7 @@ export default function BrygadaDetails() {
         <p>Ładowanie...</p>
       )}
 
-      <h2>{editId ? "Edytuj członka" : "Dodaj członka"}</h2>
+      <h2>{editId !== null ? "Edytuj członka" : "Dodaj członka"}</h2>
 
       <form className="card" onSubmit={submit}>
         <div className="grid">
@@ -169,9 +204,9 @@ export default function BrygadaDetails() {
 
         <div className="actions">
           <button type="submit" disabled={saving}>
-            {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+            {saving ? "Zapisywanie..." : editId !== null ? "Zapisz" : "Dodaj"}
           </button>
-          {editId && (
+          {editId !== null && (
             <button type="button" className="secondary" onClick={reset}>
               Anuluj
             </button>
@@ -207,8 +242,8 @@ export default function BrygadaDetails() {
                   <td>{m.rola ?? m.Rola ?? "-"}</td>
                   <td>{m.telefon ?? m.Telefon ?? "-"}</td>
                   <td className="actionsCell">
-                  <button type="button" onClick={() => handleEdit(m)}>✏️</button>
-                  <button type="button" className="danger" onClick={() => handleDelete(m.id)}>🗑</button>
+                    <button type="button" onClick={() => handleEdit(m)}>✏️</button>
+                    <button type="button" className="danger" onClick={() => handleDelete(m.id)}>🗑</button>
                   </td>
                 </tr>
               ))}
