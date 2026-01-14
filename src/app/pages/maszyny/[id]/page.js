@@ -1,106 +1,169 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function MaszynaDetails() {
   const { id } = useParams();
   const router = useRouter();
 
-  const [header, setHeader] = useState(null); // dane maszyny
-  const [items, setItems] = useState([]);     // historia/szczegóły
-  const [form, setForm] = useState({przebieg: "", awaria: "", wykonawca: "", uwagi: "", data_zdarzenia: new Date().toISOString().slice(0,10),});
+  const [header, setHeader] = useState(null); // dane maszyny + uiNr
+  const [items, setItems] = useState([]); // historia/szczegóły
+
+  const today = new Date().toISOString().slice(0, 10);
+  const emptyForm = {
+    przebieg: "",
+    awaria: "",
+    wykonawca: "",
+    uwagi: "",
+    data_zdarzenia: today,
+  };
+
+  const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
+  // ✅ Header + numer UI (M-01, M-02...) z kolejności listy
   const loadHeader = async () => {
     const list = await fetch("/api/maszyny", { cache: "no-store" })
-      .then(r => r.json()).catch(() => []);
-    const found = Array.isArray(list) ? list.find(x => String(x.id) === String(id)) : null;
-    setHeader(found || null);
+      .then((r) => r.json())
+      .catch(() => []);
+
+    if (!Array.isArray(list)) {
+      setHeader(null);
+      return;
+    }
+
+    const idx = list.findIndex((x) => String(x.id) === String(id));
+    const found = idx >= 0 ? list[idx] : null;
+
+    const uiNr = idx >= 0 ? `M-${String(idx + 1).padStart(2, "0")}` : "-";
+
+    setHeader(found ? { ...found, uiNr } : null);
   };
 
   const loadDetails = async () => {
     const res = await fetch(`/api/maszyny/${id}/details`, { cache: "no-store" });
-    const data = await res.json();
-    if (!res.ok) { setErr(data?.error || "Błąd pobierania"); return; }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setErr(data?.error || "Błąd pobierania");
+      setItems([]);
+      return;
+    }
     setItems(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => { loadHeader(); loadDetails(); }, [id]);
+  useEffect(() => {
+    loadHeader();
+    loadDetails();
+  }, [id]);
 
-  const reset = () => { setForm({ przebieg: "", awaria: "", wykonawca: "", uwagi: "" }); setEditId(null); };
+  const reset = () => {
+    setForm({
+      przebieg: "",
+      awaria: "",
+      wykonawca: "",
+      uwagi: "",
+      data_zdarzenia: today,
+    });
+    setEditId(null);
+    setErr("");
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    setSaving(true); setErr("");
+    setSaving(true);
+    setErr("");
+
     try {
-        const body = {
+      const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
         awaria: form.awaria?.trim() || null,
         wykonawca: form.wykonawca?.trim() || null,
         uwagi: form.uwagi?.trim() || null,
-        data_zdarzenia: form.data_zdarzenia || null, // ← kluczowe
-        };
-      const url = editId ? `/api/maszyny/${id}/details/${editId}` : `/api/maszyny/${id}/details`;
+        data_zdarzenia: form.data_zdarzenia || null,
+      };
+
+      const url = editId
+        ? `/api/maszyny/${id}/details/${editId}`
+        : `/api/maszyny/${id}/details`;
       const method = editId ? "PUT" : "POST";
-      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
-      reset(); loadDetails();
-    } catch (e) {
-      setErr(e.message);
+
+      reset();
+      loadDetails();
+    } catch (e2) {
+      setErr(e2.message);
     } finally {
       setSaving(false);
     }
   };
 
-    const edit = (it) => {
+  const edit = (it) => {
     setEditId(it.id);
     setForm({
-        przebieg: it.przebieg ?? "",
-        awaria: it.awaria ?? "",
-        wykonawca: it.wykonawca ?? "",
-        uwagi: it.uwagi ?? "",
-        data_zdarzenia: it.data_zdarzenia
-        ? String(it.data_zdarzenia).slice(0,10)  
-        : new Date().toISOString().slice(0,10),
-        });
-    };
-
+      przebieg: it.przebieg ?? "",
+      awaria: it.awaria ?? "",
+      wykonawca: it.wykonawca ?? "",
+      uwagi: it.uwagi ?? "",
+      data_zdarzenia: it.data_zdarzenia
+        ? String(it.data_zdarzenia).slice(0, 10)
+        : today,
+    });
+  };
 
   const del = async (detailId) => {
     if (!confirm("Usunąć wpis?")) return;
-    const res = await fetch(`/api/maszyny/${id}/details/${detailId}`, { method: "DELETE" });
+    const res = await fetch(`/api/maszyny/${id}/details/${detailId}`, {
+      method: "DELETE",
+    });
     if (res.ok) loadDetails();
+    else {
+      const d = await res.json().catch(() => ({}));
+      setErr(d?.error || "Błąd usuwania");
+    }
   };
 
   return (
     <div>
-      <button className="secondary" onClick={() => router.push("/pages/maszyny")}>← Wróć do listy</button>
+      <button className="secondary" onClick={() => router.push("/pages/maszyny")}>
+        ← Wróć do listy
+      </button>
+
       <h1>Szczegóły maszyny</h1>
 
       {header ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <b>Nr:</b> {header.nr} &nbsp;|&nbsp; <b>Rodzaj:</b> {header.rodzaj}
+          <b>Nr:</b> {header.uiNr} &nbsp;|&nbsp; <b>Rodzaj:</b> {header.rodzaj}
           &nbsp;|&nbsp; <b>Marka/Model:</b> {header.marka} {header.model}
           &nbsp;|&nbsp; <b>Operator:</b> {header.operator}
         </div>
-      ) : <p>Ładowanie...</p>}
+      ) : (
+        <p>Ładowanie...</p>
+      )}
 
-      <h2>Nowe zdarzenie</h2>
+      <h2>{editId ? "Edytuj zdarzenie" : "Nowe zdarzenie"}</h2>
+
       <form className="card" onSubmit={submit}>
         <div className="grid">
-            <label>
+          <label>
             <span>Data zdarzenia</span>
             <input
-                type="date"
-                value={form.data_zdarzenia}
-                onChange={(e) => setForm({ ...form, data_zdarzenia: e.target.value })}
-                required
+              type="date"
+              value={form.data_zdarzenia}
+              onChange={(e) => setForm({ ...form, data_zdarzenia: e.target.value })}
+              required
             />
-            </label>
+          </label>
+
           <label>
             <span>Przebieg (mth)</span>
             <input
@@ -111,14 +174,18 @@ export default function MaszynaDetails() {
               placeholder="np. 12500"
             />
           </label>
+
           <label>
             <span>Awaria</span>
             <input
               value={form.awaria}
-              onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 30) })}
+              onChange={(e) =>
+                setForm({ ...form, awaria: e.target.value.slice(0, 30) })
+              }
               placeholder="np. Uszk. wąż"
             />
           </label>
+
           <label>
             <span>Wykonawca</span>
             <input
@@ -127,26 +194,45 @@ export default function MaszynaDetails() {
               placeholder="np. Serwis XYZ"
             />
           </label>
+
           <label style={{ gridColumn: "1 / -1" }}>
             <span>Uwagi</span>
             <textarea
               value={form.uwagi}
-              onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
+              onChange={(e) =>
+                setForm({ ...form, uwagi: e.target.value.slice(0, 200) })
+              }
               rows={3}
               placeholder="Krótki opis zdarzenia..."
-              style={{ width: "100%", resize: "vertical", padding: 8, borderRadius: 6, border: "1px solid #cfd4dc", background: "#fff" }}
+              style={{
+                width: "100%",
+                resize: "vertical",
+                padding: 8,
+                borderRadius: 6,
+                border: "1px solid #cfd4dc",
+                background: "#fff",
+              }}
             />
           </label>
         </div>
 
         <div className="actions">
-          <button type="submit" disabled={saving}>{saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}</button>
-          {editId && <button type="button" className="secondary" onClick={reset}>Anuluj</button>}
+          <button type="submit" disabled={saving}>
+            {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+          </button>
+
+          {editId && (
+            <button type="button" className="secondary" onClick={reset}>
+              Anuluj
+            </button>
+          )}
         </div>
+
         {err && <p className="error">⚠ {err}</p>}
       </form>
 
       <h2>Historia zdarzeń</h2>
+
       <div className="tableWrap">
         {items.length === 0 ? (
           <p>Brak wpisów</p>
@@ -154,24 +240,28 @@ export default function MaszynaDetails() {
           <table className="table">
             <thead>
               <tr>
-                <th>Data zdarzenia</th>
+                <th>Data</th>
                 <th>Przebieg</th>
                 <th>Awaria</th>
                 <th>Wykonawca</th>
                 <th>Uwagi</th>
+                <th>Akcje</th>
               </tr>
             </thead>
+
             <tbody>
               {items.map((it) => (
                 <tr key={it.id}>
-                  <td>{it.data_zdarzenia ? it.data_zdarzenia.slice(0,10) : "-"}</td>
+                  <td>{it.data_zdarzenia ? String(it.data_zdarzenia).slice(0, 10) : "-"}</td>
                   <td>{it.przebieg ?? "-"}</td>
                   <td>{it.awaria || "-"}</td>
                   <td>{it.wykonawca || "-"}</td>
-                  <td style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}>{it.uwagi || "-"}</td>
+                  <td style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}>
+                    {it.uwagi || "-"}
+                  </td>
                   <td className="actionsCell">
-                    <button onClick={() => edit(it)}>✏️</button>
-                    <button className="danger" onClick={() => del(it.id)}>🗑</button>
+                    <button type="button" onClick={() => edit(it)}>✏️</button>
+                    <button type="button" className="danger" onClick={() => del(it.id)}>🗑</button>
                   </td>
                 </tr>
               ))}
