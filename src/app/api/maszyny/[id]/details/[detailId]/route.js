@@ -1,71 +1,65 @@
-import pool from "../../../../../../../db";
-import { audit } from "../../../../../../lib/audit";
+import pool from "../../../../../../db";
 
-// PUT: edycja wpisu (audyt update)
+function intOrNull(v) {
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+// fallback: /api/maszyny/{id}/details/{detailId}
+function getIds(req, params) {
+  const maszynaId = intOrNull(params?.id);
+  const detailId = intOrNull(params?.detailId);
+  if (maszynaId && detailId) return { maszynaId, detailId };
+
+  const url = new URL(req.url);
+  const parts = url.pathname.split("/").filter(Boolean); // ["api","maszyny","3","details","12"]
+
+  const idxM = parts.indexOf("maszyny");
+  const idxD = parts.indexOf("details");
+
+  const m = idxM >= 0 ? intOrNull(parts[idxM + 1]) : null;
+  const d = idxD >= 0 ? intOrNull(parts[idxD + 1]) : null;
+
+  return { maszynaId: m, detailId: d };
+}
+
+// PUT /api/maszyny/:id/details/:detailId
 export async function PUT(req, { params }) {
   try {
-    const maszynaId = Number(params.id);
-    const detailId  = Number(params.detailId);
-    const { przebieg, awaria, wykonawca, uwagi, data_zdarzenia } = await req.json();
+    const { maszynaId, detailId } = getIds(req, params);
+    if (!maszynaId || !detailId) return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
 
-    if (awaria && awaria.length > 30)
-      return Response.json({ error: "Awaria max 30 znaków" }, { status: 400 });
-    if (uwagi && uwagi.length > 200)
-      return Response.json({ error: "Uwagi max 200 znaków" }, { status: 400 });
+    const body = await req.json().catch(() => ({}));
 
-    // pobierz "before" do audytu
-    const before = (await pool.query(
-      `SELECT id, maszyna_id, przebieg, awaria, wykonawca, uwagi, data_zdarzenia, created_at
-       FROM maszyny_details
-       WHERE id=$1 AND maszyna_id=$2`,
-      [detailId, maszynaId]
-    )).rows[0];
+    const data_zdarzenia = body?.data_zdarzenia || null;
+    const przebieg = body?.przebieg === "" || body?.przebieg === null || body?.przebieg === undefined
+      ? null
+      : Number(body.przebieg);
+
+    const awaria = body?.awaria?.trim() || null;
+    const wykonawca = body?.wykonawca?.trim() || null;
+    const uwagi = body?.uwagi?.trim() || null;
 
     const { rows } = await pool.query(
       `UPDATE maszyny_details
-       SET przebieg=$1, awaria=$2, wykonawca=$3, uwagi=$4, data_zdarzenia=$5
+       SET data_zdarzenia=$1, przebieg=$2, awaria=$3, wykonawca=$4, uwagi=$5
        WHERE id=$6 AND maszyna_id=$7
-       RETURNING id, maszyna_id, przebieg, awaria, wykonawca, uwagi, data_zdarzenia, created_at`,
-      [
-        przebieg ?? null,
-        awaria || null,
-        wykonawca || null,
-        uwagi || null,
-        data_zdarzenia || null,
-        detailId,
-        maszynaId,
-      ]
+       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi`,
+      [data_zdarzenia, Number.isFinite(przebieg) ? przebieg : null, awaria, wykonawca, uwagi, detailId, maszynaId]
     );
 
-    if (!rows.length) return Response.json({ error: "Not found" }, { status: 404 });
-
-    await audit({
-      action: "update",
-      entity: "maszyny_details",
-      entityId: detailId,
-      before,
-      after: rows[0],
-      req,
-    });
-
+    if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(rows[0]);
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
 }
 
-// DELETE: usuń wpis (audyt delete)
+// DELETE /api/maszyny/:id/details/:detailId
 export async function DELETE(req, { params }) {
   try {
-    const maszynaId = Number(params.id);
-    const detailId  = Number(params.detailId);
-
-    const before = (await pool.query(
-      `SELECT id, maszyna_id, przebieg, awaria, wykonawca, uwagi, data_zdarzenia, created_at
-       FROM maszyny_details
-       WHERE id=$1 AND maszyna_id=$2`,
-      [detailId, maszynaId]
-    )).rows[0];
+    const { maszynaId, detailId } = getIds(req, params);
+    if (!maszynaId || !detailId) return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
 
     const { rowCount } = await pool.query(
       `DELETE FROM maszyny_details WHERE id=$1 AND maszyna_id=$2`,
@@ -73,16 +67,7 @@ export async function DELETE(req, { params }) {
     );
 
     if (!rowCount) return Response.json({ error: "Not found" }, { status: 404 });
-
-    await audit({
-      action: "delete",
-      entity: "maszyny_details",
-      entityId: detailId,
-      before,
-      req,
-    });
-
-    return Response.json({ success: true });
+    return Response.json({ ok: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
