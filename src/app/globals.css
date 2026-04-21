@@ -646,6 +646,11 @@ label {
   align-items: stretch;
 }
 
+.loginShellSimple {
+  grid-template-columns: minmax(320px, 440px);
+  justify-content: center;
+}
+
 .loginIntroCard,
 .loginCard {
   position: relative;
@@ -772,6 +777,22 @@ label {
   font-weight: 700;
   font-size: 15px;
   box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
+}
+
+.loginSubmitState {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.loginSpinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: loginSpin 0.8s linear infinite;
 }
 
 .loginError {
@@ -1125,6 +1146,10 @@ label {
     grid-template-columns: 1fr;
   }
 
+  .loginShellSimple {
+    grid-template-columns: 1fr;
+  }
+
   .loginIntroCard,
   .loginCard {
     padding: 22px 18px;
@@ -1370,5 +1395,15 @@ label {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes loginSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }

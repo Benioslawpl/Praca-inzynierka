@@ -20,12 +20,41 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, [loading]);
 
+  const mapErrorMessage = (status, apiMessage) => {
+    if (status === 400) {
+      return "Wpisz login i has\u0142o, aby si\u0119 zalogowa\u0107.";
+    }
+
+    if (status === 401) {
+      if (apiMessage?.toLowerCase().includes("login")) {
+        return "Nie znaleziono u\u017cytkownika o takim loginie.";
+      }
+
+      if (apiMessage?.toLowerCase().includes("has")) {
+        return "Podane has\u0142o jest nieprawid\u0142owe.";
+      }
+
+      return "Dane logowania s\u0105 nieprawid\u0142owe.";
+    }
+
+    if (status >= 500) {
+      return "Serwer chwilowo nie odpowiada. Spr\u00f3buj ponownie za moment.";
+    }
+
+    return "Nie uda\u0142o si\u0119 zalogowa\u0107. Spr\u00f3buj ponownie.";
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
+      if (!username.trim() || !password) {
+        setError("Wpisz login i has\u0142o, aby si\u0119 zalogowa\u0107.");
+        return;
+      }
+
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,48 +67,26 @@ export default function LoginPage() {
       }
 
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Nie udało się zalogować");
+      setError(mapErrorMessage(res.status, data?.error));
     } catch {
-      setError("Błąd połączenia z serwerem");
+      setError(
+        "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107 z serwerem. Sprawd\u017a po\u0142\u0105czenie i spr\u00f3buj ponownie."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="loginShell">
-      <section className="loginIntroCard">
-        <span className="loginEyebrow">Panel roboczy</span>
-        <h1>Zaloguj się do systemu</h1>
-        <p>
-          Zarządzaj maszynami, sprzętem, brygadami i historią zdarzeń w jednym
-          miejscu.
-        </p>
-
-        <div className="loginHighlights">
-          <div className="loginHighlight">
-            <strong>Maszyny i sprzęt</strong>
-            <span>Podgląd, edycja i historia zdarzeń.</span>
-          </div>
-          <div className="loginHighlight">
-            <strong>Brygady</strong>
-            <span>Przypisania brygadzistów i członków zespołu.</span>
-          </div>
-          <div className="loginHighlight">
-            <strong>Historia</strong>
-            <span>Śledzenie zmian i działań użytkowników.</span>
-          </div>
-        </div>
-      </section>
-
+    <div className="loginShell loginShellSimple">
       <form
         className={`loginCard ${loading ? "login-disabled" : ""}`}
         onSubmit={onSubmit}
       >
         <div className="loginCardHeader">
           <span className="loginEyebrow">Logowanie</span>
-          <h2>Wprowadź dane dostępu</h2>
-          <p>Użyj swojego loginu i hasła, aby przejść do panelu.</p>
+          <h1>Zaloguj si\u0119</h1>
+          <p>Wprowad\u017a dane dost\u0119pu, aby przej\u015b\u0107 do panelu zarz\u0105dzania.</p>
         </div>
 
         <div className="loginFields">
@@ -95,10 +102,10 @@ export default function LoginPage() {
           </label>
 
           <label className="loginField">
-            <span>Hasło</span>
+            <span>Has\u0142o</span>
             <input
               type="password"
-              placeholder="Wpisz hasło"
+              placeholder="Wpisz has\u0142o"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -108,10 +115,21 @@ export default function LoginPage() {
         </div>
 
         <button type="submit" className="loginSubmit" disabled={loading}>
-          {loading ? `Logowanie... (${seconds}s)` : "Zaloguj się"}
+          {loading ? (
+            <span className="loginSubmitState">
+              <span className="loginSpinner" aria-hidden="true" />
+              Trwa logowanie... {seconds > 0 ? `(${seconds}s)` : ""}
+            </span>
+          ) : (
+            "Zaloguj si\u0119"
+          )}
         </button>
 
-        {error && <p className="error loginError">{error}</p>}
+        {error && (
+          <p className="error loginError" role="alert" aria-live="polite">
+            {error}
+          </p>
+        )}
       </form>
     </div>
   );
