@@ -44,7 +44,7 @@ export default function MaszynaDetails() {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      setErr(data?.error || "Blad pobierania");
+      setErr(data?.error || "Błąd pobierania");
       setItems([]);
       return;
     }
@@ -130,7 +130,7 @@ export default function MaszynaDetails() {
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "Blad zapisu");
+      if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
 
       reset();
       await loadDetails(id);
@@ -155,7 +155,7 @@ export default function MaszynaDetails() {
   };
 
   const del = async (detailId) => {
-    if (!confirm("Usunac wpis?")) return;
+    if (!confirm("Usunąć wpis?")) return;
 
     const res = await fetch(`/api/maszyny/${id}/details/${detailId}`, {
       method: "DELETE",
@@ -167,7 +167,7 @@ export default function MaszynaDetails() {
     }
 
     const d = await res.json().catch(() => ({}));
-    setErr(d?.error || "Blad usuwania");
+    setErr(d?.error || "Błąd usuwania");
   };
 
   return (
@@ -176,10 +176,10 @@ export default function MaszynaDetails() {
         className="secondary"
         onClick={() => router.push("/pages/maszyny")}
       >
-        Wroc do listy
+        Wróć do listy
       </button>
 
-      <h1>Szczegoly maszyny</h1>
+      <h1>Szczegóły maszyny</h1>
 
       {header ? (
         <div className="card" style={{ marginBottom: 16 }}>
@@ -189,7 +189,7 @@ export default function MaszynaDetails() {
           &nbsp;|&nbsp; <b>Operator:</b> {header.operator}
         </div>
       ) : (
-        <p>Ladowanie...</p>
+        <p>Ładowanie...</p>
       )}
 
       <h2>{editId ? "Edytuj zdarzenie" : "Nowe zdarzenie"}</h2>
@@ -226,7 +226,7 @@ export default function MaszynaDetails() {
               onChange={(e) =>
                 setForm({ ...form, awaria: e.target.value.slice(0, 30) })
               }
-              placeholder="np. Uszk. waz"
+              placeholder="np. Uszk. wąż"
             />
           </label>
 
@@ -249,7 +249,7 @@ export default function MaszynaDetails() {
                 setForm({ ...form, uwagi: e.target.value.slice(0, 200) })
               }
               rows={3}
-              placeholder="Krotki opis zdarzenia..."
+              placeholder="Krótki opis zdarzenia..."
               style={{
                 width: "100%",
                 resize: "vertical",
@@ -277,11 +277,11 @@ export default function MaszynaDetails() {
         {err && <p className="error">{err}</p>}
       </form>
 
-      <h2>Historia zdarzen</h2>
+      <h2>Historia zdarzeń</h2>
 
       <div className="tableWrap">
         {items.length === 0 ? (
-          <p>Brak wpisow</p>
+          <p>Brak wpisów</p>
         ) : (
           <table className="table">
             <thead>
@@ -318,7 +318,7 @@ export default function MaszynaDetails() {
                       className="danger"
                       onClick={() => del(it.id)}
                     >
-                      Usun
+                      Usuń
                     </button>
                   </td>
                 </tr>

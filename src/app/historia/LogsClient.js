@@ -22,7 +22,7 @@ export default function LogsClient() {
 
       if (!res.ok) {
         setRows([]);
-        setError(data?.error || `Blad ${res.status}`);
+        setError(data?.error || `Błąd ${res.status}`);
         return;
       }
 
@@ -92,7 +92,7 @@ export default function LogsClient() {
           <thead>
             <tr>
               <th>Data</th>
-              <th>Uzytkownik</th>
+              <th>Użytkownik</th>
               <th>Akcja</th>
               <th>Obiekt</th>
               <th>Zmiany</th>

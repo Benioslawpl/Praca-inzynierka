@@ -27,14 +27,14 @@ export default function Header({ user: userProp }) {
         <Link href="/">Home</Link>
         <Link href="/pages/maszyny">Maszyny</Link>
         <Link href="/pages/brygady">Brygady</Link>
-        <Link href="/pages/sprzet">Sprzet</Link>
-        {user?.role === "admin" && <Link href="/uzytkownicy">Uzytkownicy</Link>}
+        <Link href="/pages/sprzet">Sprzęt</Link>
+        {user?.role === "admin" && <Link href="/uzytkownicy">Użytkownicy</Link>}
         {user?.role === "admin" && <Link href="/historia">Historia</Link>}
       </div>
 
       <div className="menu">
         <span>
-          Uzytkownik: <b>{user?.username ?? "Gosc"}</b>
+          Użytkownik: <b>{user?.username ?? "Gość"}</b>
         </span>
         <button onClick={handleLogout} className="logout-btn">
           Wyloguj
