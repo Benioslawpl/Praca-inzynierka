@@ -100,35 +100,31 @@ header {
   justify-content: flex-end;
 }
 
-.appUserBarMobile {
+.mobileUserName {
   display: none;
-}
-
-.brandBlock {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.brandText {
-  display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
   gap: 2px;
   min-width: 0;
+  padding: 0 2px;
+  color: #fff;
 }
 
-.brandText strong {
+.mobileUserLabel {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.mobileUserName b {
   font-size: 15px;
   line-height: 1.2;
-}
-
-.brandText span {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.72);
-  white-space: nowrap;
+  max-width: 190px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menuToggle {
@@ -220,6 +216,10 @@ header {
   transition:
     background-color var(--transition-medium),
     opacity var(--transition-medium);
+}
+
+.mobileLogout {
+  display: none;
 }
 
 .logout-btn:hover {
@@ -551,10 +551,14 @@ label {
 
   .appHeaderTop {
     display: flex;
-    margin-bottom: 4px;
+    margin-bottom: 0;
   }
 
   .menuToggle {
+    display: inline-flex;
+  }
+
+  .mobileUserName {
     display: inline-flex;
   }
 
@@ -564,7 +568,7 @@ label {
     align-items: stretch;
     gap: 8px;
     width: 100%;
-    margin-top: 2px;
+    margin-top: 10px;
     padding: 10px;
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.08);
@@ -593,11 +597,11 @@ label {
     display: none;
   }
 
-  .appUserBarMobile {
-    display: flex;
-    width: auto;
-    margin-left: auto;
-    justify-content: flex-end;
+  .mobileLogout {
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
   }
 
   .table {
@@ -740,16 +744,9 @@ label {
     align-items: stretch;
   }
 
-  .appUserBarMobile {
-    width: calc(100% - 58px);
-  }
-
-  .appUserBarMobile .userBadge {
+  .mobileUserName {
+    justify-content: center;
     min-height: 46px;
-  }
-
-  .brandText span {
-    white-space: normal;
   }
 }
 

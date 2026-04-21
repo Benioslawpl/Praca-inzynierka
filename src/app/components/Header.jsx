@@ -49,33 +49,23 @@ export default function Header({ user: userProp }) {
   return (
     <header className="appHeader">
       <div className="appHeaderTop">
-        <div className="brandBlock">
-          <button
-            type="button"
-            className="menuToggle"
-            aria-expanded={menuOpen}
-            aria-controls="primary-navigation"
-            aria-label={menuOpen ? "Zamknij menu" : "Otwórz menu"}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-          <div className="brandText">
-            <strong>Panel firmy</strong>
-            <span>Zarządzanie sprzętem i brygadami</span>
-          </div>
-        </div>
+        <span className="mobileUserName">
+          <span className="mobileUserLabel">Użytkownik</span>
+          <b>{user?.username ?? "Gość"}</b>
+        </span>
 
-        <div className="menu appUserBar appUserBarMobile">
-          <span className="userBadge">
-            Konto: <b>{user?.username ?? "Gość"}</b>
-          </span>
-          <button onClick={handleLogout} className="logout-btn">
-            Wyloguj
-          </button>
-        </div>
+        <button
+          type="button"
+          className="menuToggle"
+          aria-expanded={menuOpen}
+          aria-controls="primary-navigation"
+          aria-label={menuOpen ? "Zamknij menu" : "Otwórz menu"}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </div>
 
       <nav
@@ -91,6 +81,10 @@ export default function Header({ user: userProp }) {
             {link.label}
           </Link>
         ))}
+
+        <button type="button" className="logout-btn mobileLogout" onClick={handleLogout}>
+          Wyloguj
+        </button>
       </nav>
 
       <div className="menu appUserBar">
