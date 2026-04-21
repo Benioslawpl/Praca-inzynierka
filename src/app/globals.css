@@ -558,6 +558,128 @@ label {
   color: #334155;
 }
 
+.stackSection {
+  display: grid;
+  gap: 20px;
+}
+
+.sectionIntro {
+  display: grid;
+  gap: 10px;
+}
+
+.sectionIntro p {
+  max-width: 76ch;
+  color: #475569;
+}
+
+.statsGrid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.statCard {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.statLabel {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.statValue {
+  font-size: clamp(1.55rem, 2vw, 2rem);
+  line-height: 1;
+  color: #0f172a;
+}
+
+.statValueSm {
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  line-height: 1.2;
+}
+
+.splitLayout {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
+}
+
+.sectionCard {
+  margin: 0;
+}
+
+.sectionCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mutedText {
+  color: #64748b;
+}
+
+.compactList {
+  display: grid;
+  gap: 10px;
+}
+
+.compactListRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fbfdff;
+}
+
+.compactListMain {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rowEyebrow {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.compactAction {
+  flex: 0 0 auto;
+}
+
+.compactMetricRow {
+  background: #fff;
+}
+
+.metricBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
 .tableCenter th,
 .tableCenter td {
   text-align: center;
@@ -591,6 +713,14 @@ label {
 @media (max-width: 900px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .splitLayout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -726,6 +856,11 @@ label {
     padding: 24px 18px;
     max-width: 100%;
   }
+
+  .sectionCardHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 @media (max-width: 600px) {
@@ -772,6 +907,23 @@ label {
   .home {
     padding: 18px;
     border-radius: 18px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statCard {
+    padding: 16px;
+  }
+
+  .compactListRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .compactAction {
+    width: 100%;
   }
 
   .table {
