@@ -24,20 +24,15 @@ export default function MaszynaDetails() {
   const [err, setErr] = useState("");
 
   const loadHeader = useEffectEvent(async () => {
-    const list = await fetch("/api/maszyny", { cache: "no-store" })
-      .then((r) => r.json())
-      .catch(() => []);
+    const res = await fetch(`/api/maszyny/${id}`, { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
 
-    if (!Array.isArray(list)) {
+    if (!res.ok) {
       setHeader(null);
       return;
     }
 
-    const idx = list.findIndex((x) => String(x.id) === String(id));
-    const found = idx >= 0 ? list[idx] : null;
-    const uiNr = idx >= 0 ? `M-${String(idx + 1).padStart(2, "0")}` : "-";
-
-    setHeader(found ? { ...found, uiNr } : null);
+    setHeader(data);
   });
 
   const loadDetails = useEffectEvent(async () => {
@@ -151,7 +146,8 @@ export default function MaszynaDetails() {
 
       {header ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <b>Nr:</b> {header.uiNr} &nbsp;|&nbsp; <b>Rodzaj:</b> {header.rodzaj}
+          <b>Nr:</b> {header.nr ?? "-"} &nbsp;|&nbsp; <b>Rodzaj:</b>{" "}
+          {header.rodzaj}
           &nbsp;|&nbsp; <b>Marka/Model:</b> {header.marka} {header.model}
           &nbsp;|&nbsp; <b>Operator:</b> {header.operator}
         </div>
