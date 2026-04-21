@@ -502,6 +502,22 @@ form.card + .tableWrap {
   margin-top: -6px;
 }
 
+h1 + .detailsSummary {
+  margin-top: 6px;
+}
+
+.detailsSummary + h2 {
+  margin-top: 8px;
+}
+
+.detailsSummary + form.card {
+  margin-top: 0;
+}
+
+button.secondary + h1 {
+  margin-top: 18px;
+}
+
 .grid {
   display: grid;
   gap: 12px;
