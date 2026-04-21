@@ -443,6 +443,8 @@ label {
 .actionsCell button,
 .actionsCell .info-btn {
   min-width: 110px;
+  min-height: 38px;
+  font-weight: 600;
 }
 
 .login-body {
@@ -728,15 +730,15 @@ label {
   .table tbody tr {
     background: #fff !important;
     border: 1px solid #e4e7ee;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 6px 18px var(--color-shadow);
-    padding: 10px 12px;
+    border-radius: 18px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+    padding: 12px 14px;
   }
 
   .table tbody td {
     border-top: none;
-    padding: 8px 0 8px 44%;
-    min-height: 36px;
+    padding: 10px 0 10px 43%;
+    min-height: 40px;
     text-align: left !important;
     position: relative;
     white-space: normal;
@@ -746,10 +748,13 @@ label {
     content: attr(data-label);
     position: absolute;
     left: 0;
-    top: 8px;
-    width: 40%;
+    top: 10px;
+    width: 38%;
+    font-size: 11px;
     font-weight: 700;
-    color: #2a2f3a;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #64748b;
   }
 
   .table tbody td[colspan] {
@@ -780,6 +785,52 @@ label {
   .mobileUserName {
     justify-content: center;
     min-height: 46px;
+  }
+
+  .table tbody td.actionsCell {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 34px 0 0;
+    min-height: 0;
+  }
+
+  .table tbody td.actionsCell::before {
+    position: static;
+    width: auto;
+    margin-bottom: 2px;
+  }
+
+  .table tbody td.actionsCell button,
+  .table tbody td.actionsCell .info-btn {
+    min-width: 0;
+    width: 100%;
+    min-height: 42px;
+    border-radius: 12px;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .table tbody td.actionsCell .info-btn {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
+  .table tbody td.actionsCell .secondary {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+
+  .table tbody td.actionsCell .danger {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+
+  .table tbody td.actionsCell .danger:hover,
+  .table tbody td.actionsCell .secondary:hover,
+  .table tbody td.actionsCell .info-btn:hover {
+    transform: none;
   }
 }
 
