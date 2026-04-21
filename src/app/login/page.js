@@ -1,21 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
-  const [username, setU] = useState("");
-  const [password, setP] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [seconds, setSeconds] = useState(0);
 
-  // licznik seconds
   useEffect(() => {
     let interval;
+
     if (loading) {
       setSeconds(0);
-      interval = setInterval(() => setSeconds((s) => s + 1), 1000);
+      interval = setInterval(() => setSeconds((value) => value + 1), 1000);
     }
+
     return () => clearInterval(interval);
   }, [loading]);
 
@@ -33,45 +34,84 @@ export default function LoginPage() {
 
       if (res.ok) {
         window.location.replace("/");
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || "Nie udało się zalogować");
+        return;
       }
-    } catch (err) {
-      setError("Błąd połączenia z serwerem");
-    }
 
-    setLoading(false);
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Nie udało się zalogować");
+    } catch {
+      setError("Błąd połączenia z serwerem");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="login-body">
+    <div className="loginShell">
+      <section className="loginIntroCard">
+        <span className="loginEyebrow">Panel roboczy</span>
+        <h1>Zaloguj się do systemu</h1>
+        <p>
+          Zarządzaj maszynami, sprzętem, brygadami i historią zdarzeń w jednym
+          miejscu.
+        </p>
+
+        <div className="loginHighlights">
+          <div className="loginHighlight">
+            <strong>Maszyny i sprzęt</strong>
+            <span>Podgląd, edycja i historia zdarzeń.</span>
+          </div>
+          <div className="loginHighlight">
+            <strong>Brygady</strong>
+            <span>Przypisania brygadzistów i członków zespołu.</span>
+          </div>
+          <div className="loginHighlight">
+            <strong>Historia</strong>
+            <span>Śledzenie zmian i działań użytkowników.</span>
+          </div>
+        </div>
+      </section>
+
       <form
-        className={`login-container ${loading ? "login-disabled" : ""}`}
+        className={`loginCard ${loading ? "login-disabled" : ""}`}
         onSubmit={onSubmit}
       >
-        <h1>Logowanie</h1>
+        <div className="loginCardHeader">
+          <span className="loginEyebrow">Logowanie</span>
+          <h2>Wprowadź dane dostępu</h2>
+          <p>Użyj swojego loginu i hasła, aby przejść do panelu.</p>
+        </div>
 
-        <input
-          placeholder="Login"
-          value={username}
-          onChange={(e) => setU(e.target.value)}
-          disabled={loading}
-        />
+        <div className="loginFields">
+          <label className="loginField">
+            <span>Login</span>
+            <input
+              placeholder="np. admin"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
+              autoComplete="username"
+            />
+          </label>
 
-        <input
-          type="password"
-          placeholder="Hasło"
-          value={password}
-          onChange={(e) => setP(e.target.value)}
-          disabled={loading}
-        />
+          <label className="loginField">
+            <span>Hasło</span>
+            <input
+              type="password"
+              placeholder="Wpisz hasło"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              autoComplete="current-password"
+            />
+          </label>
+        </div>
 
-        <button type="submit" disabled={loading}>
-          {loading ? `⏳ Logowanie... (${seconds}s)` : "Zaloguj"}
+        <button type="submit" className="loginSubmit" disabled={loading}>
+          {loading ? `Logowanie... (${seconds}s)` : "Zaloguj się"}
         </button>
 
-        {error && <p className="error">⚠ {error}</p>}
+        {error && <p className="error loginError">{error}</p>}
       </form>
     </div>
   );
