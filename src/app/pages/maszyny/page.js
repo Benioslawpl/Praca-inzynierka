@@ -4,7 +4,12 @@ import Link from "next/link";
 
 export default function MaszynyPage() {
   const [rows, setRows] = useState([]);
-  const [form, setForm] = useState({ rodzaj: "", marka: "", model: "", operator: "" });
+  const [form, setForm] = useState({
+    rodzaj: "",
+    marka: "",
+    model: "",
+    operator: "",
+  });
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -84,7 +89,7 @@ export default function MaszynyPage() {
 
   return (
     <div>
-      <h1>Maszyny 🚜</h1>
+      <h1>Maszyny</h1>
 
       <form className="card" onSubmit={submit}>
         <div className="grid">
@@ -137,7 +142,7 @@ export default function MaszynyPage() {
           )}
         </div>
 
-        {error && <p className="error">⚠ {error}</p>}
+        {error && <p className="error">{error}</p>}
       </form>
 
       <div className="tableWrap">
@@ -152,12 +157,12 @@ export default function MaszynyPage() {
                 <th>Marka</th>
                 <th>Model</th>
                 <th>Operator</th>
-                <th style={{ width: 320 }}>Akcje</th>
+                <th style={{ width: 360 }}>Akcje</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((r, i) => {
-                const uiNr = `M-${String(i + 1).padStart(2, "0")}`; // M-01, M-02...
+                const uiNr = `M-${String(i + 1).padStart(2, "0")}`;
                 return (
                   <tr key={r.id}>
                     <td data-label="Numer">{uiNr}</td>
@@ -167,16 +172,28 @@ export default function MaszynyPage() {
                     <td data-label="Operator">{r.operator}</td>
 
                     <td className="actionsCell" data-label="Akcje">
-                      <Link href={`/pages/maszyny/${r.id}`} className="info-btn" title="Szczegóły">
-                        🛈
+                      <Link
+                        href={`/pages/maszyny/${r.id}`}
+                        className="info-btn"
+                        title="Szczegóły"
+                      >
+                        Szczegóły
                       </Link>
 
-                      <button type="button" onClick={() => handleEdit(r)}>
-                        ✏️ Edytuj
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => handleEdit(r)}
+                      >
+                        Edytuj
                       </button>
 
-                      <button type="button" className="danger" onClick={() => handleDelete(r.id)}>
-                        🗑 Usuń
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => handleDelete(r.id)}
+                      >
+                        Usuń
                       </button>
                     </td>
                   </tr>

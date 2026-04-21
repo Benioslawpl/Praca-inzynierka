@@ -10,7 +10,7 @@ export default function BrygadyPage() {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({ numer: "", brygadzista: "" });
-  const [editId, setEditId] = useState(null); // null = dodawanie, number = edycja
+  const [editId, setEditId] = useState(null);
   const [error, setError] = useState("");
 
   const fetchBrygady = async () => {
@@ -18,7 +18,7 @@ export default function BrygadyPage() {
     try {
       setLoading(true);
       const res = await fetch("/api/brygady", { cache: "no-store" });
-      const data = await res.json().catch(() => ([]));
+      const data = await res.json().catch(() => []);
       if (!res.ok) throw new Error(data?.error || "Błąd pobierania brygad");
       setList(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -41,7 +41,7 @@ export default function BrygadyPage() {
 
   const startEdit = (b) => {
     setError("");
-    setEditId(Number(b.id)); // pewne ID
+    setEditId(Number(b.id));
     setForm({
       numer: b.numer ?? "",
       brygadzista: b.brygadzista ?? "",
@@ -53,8 +53,8 @@ export default function BrygadyPage() {
     e.preventDefault();
     setError("");
 
-    const isEdit = editId !== null; // ✅ najważniejsze (nie Number(editId))
-    const url = isEdit ? `/api/brygady/${editId}` : `/api/brygady`;
+    const isEdit = editId !== null;
+    const url = isEdit ? `/api/brygady/${editId}` : "/api/brygady";
     const method = isEdit ? "PUT" : "POST";
 
     const payload = {
@@ -92,14 +92,11 @@ export default function BrygadyPage() {
       return;
     }
 
-    // jeśli usuwasz aktualnie edytowaną — wyczyść formularz
     if (editId === Number(id)) resetForm();
-
     fetchBrygady();
   };
 
   const goDetails = (id) => {
-    // dopasuj do swojej ścieżki szczegółów
     router.push(`/pages/brygady/${id}`);
   };
 
@@ -108,7 +105,10 @@ export default function BrygadyPage() {
       <h1>Brygady</h1>
 
       <form className="card" onSubmit={handleSubmit}>
-        <div className="grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+        <div
+          className="grid"
+          style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}
+        >
           <label>
             <span>Numer*</span>
             <input
@@ -124,7 +124,9 @@ export default function BrygadyPage() {
             <input
               placeholder="Imię i nazwisko"
               value={form.brygadzista}
-              onChange={(e) => setForm({ ...form, brygadzista: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, brygadzista: e.target.value })
+              }
               required
             />
           </label>
@@ -139,7 +141,7 @@ export default function BrygadyPage() {
           )}
         </div>
 
-        {error && <p className="error">⚠ {error}</p>}
+        {error && <p className="error">{error}</p>}
       </form>
 
       <div className="tableWrap" style={{ marginTop: 16 }}>
@@ -159,17 +161,31 @@ export default function BrygadyPage() {
             <tbody>
               {list.map((b) => (
                 <tr key={b.id}>
-                  <td data-label="Numer brygady" style={{ fontWeight: 700 }}>{b.numer}</td>
+                  <td data-label="Numer brygady" style={{ fontWeight: 700 }}>
+                    {b.numer}
+                  </td>
                   <td data-label="Brygadzista">{b.brygadzista}</td>
                   <td className="actionsCell" data-label="Akcje">
-                    <button type="button" className="secondary" onClick={() => goDetails(b.id)}>
-                      ℹ
+                    <button
+                      type="button"
+                      className="info-btn"
+                      onClick={() => goDetails(b.id)}
+                    >
+                      Szczegóły
                     </button>
-                    <button type="button" onClick={() => startEdit(b)}>
-                      ✏️ Edytuj
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => startEdit(b)}
+                    >
+                      Edytuj
                     </button>
-                    <button type="button" className="danger" onClick={() => handleDelete(b.id)}>
-                      🗑 Usuń
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => handleDelete(b.id)}
+                    >
+                      Usuń
                     </button>
                   </td>
                 </tr>

@@ -63,6 +63,13 @@ header {
   color: #fff;
 }
 
+.appHeader {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+}
+
 .menu {
   display: flex;
   gap: 20px;
@@ -73,6 +80,14 @@ header {
   padding: 0;
 }
 
+.appNav {
+  flex: 1 1 auto;
+}
+
+.appUserBar {
+  justify-content: flex-end;
+}
+
 .menu a {
   color: #fff;
   text-decoration: none;
@@ -81,6 +96,30 @@ header {
 
 .menu a:hover {
   color: #66b3ff;
+}
+
+.appNav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.appNav a:hover {
+  color: #fff;
+  background: rgba(102, 179, 255, 0.22);
+}
+
+.userBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .logout-btn {
@@ -163,18 +202,35 @@ button[disabled] {
   cursor: not-allowed;
 }
 
+.secondary {
+  background: #64748b;
+}
+
+.secondary:hover {
+  background: #475569;
+}
+
+.danger {
+  background: var(--color-danger);
+}
+
+.danger:hover {
+  background: var(--color-danger-hover);
+}
+
 .info-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  min-height: 36px;
   background: var(--color-primary);
   color: #fff;
   border-radius: var(--radius-md);
   text-decoration: none;
-  font-size: 18px;
-  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 14px;
+  margin-left: 0;
   transition:
     background-color var(--transition-medium),
     transform var(--transition-medium);
@@ -266,6 +322,11 @@ label {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.actionsCell button,
+.actionsCell .info-btn {
+  min-width: 110px;
 }
 
 .login-body {
@@ -396,6 +457,28 @@ label {
     margin-left: 0;
   }
 
+  .appNav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .appNav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .appNav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .appUserBar {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .table {
     min-width: 560px;
   }
@@ -523,5 +606,18 @@ label {
   .footer {
     padding: 12px;
     font-size: 12px;
+  }
+
+  .appUserBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .userBadge,
+  .logout-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
 }

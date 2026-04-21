@@ -6,8 +6,8 @@ export default function BrygadaDetails() {
   const { id } = useParams();
   const router = useRouter();
 
-  const [header, setHeader] = useState(null); // dane brygady
-  const [items, setItems] = useState([]);     // członkowie
+  const [header, setHeader] = useState(null);
+  const [items, setItems] = useState([]);
   const [form, setForm] = useState({
     imie: "",
     nazwisko: "",
@@ -20,23 +20,49 @@ export default function BrygadaDetails() {
 
   const validId = Number.isInteger(Number(id)) && Number(id) > 0;
 
-  // nagłówek
-  const loadHeader = async () => {
-    if (!validId) return;
-    const list = await fetch("/api/brygady", { cache: "no-store" })
-      .then((r) => r.json())
-      .catch(() => []);
-    const found = Array.isArray(list)
-      ? list.find((x) => String(x.id) === String(id))
-      : null;
-    setHeader(found || null);
-  };
+  useEffect(() => {
+    setErr("");
+    if (!validId) {
+      setItems([]);
+      setHeader(null);
+      setErr("Nieprawidłowe ID brygady w adresie URL.");
+      return;
+    }
 
-  // członkowie brygady
+    const loadHeader = async () => {
+      const list = await fetch("/api/brygady", { cache: "no-store" })
+        .then((r) => r.json())
+        .catch(() => []);
+      const found = Array.isArray(list)
+        ? list.find((x) => String(x.id) === String(id))
+        : null;
+      setHeader(found || null);
+    };
+
+    const loadMembers = async () => {
+      const res = await fetch(`/api/brygady/${id}/members`, {
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setErr(data?.error || "Błąd pobierania członków");
+        setItems([]);
+        return;
+      }
+      setItems(Array.isArray(data) ? data : []);
+    };
+
+    loadHeader();
+    loadMembers();
+  }, [id, validId]);
+
   const loadMembers = async () => {
     if (!validId) return;
 
-    const res = await fetch(`/api/brygady/${id}/members`, { cache: "no-store" });
+    const res = await fetch(`/api/brygady/${id}/members`, {
+      cache: "no-store",
+    });
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
@@ -46,19 +72,6 @@ export default function BrygadaDetails() {
     }
     setItems(Array.isArray(data) ? data : []);
   };
-
-  useEffect(() => {
-    setErr("");
-    if (!validId) {
-      setItems([]);
-      setHeader(null);
-      setErr("Nieprawidłowe ID brygady w adresie URL.");
-      return;
-    }
-    loadHeader();
-    loadMembers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
 
   const reset = () => {
     setForm({ imie: "", nazwisko: "", rola: "", telefon: "" });
@@ -108,7 +121,6 @@ export default function BrygadaDetails() {
     }
   };
 
-  // ✅ EDYCJA (klik w tabeli)
   const handleEdit = (m) => {
     const mid = Number(m.id);
     setEditId(Number.isInteger(mid) ? mid : null);
@@ -121,7 +133,6 @@ export default function BrygadaDetails() {
     });
   };
 
-  // ✅ USUWANIE (klik w tabeli)
   const handleDelete = async (memberId) => {
     if (!validId) return;
     if (!confirm("Usunąć członka?")) return;
@@ -132,7 +143,9 @@ export default function BrygadaDetails() {
       return;
     }
 
-    const res = await fetch(`/api/brygady/${id}/members/${mid}`, { method: "DELETE" });
+    const res = await fetch(`/api/brygady/${id}/members/${mid}`, {
+      method: "DELETE",
+    });
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
@@ -146,16 +159,19 @@ export default function BrygadaDetails() {
 
   return (
     <div>
-      <button className="secondary" onClick={() => router.push("/pages/brygady")}>
-        ← Wróć do listy
+      <button
+        className="secondary"
+        onClick={() => router.push("/pages/brygady")}
+      >
+        Wróć do listy
       </button>
 
       <h1>Szczegóły brygady</h1>
 
       {header ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <b>Numer:</b> {header.numer} &nbsp;|&nbsp;{" "}
-          <b>Brygadzista:</b> {header.brygadzista}
+          <b>Numer:</b> {header.numer} &nbsp;|&nbsp; <b>Brygadzista:</b>{" "}
+          {header.brygadzista}
         </div>
       ) : (
         <p>Ładowanie...</p>
@@ -213,7 +229,7 @@ export default function BrygadaDetails() {
           )}
         </div>
 
-        {err && <p className="error">⚠ {err}</p>}
+        {err && <p className="error">{err}</p>}
       </form>
 
       <h2>Członkowie</h2>
@@ -242,8 +258,20 @@ export default function BrygadaDetails() {
                   <td data-label="Rola">{m.rola ?? m.Rola ?? "-"}</td>
                   <td data-label="Telefon">{m.telefon ?? m.Telefon ?? "-"}</td>
                   <td className="actionsCell" data-label="Akcje">
-                    <button type="button" onClick={() => handleEdit(m)}>✏️</button>
-                    <button type="button" className="danger" onClick={() => handleDelete(m.id)}>🗑</button>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => handleEdit(m)}
+                    >
+                      Edytuj
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => handleDelete(m.id)}
+                    >
+                      Usuń
+                    </button>
                   </td>
                 </tr>
               ))}

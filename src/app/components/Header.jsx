@@ -22,19 +22,19 @@ export default function Header({ user: userProp }) {
   };
 
   return (
-    <header>
-      <div className="menu">
+    <header className="appHeader">
+      <nav className="menu appNav">
         <Link href="/">Home</Link>
         <Link href="/pages/maszyny">Maszyny</Link>
         <Link href="/pages/brygady">Brygady</Link>
         <Link href="/pages/sprzet">Sprzęt</Link>
         {user?.role === "admin" && <Link href="/uzytkownicy">Użytkownicy</Link>}
         {user?.role === "admin" && <Link href="/historia">Historia</Link>}
-      </div>
+      </nav>
 
-      <div className="menu">
-        <span>
-          Użytkownik: <b>{user?.username ?? "Gość"}</b>
+      <div className="menu appUserBar">
+        <span className="userBadge">
+          Konto: <b>{user?.username ?? "Gość"}</b>
         </span>
         <button onClick={handleLogout} className="logout-btn">
           Wyloguj
