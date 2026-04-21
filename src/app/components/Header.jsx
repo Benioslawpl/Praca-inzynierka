@@ -25,6 +25,7 @@ export default function Header({ user: userProp }) {
   const pathname = usePathname();
   const [user, setUser] = useState(userProp ?? null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     setUser(userProp ?? null);
@@ -33,6 +34,28 @@ export default function Header({ user: userProp }) {
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastY;
+
+      if (currentY < 24 || menuOpen) {
+        setIsVisible(true);
+      } else if (delta > 8) {
+        setIsVisible(false);
+      } else if (delta < -8) {
+        setIsVisible(true);
+      }
+
+      lastY = currentY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [menuOpen]);
 
   if (pathname === "/login") return null;
 
@@ -47,7 +70,7 @@ export default function Header({ user: userProp }) {
   };
 
   return (
-    <header className="appHeader">
+    <header className={`appHeader ${isVisible ? "appHeaderVisible" : "appHeaderHidden"}`}>
       <div className="appHeaderTop">
         <span className="mobileUserName">
           <span className="mobileUserLabel">Użytkownik</span>
@@ -82,14 +105,19 @@ export default function Header({ user: userProp }) {
           </Link>
         ))}
 
-        <button type="button" className="logout-btn mobileLogout" onClick={handleLogout}>
+        <button
+          type="button"
+          className="logout-btn mobileLogout"
+          onClick={handleLogout}
+        >
           Wyloguj
         </button>
       </nav>
 
       <div className="menu appUserBar">
         <span className="userBadge">
-          Konto: <b>{user?.username ?? "Gość"}</b>
+          <span className="desktopUserLabel">Użytkownik</span>
+          <b>{user?.username ?? "Gość"}</b>
         </span>
         <button onClick={handleLogout} className="logout-btn">
           Wyloguj

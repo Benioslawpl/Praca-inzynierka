@@ -58,8 +58,8 @@ header {
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 12px 20px;
-  background: #222;
+  padding: 10px 16px;
+  background: #fff;
   color: #fff;
 }
 
@@ -67,11 +67,22 @@ header {
   position: sticky;
   top: 0;
   z-index: 20;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
-  background:
-    linear-gradient(135deg, rgba(17, 24, 39, 0.98), rgba(30, 41, 59, 0.96)),
-    #222;
-  backdrop-filter: blur(12px);
+  width: 100%;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.7);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.appHeaderVisible {
+  transform: translateY(0);
+}
+
+.appHeaderHidden {
+  transform: translateY(calc(-100% - 8px));
 }
 
 .appHeaderTop {
@@ -108,14 +119,14 @@ header {
   gap: 2px;
   min-width: 0;
   padding: 0 2px;
-  color: #fff;
+  color: #0f172a;
 }
 
 .mobileUserLabel {
   font-size: 11px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.68);
+  color: #64748b;
 }
 
 .mobileUserName b {
@@ -133,8 +144,8 @@ header {
   height: 46px;
   padding: 0;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #fff;
+  border: 1px solid #dbe2ea;
   align-items: center;
   justify-content: center;
   flex-direction: column;
@@ -147,7 +158,7 @@ header {
   width: 20px;
   height: 2px;
   border-radius: 999px;
-  background: #fff;
+  background: #0f172a;
   transition:
     transform var(--transition-medium),
     opacity var(--transition-medium);
@@ -166,52 +177,61 @@ header {
 }
 
 .menu a {
-  color: #fff;
+  color: #334155;
   text-decoration: none;
   transition: var(--transition-medium);
 }
 
 .menu a:hover {
-  color: #66b3ff;
+  color: #0f172a;
 }
 
 .appNav a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 36px;
-  padding: 8px 12px;
+  min-height: 38px;
+  padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent;
   border: 1px solid transparent;
 }
 
 .appNav a:hover {
-  color: #fff;
-  background: rgba(102, 179, 255, 0.22);
+  color: #0f172a;
+  background: #eff6ff;
 }
 
 .appNav a.activeNavLink {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
-  border-color: rgba(191, 219, 254, 0.4);
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+  box-shadow: none;
 }
 
 .userBadge {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-height: 36px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.desktopUserLabel {
+  font-size: 12px;
+  color: #64748b;
 }
 
 .logout-btn {
-  background: var(--color-danger);
+  background: #0f172a;
   color: #fff;
   border: none;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  border-radius: 999px;
   cursor: pointer;
   transition:
     background-color var(--transition-medium),
@@ -223,7 +243,7 @@ header {
 }
 
 .logout-btn:hover {
-  background: var(--color-danger-hover);
+  background: #1e293b;
 }
 
 .main {
@@ -503,7 +523,7 @@ label {
 
   header {
     align-items: flex-start;
-    padding: 12px;
+    padding: 10px 12px;
   }
 
   .menu {
@@ -566,14 +586,14 @@ label {
     display: none;
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-    margin-top: 10px;
-    padding: 10px;
-    border-radius: 18px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
   }
 
   .appNav.menuOpen {
@@ -586,11 +606,11 @@ label {
     justify-content: flex-start;
     border-radius: 14px;
     padding: 12px 14px;
-    background: rgba(255, 255, 255, 0.06);
+    background: transparent;
   }
 
   .appNav a.activeNavLink {
-    background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+    background: #eff6ff;
   }
 
   .appUserBar {
@@ -602,6 +622,7 @@ label {
     width: 100%;
     justify-content: center;
     margin-top: 4px;
+    background: #0f172a;
   }
 
   .table {
