@@ -1,16 +1,43 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function SprzetDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
 
-  const [item, setItem] = useState(null);
-  const [brygady, setBrygady] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [header, setHeader] = useState(null);
+  const [items, setItems] = useState([]);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const emptyForm = {
+    przebieg: "",
+    awaria: "",
+    wykonawca: "",
+    uwagi: "",
+    data_zdarzenia: today,
+  };
+
+  const [form, setForm] = useState(emptyForm);
+  const [editId, setEditId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const loadDetails = async (sprzetId) => {
+    const res = await fetch(`/api/sprzet/${sprzetId}/details`, {
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setErr(data?.error || "Błąd pobierania");
+      setItems([]);
+      return;
+    }
+
+    setItems(Array.isArray(data) ? data : []);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -18,33 +45,31 @@ export default function SprzetDetailsPage() {
     let cancelled = false;
 
     const load = async () => {
-      setLoading(true);
-      setError("");
+      setErr("");
 
-      const [itemRes, brygadyRes] = await Promise.all([
-        fetch(`/api/sprzet/${id}`, { cache: "no-store" }),
-        fetch("/api/brygady", { cache: "no-store" }),
+      const [headerRes, detailsRes] = await Promise.all([
+        fetch(`/api/sprzet/${id}`, { cache: "no-store" })
+          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+          .catch(() => ({ ok: false, data: null })),
+        fetch(`/api/sprzet/${id}/details`, { cache: "no-store" })
+          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+          .catch(() => ({ ok: false, data: null })),
       ]);
-
-      const itemData = await itemRes.json().catch(() => ({}));
-      const brygadyData = await brygadyRes.json().catch(() => ({}));
 
       if (cancelled) return;
 
-      if (!itemRes.ok) {
-        setItem(null);
-        setError(itemData?.error || "Nie udało się pobrać sprzętu.");
+      if (headerRes.ok) {
+        setHeader(headerRes.data);
       } else {
-        setItem(itemData);
+        setHeader(null);
       }
 
-      if (brygadyRes.ok) {
-        setBrygady(Array.isArray(brygadyData) ? brygadyData : []);
+      if (detailsRes.ok) {
+        setItems(Array.isArray(detailsRes.data) ? detailsRes.data : []);
       } else {
-        setBrygady([]);
+        setItems([]);
+        setErr(detailsRes.data?.error || "Błąd pobierania");
       }
-
-      setLoading(false);
     };
 
     load();
@@ -54,15 +79,77 @@ export default function SprzetDetailsPage() {
     };
   }, [id]);
 
-  const linkedBrygada = useMemo(() => {
-    if (!item?.brygadzista) return null;
+  const reset = () => {
+    setForm(emptyForm);
+    setEditId(null);
+    setErr("");
+  };
 
-    return (
-      brygady.find(
-        (row) => row?.brygadzista?.trim() === item.brygadzista?.trim()
-      ) || null
-    );
-  }, [brygady, item]);
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setErr("");
+
+    try {
+      const body = {
+        przebieg: form.przebieg === "" ? null : Number(form.przebieg),
+        awaria: form.awaria?.trim() || null,
+        wykonawca: form.wykonawca?.trim() || null,
+        uwagi: form.uwagi?.trim() || null,
+        data_zdarzenia: form.data_zdarzenia || null,
+      };
+
+      const url = editId
+        ? `/api/sprzet/${id}/details/${editId}`
+        : `/api/sprzet/${id}/details`;
+      const method = editId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
+
+      reset();
+      await loadDetails(id);
+    } catch (e2) {
+      setErr(e2.message || "Błąd zapisu");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const edit = (it) => {
+    setEditId(it.id);
+    setForm({
+      przebieg: it.przebieg ?? "",
+      awaria: it.awaria ?? "",
+      wykonawca: it.wykonawca ?? "",
+      uwagi: it.uwagi ?? "",
+      data_zdarzenia: it.data_zdarzenia
+        ? String(it.data_zdarzenia).slice(0, 10)
+        : today,
+    });
+  };
+
+  const del = async (detailId) => {
+    if (!confirm("Usunąć wpis?")) return;
+
+    const res = await fetch(`/api/sprzet/${id}/details/${detailId}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      await loadDetails(id);
+      return;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    setErr(data?.error || "Błąd usuwania");
+  };
 
   return (
     <div>
@@ -76,51 +163,155 @@ export default function SprzetDetailsPage() {
 
       <h1>Szczegóły sprzętu</h1>
 
-      {loading ? (
-        <p>Ładowanie...</p>
-      ) : error ? (
-        <p className="error">{error}</p>
-      ) : !item ? (
-        <p>Nie znaleziono sprzętu.</p>
+      {header ? (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <b>Nr:</b> {header.nr ?? "-"} &nbsp;|&nbsp; <b>Rodzaj:</b>{" "}
+          {header.rodzaj}
+          &nbsp;|&nbsp; <b>Marka/Model:</b> {header.marka} {header.model}
+          &nbsp;|&nbsp; <b>Brygadzista:</b> {header.brygadzista}
+        </div>
       ) : (
-        <>
-          <div className="card" style={{ marginBottom: 16 }}>
-            <b>Nr:</b> {item.nr || "-"} &nbsp;|&nbsp; <b>Rodzaj:</b>{" "}
-            {item.rodzaj || "-"}
-            &nbsp;|&nbsp; <b>Marka/Model:</b> {item.marka || "-"}{" "}
-            {item.model || ""}
-            &nbsp;|&nbsp; <b>Brygadzista:</b> {item.brygadzista || "-"}
-          </div>
-
-          <h2>Przypisanie sprzętu</h2>
-
-          <div className="card">
-            <div className="compactList">
-              <div className="compactListRow">
-                <div className="compactListMain">
-                  <span className="rowEyebrow">Brygadzista</span>
-                  <strong>{item.brygadzista || "-"}</strong>
-                  <span className="mutedText">
-                    {linkedBrygada
-                      ? `Przypisany do brygady ${linkedBrygada.numer}`
-                      : "Brak dopasowanej brygady w bazie"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="compactListRow">
-                <div className="compactListMain">
-                  <span className="rowEyebrow">Typ sprzętu</span>
-                  <strong>{item.rodzaj || "-"}</strong>
-                  <span className="mutedText">
-                    {item.marka || "-"} {item.model || ""}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
+        <p>Ładowanie...</p>
       )}
+
+      <h2>{editId ? "Edytuj zdarzenie" : "Nowe zdarzenie"}</h2>
+
+      <form className="card" onSubmit={submit}>
+        <div className="grid">
+          <label>
+            <span>Data zdarzenia</span>
+            <input
+              type="date"
+              value={form.data_zdarzenia}
+              onChange={(e) =>
+                setForm({ ...form, data_zdarzenia: e.target.value })
+              }
+              required
+            />
+          </label>
+
+          <label>
+            <span>Przebieg / licznik</span>
+            <input
+              type="number"
+              value={form.przebieg}
+              onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
+              min="0"
+              placeholder="np. 320"
+            />
+          </label>
+
+          <label>
+            <span>Awaria</span>
+            <input
+              value={form.awaria}
+              onChange={(e) =>
+                setForm({ ...form, awaria: e.target.value.slice(0, 30) })
+              }
+              placeholder="np. Uszkodzony przewód"
+            />
+          </label>
+
+          <label>
+            <span>Wykonawca</span>
+            <input
+              value={form.wykonawca}
+              onChange={(e) =>
+                setForm({ ...form, wykonawca: e.target.value })
+              }
+              placeholder="np. Serwis wewnętrzny"
+            />
+          </label>
+
+          <label style={{ gridColumn: "1 / -1" }}>
+            <span>Uwagi</span>
+            <textarea
+              value={form.uwagi}
+              onChange={(e) =>
+                setForm({ ...form, uwagi: e.target.value.slice(0, 200) })
+              }
+              rows={3}
+              placeholder="Krótki opis zdarzenia..."
+              style={{
+                width: "100%",
+                resize: "vertical",
+                padding: 8,
+                borderRadius: 6,
+                border: "1px solid #cfd4dc",
+                background: "#fff",
+              }}
+            />
+          </label>
+        </div>
+
+        <div className="actions">
+          <button type="submit" disabled={saving}>
+            {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+          </button>
+
+          {editId && (
+            <button type="button" className="secondary" onClick={reset}>
+              Anuluj
+            </button>
+          )}
+        </div>
+
+        {err && <p className="error">{err}</p>}
+      </form>
+
+      <h2>Historia zdarzeń</h2>
+
+      <div className="tableWrap">
+        {items.length === 0 ? (
+          <p>Brak wpisów</p>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Przebieg</th>
+                <th>Awaria</th>
+                <th>Wykonawca</th>
+                <th>Uwagi</th>
+                <th>Akcje</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {items.map((it) => (
+                <tr key={it.id}>
+                  <td data-label="Data">
+                    {it.data_zdarzenia
+                      ? String(it.data_zdarzenia).slice(0, 10)
+                      : "-"}
+                  </td>
+                  <td data-label="Przebieg">{it.przebieg ?? "-"}</td>
+                  <td data-label="Awaria">{it.awaria || "-"}</td>
+                  <td data-label="Wykonawca">{it.wykonawca || "-"}</td>
+                  <td
+                    data-label="Uwagi"
+                    style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
+                  >
+                    {it.uwagi || "-"}
+                  </td>
+                  <td className="actionsCell" data-label="Akcje">
+                    <button type="button" onClick={() => edit(it)}>
+                      Edytuj
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => del(it.id)}
+                    >
+                      Usuń
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
