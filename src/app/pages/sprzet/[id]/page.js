@@ -56,6 +56,7 @@ export default function SprzetDetailsPage() {
 
   const linkedBrygada = useMemo(() => {
     if (!item?.brygadzista) return null;
+
     return (
       brygady.find(
         (row) => row?.brygadzista?.trim() === item.brygadzista?.trim()
@@ -64,7 +65,7 @@ export default function SprzetDetailsPage() {
   }, [brygady, item]);
 
   return (
-    <div className="stackSection">
+    <div>
       <button
         type="button"
         className="secondary"
@@ -73,13 +74,7 @@ export default function SprzetDetailsPage() {
         Wróć do listy
       </button>
 
-      <div className="sectionIntro">
-        <h1>Szczegóły sprzętu</h1>
-        <p>
-          Podgląd podstawowych informacji o wybranym sprzęcie i przypisaniu do
-          brygadzisty.
-        </p>
-      </div>
+      <h1>Szczegóły sprzętu</h1>
 
       {loading ? (
         <p>Ładowanie...</p>
@@ -89,60 +84,17 @@ export default function SprzetDetailsPage() {
         <p>Nie znaleziono sprzętu.</p>
       ) : (
         <>
-          <article className="card sectionCard">
-            <div className="sectionCardHeader">
-              <div>
-                <h2>
-                  {item.nr || "Bez numeru"} · {item.rodzaj}
-                </h2>
-                <p className="mutedText">
-                  {item.marka} {item.model}
-                </p>
-              </div>
-            </div>
+          <div className="card" style={{ marginBottom: 16 }}>
+            <b>Nr:</b> {item.nr || "-"} &nbsp;|&nbsp; <b>Rodzaj:</b>{" "}
+            {item.rodzaj || "-"}
+            &nbsp;|&nbsp; <b>Marka/Model:</b> {item.marka || "-"}{" "}
+            {item.model || ""}
+            &nbsp;|&nbsp; <b>Brygadzista:</b> {item.brygadzista || "-"}
+          </div>
 
-            <div className="statsGrid">
-              <div className="statCard">
-                <span className="statLabel">Numer sprzętu</span>
-                <strong className="statValue statValueSm">
-                  {item.nr || "-"}
-                </strong>
-              </div>
+          <h2>Przypisanie sprzętu</h2>
 
-              <div className="statCard">
-                <span className="statLabel">Rodzaj</span>
-                <strong className="statValue statValueSm">
-                  {item.rodzaj || "-"}
-                </strong>
-              </div>
-
-              <div className="statCard">
-                <span className="statLabel">Marka i model</span>
-                <strong className="statValue statValueSm">
-                  {item.marka} {item.model}
-                </strong>
-              </div>
-
-              <div className="statCard">
-                <span className="statLabel">Brygadzista</span>
-                <strong className="statValue statValueSm">
-                  {item.brygadzista || "-"}
-                </strong>
-              </div>
-            </div>
-          </article>
-
-          <article className="card sectionCard">
-            <div className="sectionCardHeader">
-              <div>
-                <h2>Przypisanie</h2>
-                <p className="mutedText">
-                  Informacja, do której brygady jest najpewniej przypisany ten
-                  sprzęt.
-                </p>
-              </div>
-            </div>
-
+          <div className="card">
             <div className="compactList">
               <div className="compactListRow">
                 <div className="compactListMain">
@@ -150,13 +102,23 @@ export default function SprzetDetailsPage() {
                   <strong>{item.brygadzista || "-"}</strong>
                   <span className="mutedText">
                     {linkedBrygada
-                      ? `Brygada ${linkedBrygada.numer}`
+                      ? `Przypisany do brygady ${linkedBrygada.numer}`
                       : "Brak dopasowanej brygady w bazie"}
                   </span>
                 </div>
               </div>
+
+              <div className="compactListRow">
+                <div className="compactListMain">
+                  <span className="rowEyebrow">Typ sprzętu</span>
+                  <strong>{item.rodzaj || "-"}</strong>
+                  <span className="mutedText">
+                    {item.marka || "-"} {item.model || ""}
+                  </span>
+                </div>
+              </div>
             </div>
-          </article>
+          </div>
         </>
       )}
     </div>
