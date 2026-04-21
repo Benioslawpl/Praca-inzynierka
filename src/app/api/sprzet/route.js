@@ -4,7 +4,7 @@ import { audit } from "../../../lib/audit";
 export async function GET() {
   try {
     const { rows } = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator, created_at
+      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista, created_at
        FROM sprzet
        ORDER BY id ASC`
     );
@@ -21,11 +21,11 @@ export async function POST(req) {
     const rodzaj = body?.rodzaj?.trim();
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
-    const operator = body?.operator?.trim();
+    const brygadzista = body?.brygadzista?.trim();
 
-    if (!rodzaj || !marka || !model || !operator) {
+    if (!rodzaj || !marka || !model || !brygadzista) {
       return Response.json(
-        { error: "Wymagane: rodzaj, marka, model, operator" },
+        { error: "Wymagane: rodzaj, marka, model, brygadzista" },
         { status: 400 }
       );
     }
@@ -33,8 +33,8 @@ export async function POST(req) {
     const { rows } = await pool.query(
       `INSERT INTO sprzet (rodzaj, marka, model, operator)
        VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [rodzaj, marka, model, operator]
+       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista, created_at`,
+      [rodzaj, marka, model, brygadzista]
     );
 
     await audit({

@@ -1,39 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function SprzetPage() {
   const [rows, setRows] = useState([]);
+  const [brygady, setBrygady] = useState([]);
   const [form, setForm] = useState({
     rodzaj: "",
     marka: "",
     model: "",
-    operator: "",
+    brygadzista: "",
   });
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const brygadzisci = useMemo(() => {
+    const seen = new Set();
+    return brygady.filter((item) => {
+      const name = item?.brygadzista?.trim();
+      if (!name || seen.has(name)) return false;
+      seen.add(name);
+      return true;
+    });
+  }, [brygady]);
+
   const load = async () => {
     setError("");
-    const res = await fetch("/api/sprzet", { cache: "no-store" });
-    const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
+    const [sprzetRes, brygadyRes] = await Promise.all([
+      fetch("/api/sprzet", { cache: "no-store" }),
+      fetch("/api/brygady", { cache: "no-store" }),
+    ]);
+
+    const sprzetData = await sprzetRes.json().catch(() => ({}));
+    const brygadyData = await brygadyRes.json().catch(() => ({}));
+
+    if (!sprzetRes.ok) {
       setRows([]);
-      setError(data?.error || "Błąd pobierania sprzętu");
-      return;
+      setError(sprzetData?.error || "Błąd pobierania sprzętu");
+    } else {
+      setRows(Array.isArray(sprzetData) ? sprzetData : []);
     }
 
-    setRows(Array.isArray(data) ? data : []);
+    if (!brygadyRes.ok) {
+      setBrygady([]);
+      setError((prev) => prev || brygadyData?.error || "Błąd pobierania brygad");
+    } else {
+      setBrygady(Array.isArray(brygadyData) ? brygadyData : []);
+    }
   };
 
   useEffect(() => {
     load();
   }, []);
 
+  useEffect(() => {
+    if (!form.brygadzista && brygadzisci[0]?.brygadzista) {
+      setForm((current) => ({
+        ...current,
+        brygadzista: current.brygadzista || brygadzisci[0].brygadzista,
+      }));
+    }
+  }, [brygadzisci, form.brygadzista]);
+
   const reset = () => {
-    setForm({ rodzaj: "", marka: "", model: "", operator: "" });
+    setForm({
+      rodzaj: "",
+      marka: "",
+      model: "",
+      brygadzista: brygadzisci[0]?.brygadzista || "",
+    });
     setEditId(null);
     setError("");
   };
@@ -51,7 +88,7 @@ export default function SprzetPage() {
         rodzaj: form.rodzaj.trim(),
         marka: form.marka.trim(),
         model: form.model.trim(),
-        operator: form.operator.trim(),
+        brygadzista: form.brygadzista.trim(),
       };
 
       const res = await fetch(url, {
@@ -80,7 +117,7 @@ export default function SprzetPage() {
       rodzaj: row.rodzaj ?? "",
       marka: row.marka ?? "",
       model: row.model ?? "",
-      operator: row.operator ?? "",
+      brygadzista: row.brygadzista ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -137,18 +174,30 @@ export default function SprzetPage() {
           </label>
 
           <label>
-            <span>Operator*</span>
-            <input
-              value={form.operator}
-              onChange={(e) => setForm({ ...form, operator: e.target.value })}
+            <span>Brygadzista*</span>
+            <select
+              value={form.brygadzista}
+              onChange={(e) =>
+                setForm({ ...form, brygadzista: e.target.value })
+              }
               required
-              placeholder="np. Jan Kowalski"
-            />
+              disabled={brygadzisci.length === 0}
+            >
+              {brygadzisci.length === 0 ? (
+                <option value="">Brak dostępnych brygadzistów</option>
+              ) : (
+                brygadzisci.map((item) => (
+                  <option key={item.id} value={item.brygadzista}>
+                    {item.brygadzista} ({item.numer})
+                  </option>
+                ))
+              )}
+            </select>
           </label>
         </div>
 
         <div className="actions">
-          <button type="submit" disabled={saving}>
+          <button type="submit" disabled={saving || brygadzisci.length === 0}>
             {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
           </button>
 
@@ -158,6 +207,13 @@ export default function SprzetPage() {
             </button>
           )}
         </div>
+
+        {brygadzisci.length === 0 && !error && (
+          <p className="error">
+            Najpierw dodaj przynajmniej jedną brygadę z przypisanym
+            brygadzistą.
+          </p>
+        )}
 
         {error && <p className="error">{error}</p>}
       </form>
@@ -173,7 +229,7 @@ export default function SprzetPage() {
                 <th>Rodzaj</th>
                 <th>Marka</th>
                 <th>Model</th>
-                <th>Operator</th>
+                <th>Brygadzista</th>
                 <th style={{ width: 240 }}>Akcje</th>
               </tr>
             </thead>
@@ -188,7 +244,7 @@ export default function SprzetPage() {
                     <td data-label="Rodzaj">{row.rodzaj}</td>
                     <td data-label="Marka">{row.marka}</td>
                     <td data-label="Model">{row.model}</td>
-                    <td data-label="Operator">{row.operator}</td>
+                    <td data-label="Brygadzista">{row.brygadzista}</td>
 
                     <td className="actionsCell" data-label="Akcje">
                       <button

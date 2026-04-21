@@ -26,7 +26,7 @@ export async function GET(req, ctx) {
     }
 
     const { rows } = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator
+      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista
        FROM sprzet
        WHERE id=$1`,
       [id]
@@ -50,7 +50,7 @@ export async function PUT(req, { params }) {
     }
 
     const beforeResult = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator
+      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista
        FROM sprzet
        WHERE id=$1`,
       [id]
@@ -65,11 +65,11 @@ export async function PUT(req, { params }) {
     const rodzaj = body?.rodzaj?.trim();
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
-    const operator = body?.operator?.trim();
+    const brygadzista = body?.brygadzista?.trim();
 
-    if (!rodzaj || !marka || !model || !operator) {
+    if (!rodzaj || !marka || !model || !brygadzista) {
       return Response.json(
-        { error: "Wymagane: rodzaj, marka, model, operator" },
+        { error: "Wymagane: rodzaj, marka, model, brygadzista" },
         { status: 400 }
       );
     }
@@ -78,8 +78,8 @@ export async function PUT(req, { params }) {
       `UPDATE sprzet
        SET rodzaj=$1, marka=$2, model=$3, operator=$4
        WHERE id=$5
-       RETURNING id, nr, rodzaj, marka, model, operator`,
-      [rodzaj, marka, model, operator, id]
+       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista`,
+      [rodzaj, marka, model, brygadzista, id]
     );
 
     await audit({
@@ -107,7 +107,7 @@ export async function DELETE(req, { params }) {
     const { rows } = await pool.query(
       `DELETE FROM sprzet
        WHERE id=$1
-       RETURNING id, nr, rodzaj, marka, model, operator`,
+       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista`,
       [id]
     );
 
