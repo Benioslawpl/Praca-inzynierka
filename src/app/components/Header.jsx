@@ -4,6 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
+const BASE_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/pages/maszyny", label: "Maszyny" },
+  { href: "/pages/brygady", label: "Brygady" },
+  { href: "/pages/sprzet", label: "Sprzęt" },
+];
+
+const ADMIN_LINKS = [
+  { href: "/uzytkownicy", label: "Użytkownicy" },
+  { href: "/historia", label: "Historia" },
+];
+
+function isActive(pathname, href) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function Header({ user: userProp }) {
   const pathname = usePathname();
   const [user, setUser] = useState(userProp ?? null);
@@ -19,6 +36,8 @@ export default function Header({ user: userProp }) {
 
   if (pathname === "/login") return null;
 
+  const links = user?.role === "admin" ? [...BASE_LINKS, ...ADMIN_LINKS] : BASE_LINKS;
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -30,18 +49,24 @@ export default function Header({ user: userProp }) {
   return (
     <header className="appHeader">
       <div className="appHeaderTop">
-        <button
-          type="button"
-          className="menuToggle"
-          aria-expanded={menuOpen}
-          aria-controls="primary-navigation"
-          aria-label={menuOpen ? "Zamknij menu" : "Otwórz menu"}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+        <div className="brandBlock">
+          <button
+            type="button"
+            className="menuToggle"
+            aria-expanded={menuOpen}
+            aria-controls="primary-navigation"
+            aria-label={menuOpen ? "Zamknij menu" : "Otwórz menu"}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+          <div className="brandText">
+            <strong>Panel firmy</strong>
+            <span>Zarządzanie sprzętem i brygadami</span>
+          </div>
+        </div>
 
         <div className="menu appUserBar appUserBarMobile">
           <span className="userBadge">
@@ -57,12 +82,15 @@ export default function Header({ user: userProp }) {
         id="primary-navigation"
         className={`menu appNav ${menuOpen ? "menuOpen" : ""}`}
       >
-        <Link href="/">Home</Link>
-        <Link href="/pages/maszyny">Maszyny</Link>
-        <Link href="/pages/brygady">Brygady</Link>
-        <Link href="/pages/sprzet">Sprzęt</Link>
-        {user?.role === "admin" && <Link href="/uzytkownicy">Użytkownicy</Link>}
-        {user?.role === "admin" && <Link href="/historia">Historia</Link>}
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={isActive(pathname, link.href) ? "activeNavLink" : ""}
+          >
+            {link.label}
+          </Link>
+        ))}
       </nav>
 
       <div className="menu appUserBar">
