@@ -11,7 +11,7 @@ export default function UsersPage() {
     password: "",
     email: "",
     role: "user",
-    blocked: false, // ✅ mamy w DB
+    blocked: false,
   });
 
   const fetchUsers = async () => {
@@ -27,7 +27,9 @@ export default function UsersPage() {
     setList(Array.isArray(data) ? data : []);
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const addUser = async (e) => {
     e.preventDefault();
@@ -51,7 +53,13 @@ export default function UsersPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Błąd dodawania");
 
-      setForm({ username: "", password: "", email: "", role: "user", blocked: false });
+      setForm({
+        username: "",
+        password: "",
+        email: "",
+        role: "user",
+        blocked: false,
+      });
       fetchUsers();
       alert(`Użytkownik dodany: ${data.username}`);
     } catch (e) {
@@ -61,7 +69,6 @@ export default function UsersPage() {
     }
   };
 
-  // ✅ toggle blokady używa blocked
   const toggleBlocked = async (id, blocked) => {
     setError("");
     const res = await fetch(`/api/users/${id}`, {
@@ -154,7 +161,7 @@ export default function UsersPage() {
           </button>
         </div>
 
-        {error && <p className="error">⚠ {error}</p>}
+        {error && <p className="error">{error}</p>}
       </form>
 
       <div className="tableWrap">
@@ -177,24 +184,22 @@ export default function UsersPage() {
             <tbody>
               {list.map((u, i) => (
                 <tr key={u.id}>
-                  <td>{i + 1}</td>
-                  <td>{u.username}</td>
-                  <td>{"•".repeat(8)}</td>
-                  <td>{u.role}</td>
-                  <td>
+                  <td data-label="Numer">{i + 1}</td>
+                  <td data-label="Login">{u.username}</td>
+                  <td data-label="Hasło">{"•".repeat(8)}</td>
+                  <td data-label="Rola">{u.role}</td>
+                  <td data-label="Data utworzenia">
                     {u.created_at
                       ? String(u.created_at).slice(0, 19).replace("T", " ")
                       : "-"}
                   </td>
-
-                  {/* ✅ blocked */}
-                  <td>
+                  <td data-label="Zablokowany">
                     <span className={`badge ${u.blocked ? "bad" : "ok"}`}>
                       {u.blocked ? "TAK" : "NIE"}
                     </span>
                   </td>
 
-                  <td className="actionsCell">
+                  <td className="actionsCell" data-label="Akcje">
                     <button
                       type="button"
                       className={u.blocked ? "secondary" : "danger"}
@@ -207,7 +212,11 @@ export default function UsersPage() {
                       Reset hasła
                     </button>
 
-                    <button type="button" className="danger" onClick={() => removeUser(u.id)}>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => removeUser(u.id)}
+                    >
                       Usuń
                     </button>
                   </td>

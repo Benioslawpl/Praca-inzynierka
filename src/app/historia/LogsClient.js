@@ -109,14 +109,14 @@ export default function LogsClient() {
             ) : (
               rows.map((r, i) => (
                 <tr key={i}>
-                  <td>{fmtDate(r?.date)}</td>
-                  <td>{r?.username ?? "-"}</td>
-                  <td>{r?.action ?? "-"}</td>
-                  <td>
+                  <td data-label="Data">{fmtDate(r?.date)}</td>
+                  <td data-label="Użytkownik">{r?.username ?? "-"}</td>
+                  <td data-label="Akcja">{r?.action ?? "-"}</td>
+                  <td data-label="Obiekt">
                     {r?.entity}
                     {r?.entityId ? `#${r.entityId}` : ""}
                   </td>
-                  <td>
+                  <td data-label="Zmiany">
                     {Array.isArray(r?.changes) && r.changes.length
                       ? r.changes.map((c, j) => (
                           <div key={j}>
@@ -126,7 +126,7 @@ export default function LogsClient() {
                         ))
                       : "-"}
                   </td>
-                  <td>{r?.ip ?? "-"}</td>
+                  <td data-label="IP">{r?.ip ?? "-"}</td>
                 </tr>
               ))
             )}

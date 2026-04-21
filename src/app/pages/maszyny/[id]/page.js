@@ -298,18 +298,18 @@ export default function MaszynaDetails() {
             <tbody>
               {items.map((it) => (
                 <tr key={it.id}>
-                  <td>
+                  <td data-label="Data">
                     {it.data_zdarzenia
                       ? String(it.data_zdarzenia).slice(0, 10)
                       : "-"}
                   </td>
-                  <td>{it.przebieg ?? "-"}</td>
-                  <td>{it.awaria || "-"}</td>
-                  <td>{it.wykonawca || "-"}</td>
-                  <td style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}>
+                  <td data-label="Przebieg">{it.przebieg ?? "-"}</td>
+                  <td data-label="Awaria">{it.awaria || "-"}</td>
+                  <td data-label="Wykonawca">{it.wykonawca || "-"}</td>
+                  <td data-label="Uwagi" style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}>
                     {it.uwagi || "-"}
                   </td>
-                  <td className="actionsCell">
+                  <td className="actionsCell" data-label="Akcje">
                     <button type="button" onClick={() => edit(it)}>
                       Edytuj
                     </button>

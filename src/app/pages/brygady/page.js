@@ -159,9 +159,9 @@ export default function BrygadyPage() {
             <tbody>
               {list.map((b) => (
                 <tr key={b.id}>
-                  <td style={{ fontWeight: 700 }}>{b.numer}</td>
-                  <td>{b.brygadzista}</td>
-                  <td className="actionsCell">
+                  <td data-label="Numer brygady" style={{ fontWeight: 700 }}>{b.numer}</td>
+                  <td data-label="Brygadzista">{b.brygadzista}</td>
+                  <td className="actionsCell" data-label="Akcje">
                     <button type="button" className="secondary" onClick={() => goDetails(b.id)}>
                       ℹ
                     </button>

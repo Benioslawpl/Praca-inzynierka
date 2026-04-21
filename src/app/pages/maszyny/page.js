@@ -160,13 +160,13 @@ export default function MaszynyPage() {
                 const uiNr = `M-${String(i + 1).padStart(2, "0")}`; // M-01, M-02...
                 return (
                   <tr key={r.id}>
-                    <td>{uiNr}</td>
-                    <td>{r.rodzaj}</td>
-                    <td>{r.marka}</td>
-                    <td>{r.model}</td>
-                    <td>{r.operator}</td>
+                    <td data-label="Numer">{uiNr}</td>
+                    <td data-label="Rodzaj">{r.rodzaj}</td>
+                    <td data-label="Marka">{r.marka}</td>
+                    <td data-label="Model">{r.model}</td>
+                    <td data-label="Operator">{r.operator}</td>
 
-                    <td className="actionsCell">
+                    <td className="actionsCell" data-label="Akcje">
                       <Link href={`/pages/maszyny/${r.id}`} className="info-btn" title="Szczegóły">
                         🛈
                       </Link>

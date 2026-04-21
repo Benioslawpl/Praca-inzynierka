@@ -236,12 +236,12 @@ export default function BrygadaDetails() {
             <tbody>
               {items.map((m, i) => (
                 <tr key={m.id}>
-                  <td>{i + 1}</td>
-                  <td>{m.imie ?? m.Imie ?? "-"}</td>
-                  <td>{m.nazwisko ?? m.Nazwisko ?? "-"}</td>
-                  <td>{m.rola ?? m.Rola ?? "-"}</td>
-                  <td>{m.telefon ?? m.Telefon ?? "-"}</td>
-                  <td className="actionsCell">
+                  <td data-label="Lp.">{i + 1}</td>
+                  <td data-label="Imię">{m.imie ?? m.Imie ?? "-"}</td>
+                  <td data-label="Nazwisko">{m.nazwisko ?? m.Nazwisko ?? "-"}</td>
+                  <td data-label="Rola">{m.rola ?? m.Rola ?? "-"}</td>
+                  <td data-label="Telefon">{m.telefon ?? m.Telefon ?? "-"}</td>
+                  <td className="actionsCell" data-label="Akcje">
                     <button type="button" onClick={() => handleEdit(m)}>✏️</button>
                     <button type="button" className="danger" onClick={() => handleDelete(m.id)}>🗑</button>
                   </td>
