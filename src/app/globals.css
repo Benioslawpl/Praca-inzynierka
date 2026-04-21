@@ -70,6 +70,14 @@ header {
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
 }
 
+.appHeaderTop {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .menu {
   display: flex;
   gap: 20px;
@@ -86,6 +94,48 @@ header {
 
 .appUserBar {
   justify-content: flex-end;
+}
+
+.appUserBarMobile {
+  display: none;
+}
+
+.menuToggle {
+  display: none;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: none;
+}
+
+.menuToggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: #fff;
+  transition:
+    transform var(--transition-medium),
+    opacity var(--transition-medium);
+}
+
+.menuToggle[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menuToggle[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
+
+.menuToggle[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 .menu a {
@@ -457,26 +507,47 @@ label {
     margin-left: 0;
   }
 
-  .appNav {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 2px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+  .appHeader {
+    align-items: stretch;
   }
 
-  .appNav::-webkit-scrollbar {
+  .appHeaderTop {
+    display: flex;
+  }
+
+  .menuToggle {
+    display: inline-flex;
+  }
+
+  .appNav {
     display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .appNav.menuOpen {
+    display: flex;
   }
 
   .appNav a {
-    flex: 0 0 auto;
-    white-space: nowrap;
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 14px;
+    padding: 12px 14px;
   }
 
   .appUserBar {
-    width: 100%;
-    justify-content: space-between;
+    display: none;
+  }
+
+  .appUserBarMobile {
+    display: flex;
+    width: auto;
+    margin-left: auto;
+    justify-content: flex-end;
   }
 
   .table {
@@ -608,16 +679,22 @@ label {
     font-size: 12px;
   }
 
-  .appUserBar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
   .userBadge,
   .logout-btn {
     width: 100%;
     justify-content: center;
     text-align: center;
+  }
+
+  .appHeaderTop {
+    align-items: stretch;
+  }
+
+  .appUserBarMobile {
+    width: calc(100% - 58px);
+  }
+
+  .appUserBarMobile .userBadge {
+    min-height: 46px;
   }
 }
