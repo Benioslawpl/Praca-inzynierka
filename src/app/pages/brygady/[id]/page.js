@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
@@ -115,7 +116,7 @@ export default function BrygadaDetails() {
       reset();
       loadMembers();
     } catch (e) {
-      setErr(e.message);
+      setErr(e.message || "Błąd zapisu");
     } finally {
       setSaving(false);
     }
@@ -160,6 +161,7 @@ export default function BrygadaDetails() {
   return (
     <div>
       <button
+        type="button"
         className="secondary"
         onClick={() => router.push("/pages/brygady")}
       >
@@ -169,9 +171,13 @@ export default function BrygadaDetails() {
       <h1>Szczegóły brygady</h1>
 
       {header ? (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <b>Numer:</b> {header.numer} &nbsp;|&nbsp; <b>Brygadzista:</b>{" "}
-          {header.brygadzista}
+        <div className="card detailsSummary" style={{ marginBottom: 16 }}>
+          <div className="detailsSummaryContent">
+            <div className="detailsSummaryLine">
+              <b>Numer:</b> <span>{header.numer}</span>
+              <b>Brygadzista:</b> <span>{header.brygadzista}</span>
+            </div>
+          </div>
         </div>
       ) : (
         <p>Ładowanie...</p>

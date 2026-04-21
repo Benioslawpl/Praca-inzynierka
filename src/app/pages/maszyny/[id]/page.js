@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
@@ -22,20 +23,6 @@ export default function MaszynaDetails() {
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
-
-  const loadHeader = async (machineId) => {
-    const res = await fetch(`/api/maszyny/${machineId}`, {
-      cache: "no-store",
-    });
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      setHeader(null);
-      return;
-    }
-
-    setHeader(data);
-  };
 
   const loadDetails = async (machineId) => {
     const res = await fetch(`/api/maszyny/${machineId}/details`, {
@@ -81,7 +68,7 @@ export default function MaszynaDetails() {
         setItems(Array.isArray(detailsRes.data) ? detailsRes.data : []);
       } else {
         setItems([]);
-        setErr(detailsRes.data?.error || "Blad pobierania");
+        setErr(detailsRes.data?.error || "Błąd pobierania");
       }
     };
 
@@ -93,13 +80,7 @@ export default function MaszynaDetails() {
   }, [id]);
 
   const reset = () => {
-    setForm({
-      przebieg: "",
-      awaria: "",
-      wykonawca: "",
-      uwagi: "",
-      data_zdarzenia: today,
-    });
+    setForm(emptyForm);
     setEditId(null);
     setErr("");
   };
@@ -135,7 +116,7 @@ export default function MaszynaDetails() {
       reset();
       await loadDetails(id);
     } catch (e2) {
-      setErr(e2.message);
+      setErr(e2.message || "Błąd zapisu");
     } finally {
       setSaving(false);
     }
@@ -173,6 +154,7 @@ export default function MaszynaDetails() {
   return (
     <div>
       <button
+        type="button"
         className="secondary"
         onClick={() => router.push("/pages/maszyny")}
       >
@@ -182,11 +164,17 @@ export default function MaszynaDetails() {
       <h1>Szczegóły maszyny</h1>
 
       {header ? (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <b>Nr:</b> {header.nr ?? "-"} &nbsp;|&nbsp; <b>Rodzaj:</b>{" "}
-          {header.rodzaj}
-          &nbsp;|&nbsp; <b>Marka/Model:</b> {header.marka} {header.model}
-          &nbsp;|&nbsp; <b>Operator:</b> {header.operator}
+        <div className="card detailsSummary" style={{ marginBottom: 16 }}>
+          <div className="detailsSummaryContent">
+            <div className="detailsSummaryLine">
+              <b>Nr:</b> <span>{header.nr ?? "-"}</span>
+              <b>Rodzaj:</b> <span>{header.rodzaj}</span>
+            </div>
+            <div className="detailsSummaryLine">
+              <b>Marka/Model:</b> <span>{header.marka} {header.model}</span>
+              <b>Operator:</b> <span>{header.operator}</span>
+            </div>
+          </div>
         </div>
       ) : (
         <p>Ładowanie...</p>
@@ -226,7 +214,7 @@ export default function MaszynaDetails() {
               onChange={(e) =>
                 setForm({ ...form, awaria: e.target.value.slice(0, 30) })
               }
-              placeholder="np. Uszk. wąż"
+              placeholder="np. Uszkodzony wąż"
             />
           </label>
 
@@ -306,7 +294,10 @@ export default function MaszynaDetails() {
                   <td data-label="Przebieg">{it.przebieg ?? "-"}</td>
                   <td data-label="Awaria">{it.awaria || "-"}</td>
                   <td data-label="Wykonawca">{it.wykonawca || "-"}</td>
-                  <td data-label="Uwagi" style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}>
+                  <td
+                    data-label="Uwagi"
+                    style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
+                  >
                     {it.uwagi || "-"}
                   </td>
                   <td className="actionsCell" data-label="Akcje">

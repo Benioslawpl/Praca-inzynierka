@@ -164,11 +164,17 @@ export default function SprzetDetailsPage() {
       <h1>Szczegóły sprzętu</h1>
 
       {header ? (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <b>Nr:</b> {header.nr ?? "-"} &nbsp;|&nbsp; <b>Rodzaj:</b>{" "}
-          {header.rodzaj}
-          &nbsp;|&nbsp; <b>Marka/Model:</b> {header.marka} {header.model}
-          &nbsp;|&nbsp; <b>Brygadzista:</b> {header.brygadzista}
+        <div className="card detailsSummary" style={{ marginBottom: 16 }}>
+          <div className="detailsSummaryContent">
+            <div className="detailsSummaryLine">
+              <b>Nr:</b> <span>{header.nr ?? "-"}</span>
+              <b>Rodzaj:</b> <span>{header.rodzaj}</span>
+            </div>
+            <div className="detailsSummaryLine">
+              <b>Marka/Model:</b> <span>{header.marka} {header.model}</span>
+              <b>Brygadzista:</b> <span>{header.brygadzista}</span>
+            </div>
+          </div>
         </div>
       ) : (
         <p>Ładowanie...</p>

@@ -399,6 +399,42 @@ button[disabled] {
   box-shadow: 0 6px 18px var(--color-shadow);
 }
 
+.detailsSummary {
+  position: relative;
+  overflow: hidden;
+  border-color: #d9e4f3;
+  background:
+    linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.98)),
+    #fff;
+  box-shadow: 0 18px 36px rgba(37, 99, 235, 0.08);
+}
+
+.detailsSummary::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #2563eb, #60a5fa);
+}
+
+.detailsSummaryContent {
+  display: grid;
+  gap: 10px;
+  padding-left: 6px;
+}
+
+.detailsSummaryLine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  line-height: 1.55;
+  color: #1e293b;
+}
+
+.detailsSummaryLine b {
+  color: #0f172a;
+}
+
 form.card {
   position: relative;
   display: grid;
@@ -817,6 +853,15 @@ label {
     margin: 12px 0 18px;
   }
 
+  .detailsSummaryContent {
+    padding-left: 2px;
+  }
+
+  .detailsSummaryLine {
+    gap: 6px;
+    font-size: 14px;
+  }
+
   form.card {
     gap: 14px;
   }
@@ -1004,6 +1049,15 @@ label {
 
   .compactAction {
     width: 100%;
+  }
+
+  .detailsSummary {
+    padding: 14px;
+  }
+
+  .detailsSummaryLine {
+    flex-direction: column;
+    gap: 2px;
   }
 
   .table {
