@@ -8,9 +8,10 @@ export function verifyJwt(token) {
 }
 
 /* ===== SERVER COMPONENTS (layout.js, server pages) ===== */
-export function getUserFromCookies() {
+export async function getUserFromCookies() {
   try {
-    const token = cookies().get("token")?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
     if (!token) return null;
 
     const p = verifyJwt(token);

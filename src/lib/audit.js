@@ -1,11 +1,11 @@
 import pool from "../../db";
 import { getUserFromCookies, getUserFromRequest } from "./auth";
 
-function getAuditUser(req) {
+async function getAuditUser(req) {
   const fromRequest = req ? getUserFromRequest(req) : null;
   if (fromRequest) return fromRequest;
 
-  const fromCookies = getUserFromCookies();
+  const fromCookies = await getUserFromCookies();
   if (fromCookies) return fromCookies;
 
   return { id: null, username: "anon", role: null, isAdmin: false };
@@ -22,7 +22,7 @@ function diff(before, after) {
 }
 
 export async function audit({ action, entity, entityId, before, after, req }) {
-  const u = getAuditUser(req);
+  const u = await getAuditUser(req);
   const ip =
     req?.headers?.get?.("x-forwarded-for") ||
     req?.headers?.get?.("x-real-ip") ||

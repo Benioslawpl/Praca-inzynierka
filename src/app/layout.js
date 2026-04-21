@@ -1,7 +1,6 @@
 import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import { cookies } from "next/headers";
 import { getUserFromCookies } from "../lib/auth";
 
 export const metadata = {
@@ -10,8 +9,7 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-  const cookieStore = cookies();
-  const user = getUserFromCookies(cookieStore);
+  const user = await getUserFromCookies();
 
   return (
     <html lang="pl">
