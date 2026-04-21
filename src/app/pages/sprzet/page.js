@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 export default function SprzetPage() {
@@ -247,6 +248,14 @@ export default function SprzetPage() {
                     <td data-label="Brygadzista">{row.brygadzista}</td>
 
                     <td className="actionsCell" data-label="Akcje">
+                      <Link
+                        href={`/pages/sprzet/${row.id}`}
+                        className="info-btn"
+                        title="Szczegóły"
+                      >
+                        Szczegóły
+                      </Link>
+
                       <button
                         type="button"
                         className="secondary"
