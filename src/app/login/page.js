@@ -22,26 +22,26 @@ export default function LoginPage() {
 
   const mapErrorMessage = (status, apiMessage) => {
     if (status === 400) {
-      return "Wpisz login i has\u0142o, aby si\u0119 zalogowa\u0107.";
+      return "Wpisz login i hasło, aby się zalogować.";
     }
 
     if (status === 401) {
       if (apiMessage?.toLowerCase().includes("login")) {
-        return "Nie znaleziono u\u017cytkownika o takim loginie.";
+        return "Nie znaleziono użytkownika o takim loginie.";
       }
 
       if (apiMessage?.toLowerCase().includes("has")) {
-        return "Podane has\u0142o jest nieprawid\u0142owe.";
+        return "Podane hasło jest nieprawidłowe.";
       }
 
-      return "Dane logowania s\u0105 nieprawid\u0142owe.";
+      return "Dane logowania są nieprawidłowe.";
     }
 
     if (status >= 500) {
-      return "Serwer chwilowo nie odpowiada. Spr\u00f3buj ponownie za moment.";
+      return "Serwer chwilowo nie odpowiada. Spróbuj ponownie za moment.";
     }
 
-    return "Nie uda\u0142o si\u0119 zalogowa\u0107. Spr\u00f3buj ponownie.";
+    return "Nie udało się zalogować. Spróbuj ponownie.";
   };
 
   const onSubmit = async (e) => {
@@ -51,7 +51,7 @@ export default function LoginPage() {
 
     try {
       if (!username.trim() || !password) {
-        setError("Wpisz login i has\u0142o, aby si\u0119 zalogowa\u0107.");
+        setError("Wpisz login i hasło, aby się zalogować.");
         return;
       }
 
@@ -70,7 +70,7 @@ export default function LoginPage() {
       setError(mapErrorMessage(res.status, data?.error));
     } catch {
       setError(
-        "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107 z serwerem. Sprawd\u017a po\u0142\u0105czenie i spr\u00f3buj ponownie."
+        "Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie."
       );
     } finally {
       setLoading(false);
@@ -85,8 +85,8 @@ export default function LoginPage() {
       >
         <div className="loginCardHeader">
           <span className="loginEyebrow">Logowanie</span>
-          <h1>Zaloguj si\u0119</h1>
-          <p>Wprowad\u017a dane dost\u0119pu, aby przej\u015b\u0107 do panelu zarz\u0105dzania.</p>
+          <h1>Zaloguj się</h1>
+          <p>Wprowadź dane dostępu, aby przejść do panelu zarządzania.</p>
         </div>
 
         <div className="loginFields">
@@ -102,10 +102,10 @@ export default function LoginPage() {
           </label>
 
           <label className="loginField">
-            <span>Has\u0142o</span>
+            <span>Hasło</span>
             <input
               type="password"
-              placeholder="Wpisz has\u0142o"
+              placeholder="Wpisz hasło"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
@@ -121,7 +121,7 @@ export default function LoginPage() {
               Trwa logowanie... {seconds > 0 ? `(${seconds}s)` : ""}
             </span>
           ) : (
-            "Zaloguj si\u0119"
+            "Zaloguj się"
           )}
         </button>
 

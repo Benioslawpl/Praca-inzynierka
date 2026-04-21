@@ -12,7 +12,7 @@ export async function POST(req) {
 
     if (!username || !password) {
       return Response.json(
-        { error: "Wpisz login i has\u0142o, aby si\u0119 zalogowa\u0107." },
+        { error: "Wpisz login i hasło, aby się zalogować." },
         { status: 400 }
       );
     }
@@ -26,7 +26,7 @@ export async function POST(req) {
 
     if (!user) {
       return Response.json(
-        { error: "Nie znaleziono u\u017cytkownika o takim loginie." },
+        { error: "Nie znaleziono użytkownika o takim loginie." },
         { status: 401 }
       );
     }
@@ -35,7 +35,7 @@ export async function POST(req) {
 
     if (!ok) {
       return Response.json(
-        { error: "Podane has\u0142o jest nieprawid\u0142owe." },
+        { error: "Podane hasło jest nieprawidłowe." },
         { status: 401 }
       );
     }
@@ -59,7 +59,7 @@ export async function POST(req) {
     return Response.json({ ok: true, username: user.username, role });
   } catch {
     return Response.json(
-      { error: "Serwer chwilowo nie odpowiada. Spr\u00f3buj ponownie za moment." },
+      { error: "Serwer chwilowo nie odpowiada. Spróbuj ponownie za moment." },
       { status: 500 }
     );
   }
