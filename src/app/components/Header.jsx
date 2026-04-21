@@ -70,7 +70,16 @@ export default function Header({ user: userProp }) {
   };
 
   return (
-    <header className={`appHeader ${isVisible ? "appHeaderVisible" : "appHeaderHidden"}`}>
+    <header
+      className={`appHeader ${isVisible ? "appHeaderVisible" : "appHeaderHidden"}`}
+    >
+      <div className="desktopUserBlock">
+        <span className="userBadge">
+          <span className="desktopUserLabel">Użytkownik</span>
+          <b>{user?.username ?? "Gość"}</b>
+        </span>
+      </div>
+
       <div className="appHeaderTop">
         <span className="mobileUserName">
           <span className="mobileUserLabel">Użytkownik</span>
@@ -115,10 +124,6 @@ export default function Header({ user: userProp }) {
       </nav>
 
       <div className="menu appUserBar">
-        <span className="userBadge">
-          <span className="desktopUserLabel">Użytkownik</span>
-          <b>{user?.username ?? "Gość"}</b>
-        </span>
         <button onClick={handleLogout} className="logout-btn">
           Wyloguj
         </button>
