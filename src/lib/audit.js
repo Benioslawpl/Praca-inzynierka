@@ -1,18 +1,14 @@
 import pool from "../../db";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { getUserFromCookies, getUserFromRequest } from "./auth";
 
-const SECRET = process.env.JWT_SECRET || "Test123!";
+function getAuditUser(req) {
+  const fromRequest = req ? getUserFromRequest(req) : null;
+  if (fromRequest) return fromRequest;
 
-export function getUser() {
-  try {
-    const token = cookies().get("token")?.value;
-    if (!token) return { id: null, username: "anon", isAdmin: false };
-    const p = jwt.verify(token, SECRET);
-    return { id: p.id ?? null, username: p.username ?? "anon", isAdmin: p.role === "admin" || p.username === "admin" };
-  } catch {
-    return { id: null, username: "anon", isAdmin: false };
-  }
+  const fromCookies = getUserFromCookies();
+  if (fromCookies) return fromCookies;
+
+  return { id: null, username: "anon", role: null, isAdmin: false };
 }
 
 function diff(before, after) {
@@ -26,7 +22,7 @@ function diff(before, after) {
 }
 
 export async function audit({ action, entity, entityId, before, after, req }) {
-  const u = getUser();
+  const u = getAuditUser(req);
   const ip =
     req?.headers?.get?.("x-forwarded-for") ||
     req?.headers?.get?.("x-real-ip") ||
