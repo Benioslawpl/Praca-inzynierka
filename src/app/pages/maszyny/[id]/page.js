@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function MaszynaDetails() {
@@ -23,8 +23,10 @@ export default function MaszynaDetails() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
-  const loadHeader = useEffectEvent(async () => {
-    const res = await fetch(`/api/maszyny/${id}`, { cache: "no-store" });
+  const loadHeader = async (machineId) => {
+    const res = await fetch(`/api/maszyny/${machineId}`, {
+      cache: "no-store",
+    });
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
@@ -33,10 +35,10 @@ export default function MaszynaDetails() {
     }
 
     setHeader(data);
-  });
+  };
 
-  const loadDetails = useEffectEvent(async () => {
-    const res = await fetch(`/api/maszyny/${id}/details`, {
+  const loadDetails = async (machineId) => {
+    const res = await fetch(`/api/maszyny/${machineId}/details`, {
       cache: "no-store",
     });
     const data = await res.json().catch(() => ({}));
@@ -48,12 +50,47 @@ export default function MaszynaDetails() {
     }
 
     setItems(Array.isArray(data) ? data : []);
-  });
+  };
 
   useEffect(() => {
-    loadHeader();
-    loadDetails();
-  }, [id, loadHeader, loadDetails]);
+    if (!id) return;
+
+    let cancelled = false;
+
+    const load = async () => {
+      setErr("");
+
+      const [headerRes, detailsRes] = await Promise.all([
+        fetch(`/api/maszyny/${id}`, { cache: "no-store" })
+          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+          .catch(() => ({ ok: false, data: null })),
+        fetch(`/api/maszyny/${id}/details`, { cache: "no-store" })
+          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+          .catch(() => ({ ok: false, data: null })),
+      ]);
+
+      if (cancelled) return;
+
+      if (headerRes.ok) {
+        setHeader(headerRes.data);
+      } else {
+        setHeader(null);
+      }
+
+      if (detailsRes.ok) {
+        setItems(Array.isArray(detailsRes.data) ? detailsRes.data : []);
+      } else {
+        setItems([]);
+        setErr(detailsRes.data?.error || "Blad pobierania");
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const reset = () => {
     setForm({
@@ -96,7 +133,7 @@ export default function MaszynaDetails() {
       if (!res.ok) throw new Error(data?.error || "Blad zapisu");
 
       reset();
-      loadDetails();
+      await loadDetails(id);
     } catch (e2) {
       setErr(e2.message);
     } finally {
@@ -125,7 +162,7 @@ export default function MaszynaDetails() {
     });
 
     if (res.ok) {
-      loadDetails();
+      await loadDetails(id);
       return;
     }
 
