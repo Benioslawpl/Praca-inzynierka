@@ -1072,6 +1072,57 @@ label {
   border-color: #fecaca;
 }
 
+.historyFiltersCard {
+  margin-bottom: 12px;
+}
+
+.historyFiltersGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.historyError {
+  margin-top: 8px;
+}
+
+.historyTable .historyChangesCell {
+  min-width: 300px;
+}
+
+.historyChangesList {
+  display: grid;
+  gap: 8px;
+}
+
+.historyChangeItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.historyChangeField {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.historyChangeArrow {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.historyChangeValue {
+  color: #475569;
+  word-break: break-word;
+}
+
+.historyChangeValueNew {
+  color: #1d4ed8;
+}
+
 @media (max-width: 900px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1259,6 +1310,10 @@ label {
 
   .formPanelHeader button {
     width: 100%;
+  }
+
+  .historyFiltersGrid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1483,6 +1538,29 @@ label {
   .table tbody td.actionsCell .secondary:hover,
   .table tbody td.actionsCell .info-btn:hover {
     transform: none;
+  }
+
+  .historyTable tbody td.historyChangesCell {
+    padding-left: 0;
+    padding-top: 14px;
+  }
+
+  .historyTable tbody td.historyChangesCell::before {
+    position: static;
+    width: auto;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .historyChangeItem {
+    padding: 10px 12px;
+    gap: 4px 6px;
+  }
+
+  .historyChangeField,
+  .historyChangeValue,
+  .historyChangeArrow {
+    font-size: 13px;
   }
 }
 

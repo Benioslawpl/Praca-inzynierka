@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
 export default function LogsClient() {
@@ -9,12 +10,13 @@ export default function LogsClient() {
   useEffect(() => {
     const load = async () => {
       setError("");
-      const p = new URLSearchParams();
-      if (filters.entity) p.set("entity", filters.entity);
-      if (filters.action) p.set("action", filters.action);
-      p.set("limit", "200");
+      const params = new URLSearchParams();
 
-      const res = await fetch("/api/logs?" + p.toString(), {
+      if (filters.entity) params.set("entity", filters.entity);
+      if (filters.action) params.set("action", filters.action);
+      params.set("limit", "200");
+
+      const res = await fetch("/api/logs?" + params.toString(), {
         cache: "no-store",
         credentials: "include",
       });
@@ -32,44 +34,41 @@ export default function LogsClient() {
     load();
   }, [filters]);
 
-  const fmtDate = (v) => {
-    if (!v) return "-";
+  const fmtDate = (value) => {
+    if (!value) return "-";
+
     try {
-      return new Date(v).toLocaleString("pl-PL");
+      return new Date(value).toLocaleString("pl-PL");
     } catch {
-      return String(v).slice(0, 19).replace("T", " ");
+      return String(value).slice(0, 19).replace("T", " ");
     }
   };
 
   return (
     <>
-      <div className="card" style={{ marginBottom: 12 }}>
-        <div
-          className="grid"
-          style={{ gridTemplateColumns: "repeat(3, minmax(0,1fr))" }}
-        >
+      <div className="card historyFiltersCard">
+        <div className="grid historyFiltersGrid">
           <label>
             <span>Encja</span>
             <select
               value={filters.entity}
-              onChange={(e) =>
-                setFilters({ ...filters, entity: e.target.value })
-              }
+              onChange={(e) => setFilters({ ...filters, entity: e.target.value })}
             >
               <option value="">Wszystkie</option>
               <option>maszyny</option>
               <option>brygady</option>
               <option>members</option>
               <option>maszyny_details</option>
+              <option>sprzet</option>
+              <option>sprzet_details</option>
             </select>
           </label>
+
           <label>
             <span>Akcja</span>
             <select
               value={filters.action}
-              onChange={(e) =>
-                setFilters({ ...filters, action: e.target.value })
-              }
+              onChange={(e) => setFilters({ ...filters, action: e.target.value })}
             >
               <option value="">Wszystkie</option>
               <option>create</option>
@@ -80,15 +79,12 @@ export default function LogsClient() {
             </select>
           </label>
         </div>
-        {error && (
-          <p className="error" style={{ marginTop: 8 }}>
-            {error}
-          </p>
-        )}
+
+        {error && <p className="error historyError">{error}</p>}
       </div>
 
       <div className="tableWrap">
-        <table className="table">
+        <table className="table historyTable">
           <thead>
             <tr>
               <th>Data</th>
@@ -99,6 +95,7 @@ export default function LogsClient() {
               <th>IP</th>
             </tr>
           </thead>
+
           <tbody>
             {rows.length === 0 ? (
               <tr>
@@ -107,26 +104,45 @@ export default function LogsClient() {
                 </td>
               </tr>
             ) : (
-              rows.map((r, i) => (
-                <tr key={i}>
-                  <td data-label="Data">{fmtDate(r?.date)}</td>
-                  <td data-label="Użytkownik">{r?.username ?? "-"}</td>
-                  <td data-label="Akcja">{r?.action ?? "-"}</td>
+              rows.map((row, index) => (
+                <tr key={index}>
+                  <td data-label="Data">{fmtDate(row?.date)}</td>
+                  <td data-label="Użytkownik">{row?.username ?? "-"}</td>
+                  <td data-label="Akcja">
+                    <span className="pill">{row?.action ?? "-"}</span>
+                  </td>
                   <td data-label="Obiekt">
-                    {r?.entity}
-                    {r?.entityId ? `#${r.entityId}` : ""}
+                    {row?.entity}
+                    {row?.entityId ? ` #${row.entityId}` : ""}
                   </td>
-                  <td data-label="Zmiany">
-                    {Array.isArray(r?.changes) && r.changes.length
-                      ? r.changes.map((c, j) => (
-                          <div key={j}>
-                            <b>{c.field}</b>: {String(c.from)} -&gt;{" "}
-                            {String(c.to)}
+                  <td data-label="Zmiany" className="historyChangesCell">
+                    {Array.isArray(row?.changes) && row.changes.length ? (
+                      <div className="historyChangesList">
+                        {row.changes.map((change, changeIndex) => (
+                          <div className="historyChangeItem" key={changeIndex}>
+                            <span className="historyChangeField">
+                              {change.field}
+                            </span>
+                            <span className="historyChangeArrow" aria-hidden="true">
+                              →
+                            </span>
+                            <span className="historyChangeValue">
+                              {String(change.from)}
+                            </span>
+                            <span className="historyChangeArrow" aria-hidden="true">
+                              →
+                            </span>
+                            <span className="historyChangeValue historyChangeValueNew">
+                              {String(change.to)}
+                            </span>
                           </div>
-                        ))
-                      : "-"}
+                        ))}
+                      </div>
+                    ) : (
+                      "-"
+                    )}
                   </td>
-                  <td data-label="IP">{r?.ip ?? "-"}</td>
+                  <td data-label="IP">{row?.ip ?? "-"}</td>
                 </tr>
               ))
             )}
