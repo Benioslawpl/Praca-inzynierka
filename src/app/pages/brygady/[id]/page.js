@@ -215,7 +215,18 @@ export default function BrygadaDetails() {
           </div>
 
           <button type="button" onClick={toggleForm}>
-            {isFormOpen ? (editId !== null ? "Edytujesz" : "Ukryj formularz") : "Dodaj"}
+            <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
+              <span className="formPanelToggleIcon" aria-hidden="true">
+                {editId !== null ? "•" : "+"}
+              </span>
+              <span>
+                {isFormOpen
+                  ? editId !== null
+                    ? "Tryb edycji"
+                    : "Ukryj formularz"
+                  : "Dodaj członka"}
+              </span>
+            </span>
           </button>
         </div>
 

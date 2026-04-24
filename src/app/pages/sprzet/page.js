@@ -172,7 +172,18 @@ export default function SprzetPage() {
           </div>
 
           <button type="button" onClick={toggleForm}>
-            {isFormOpen ? (editId ? "Edytujesz" : "Ukryj formularz") : "Dodaj"}
+            <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
+              <span className="formPanelToggleIcon" aria-hidden="true">
+                {editId ? "•" : "+"}
+              </span>
+              <span>
+                {isFormOpen
+                  ? editId
+                    ? "Tryb edycji"
+                    : "Ukryj formularz"
+                  : "Dodaj sprzęt"}
+              </span>
+            </span>
           </button>
         </div>
 

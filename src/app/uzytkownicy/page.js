@@ -149,7 +149,10 @@ export default function UsersPage() {
           </div>
 
           <button type="button" onClick={toggleForm}>
-            {isFormOpen ? "Ukryj formularz" : "Dodaj"}
+            <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
+              <span className="formPanelToggleIcon" aria-hidden="true">+</span>
+              <span>{isFormOpen ? "Ukryj formularz" : "Dodaj użytkownika"}</span>
+            </span>
           </button>
         </div>
 
