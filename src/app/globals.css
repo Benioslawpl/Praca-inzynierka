@@ -791,35 +791,12 @@ label {
   justify-content: center;
 }
 
-.loginIntroCard,
 .loginCard {
   position: relative;
   overflow: hidden;
   border-radius: 28px;
   border: 1px solid rgba(226, 232, 240, 0.9);
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
-}
-
-.loginIntroCard {
-  display: grid;
-  gap: 18px;
-  padding: 34px;
-  background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.9)),
-    #0f172a;
-  color: #fff;
-}
-
-.loginIntroCard h1,
-.loginIntroCard p,
-.loginIntroCard strong,
-.loginIntroCard span {
-  color: inherit;
-}
-
-.loginIntroCard p {
-  max-width: 38rem;
-  color: rgba(255, 255, 255, 0.78);
 }
 
 .loginCard {
@@ -866,25 +843,6 @@ label {
 .loginCard .loginEyebrow {
   background: #eff6ff;
   color: #1d4ed8;
-}
-
-.loginHighlights {
-  display: grid;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.loginHighlight {
-  display: grid;
-  gap: 4px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.loginHighlight span {
-  color: rgba(255, 255, 255, 0.72);
 }
 
 .loginFields {
@@ -1147,20 +1105,6 @@ label {
 .historyPageIntro p {
   max-width: 62ch;
   color: #64748b;
-}
-
-.historyEyebrow {
-  display: inline-flex;
-  width: fit-content;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1d4ed8;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 .historyStack {
@@ -1502,7 +1446,6 @@ label {
     grid-template-columns: 1fr;
   }
 
-  .loginIntroCard,
   .loginCard {
     padding: 22px 18px;
     border-radius: 22px;
@@ -1613,7 +1556,6 @@ label {
     padding: 14px 10px;
   }
 
-  .loginIntroCard,
   .loginCard {
     padding: 18px 16px;
     border-radius: 18px;

@@ -38,17 +38,7 @@ export async function PUT(req, ctx) {
 
     const parsed = getIdFrom(req, ctx);
     if (!parsed.ok) {
-      return Response.json(
-        {
-          error: "Bad id",
-          debug: {
-            raw: parsed.raw,
-            pathname: new URL(req.url).pathname,
-            params: ctx?.params || null,
-          },
-        },
-        { status: 400 }
-      );
+      return Response.json({ error: "Bad id" }, { status: 400 });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -163,17 +153,7 @@ export async function DELETE(req, ctx) {
 
     const parsed = getIdFrom(req, ctx);
     if (!parsed.ok) {
-      return Response.json(
-        {
-          error: "Bad id",
-          debug: {
-            raw: parsed.raw,
-            pathname: new URL(req.url).pathname,
-            params: ctx?.params || null,
-          },
-        },
-        { status: 400 }
-      );
+      return Response.json({ error: "Bad id" }, { status: 400 });
     }
 
     if (me?.id === parsed.id) {

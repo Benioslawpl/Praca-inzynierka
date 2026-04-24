@@ -1,31 +1,21 @@
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-
-const SECRET = process.env.JWT_SECRET || "Test123!";
+import { getUserFromCookies } from "../../../lib/auth";
 
 export async function GET() {
   try {
-    const cookieStore = await cookies(); // ✅ WAŻNE
-    const token = cookieStore.get("token")?.value;
+    const user = await getUserFromCookies();
 
-    if (!token) {
+    if (!user) {
       return Response.json({ ok: false, reason: "NO_COOKIE" }, { status: 200 });
     }
 
-    const payload = jwt.verify(token, SECRET);
-    const role = payload.role || (payload.username === "admin" ? "admin" : "user");
-
     return Response.json({
       ok: true,
-      id: payload.id ?? null,
-      username: payload.username ?? null,
-      role,
-      isAdmin: role === "admin",
+      id: user.id ?? null,
+      username: user.username ?? null,
+      role: user.role ?? null,
+      isAdmin: !!user.isAdmin,
     });
-  } catch (e) {
-    return Response.json(
-      { ok: false, reason: "JWT_ERROR", error: e.message },
-      { status: 401 }
-    );
+  } catch {
+    return Response.json({ ok: false, reason: "JWT_ERROR" }, { status: 401 });
   }
 }

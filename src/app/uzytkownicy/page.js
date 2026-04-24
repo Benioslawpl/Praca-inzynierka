@@ -10,17 +10,13 @@ export default function UsersPage() {
   const [form, setForm] = useState({
     username: "",
     password: "",
-    email: "",
     role: "user",
-    blocked: false,
   });
 
   const emptyForm = {
     username: "",
     password: "",
-    email: "",
     role: "user",
-    blocked: false,
   };
 
   const fetchUsers = async () => {
@@ -51,9 +47,7 @@ export default function UsersPage() {
       const payload = {
         username: form.username,
         password: form.password,
-        email: form.email || null,
         role: form.role,
-        blocked: !!form.blocked,
       };
 
       const res = await fetch("/api/users", {

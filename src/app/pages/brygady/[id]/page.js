@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function BrygadaDetails() {
@@ -22,46 +22,21 @@ export default function BrygadaDetails() {
 
   const validId = Number.isInteger(Number(id)) && Number(id) > 0;
 
-  useEffect(() => {
-    setErr("");
+  const loadHeader = useCallback(async () => {
+    if (!validId) return;
 
-    if (!validId) {
-      setItems([]);
-      setHeader(null);
-      setErr("Nieprawidłowe ID brygady w adresie URL.");
-      return;
-    }
+    const list = await fetch("/api/brygady", { cache: "no-store" })
+      .then((res) => res.json())
+      .catch(() => []);
 
-    const loadHeader = async () => {
-      const list = await fetch("/api/brygady", { cache: "no-store" })
-        .then((res) => res.json())
-        .catch(() => []);
-      const found = Array.isArray(list)
-        ? list.find((item) => String(item.id) === String(id))
-        : null;
-      setHeader(found || null);
-    };
+    const found = Array.isArray(list)
+      ? list.find((item) => String(item.id) === String(id))
+      : null;
 
-    const loadMembers = async () => {
-      const res = await fetch(`/api/brygady/${id}/members`, {
-        cache: "no-store",
-      });
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        setErr(data?.error || "Błąd pobierania członków");
-        setItems([]);
-        return;
-      }
-
-      setItems(Array.isArray(data) ? data : []);
-    };
-
-    loadHeader();
-    loadMembers();
+    setHeader(found || null);
   }, [id, validId]);
 
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     if (!validId) return;
 
     const res = await fetch(`/api/brygady/${id}/members`, {
@@ -76,12 +51,27 @@ export default function BrygadaDetails() {
     }
 
     setItems(Array.isArray(data) ? data : []);
-  };
+  }, [id, validId]);
+
+  useEffect(() => {
+    setErr("");
+
+    if (!validId) {
+      setItems([]);
+      setHeader(null);
+      setErr("Nieprawidłowe ID brygady w adresie URL.");
+      return;
+    }
+
+    loadHeader();
+    loadMembers();
+  }, [loadHeader, loadMembers, validId]);
 
   const reset = () => {
     setForm({ imie: "", nazwisko: "", rola: "", telefon: "" });
     setEditId(null);
     setIsFormOpen(false);
+    setErr("");
   };
 
   const submit = async (e) => {
@@ -92,15 +82,15 @@ export default function BrygadaDetails() {
     setErr("");
 
     try {
-      if (!form.imie?.trim() || !form.nazwisko?.trim()) {
+      if (!form.imie.trim() || !form.nazwisko.trim()) {
         throw new Error("Wymagane: imię i nazwisko");
       }
 
       const body = {
         imie: form.imie.trim(),
         nazwisko: form.nazwisko.trim(),
-        rola: form.rola?.trim() || null,
-        telefon: form.telefon?.trim() || null,
+        rola: form.rola.trim() || null,
+        telefon: form.telefon.trim() || null,
       };
 
       const isEdit = editId !== null;
@@ -129,6 +119,7 @@ export default function BrygadaDetails() {
 
   const handleEdit = (member) => {
     const memberId = Number(member.id);
+
     setIsFormOpen(true);
     setEditId(Number.isInteger(memberId) ? memberId : null);
     setForm({
@@ -215,7 +206,9 @@ export default function BrygadaDetails() {
           </div>
 
           <button type="button" onClick={toggleForm}>
-            <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
+            <span
+              className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}
+            >
               <span className="formPanelToggleIcon" aria-hidden="true">
                 {editId !== null ? "•" : "+"}
               </span>
@@ -306,9 +299,13 @@ export default function BrygadaDetails() {
                 <tr key={member.id}>
                   <td data-label="Lp.">{index + 1}</td>
                   <td data-label="Imię">{member.imie ?? member.Imie ?? "-"}</td>
-                  <td data-label="Nazwisko">{member.nazwisko ?? member.Nazwisko ?? "-"}</td>
+                  <td data-label="Nazwisko">
+                    {member.nazwisko ?? member.Nazwisko ?? "-"}
+                  </td>
                   <td data-label="Rola">{member.rola ?? member.Rola ?? "-"}</td>
-                  <td data-label="Telefon">{member.telefon ?? member.Telefon ?? "-"}</td>
+                  <td data-label="Telefon">
+                    {member.telefon ?? member.Telefon ?? "-"}
+                  </td>
                   <td className="actionsCell" data-label="Akcje">
                     <button
                       type="button"

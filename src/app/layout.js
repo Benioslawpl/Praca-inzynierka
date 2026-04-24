@@ -4,8 +4,8 @@ import Footer from "./components/Footer";
 import { getUserFromCookies } from "../lib/auth";
 
 export const metadata = {
-  title: "Aplikacja Maszyny",
-  description: "Next.js + Supabase demo",
+  title: "Panel Zarządzania Zapleczem",
+  description: "Aplikacja do zarządzania maszynami, sprzętem i brygadami.",
 };
 
 export default async function RootLayout({ children }) {
