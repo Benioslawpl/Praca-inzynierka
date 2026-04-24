@@ -53,15 +53,57 @@ function buildChanges({ action, before_row, after_row, changes }) {
   return out;
 }
 
-function buildObjectLabel(entity, entityId, beforeRow, afterRow) {
+async function buildLookups(rows) {
+  const maszynyIds = new Set();
+  const sprzetIds = new Set();
+
+  for (const row of rows) {
+    const before = row.before_row || {};
+    const after = row.after_row || {};
+
+    if (row.entity === "maszyny" && row.entityId) maszynyIds.add(row.entityId);
+    if (row.entity === "sprzet" && row.entityId) sprzetIds.add(row.entityId);
+    if (row.entity === "maszyny_details") {
+      if (before.maszyna_id) maszynyIds.add(before.maszyna_id);
+      if (after.maszyna_id) maszynyIds.add(after.maszyna_id);
+    }
+    if (row.entity === "sprzet_details") {
+      if (before.sprzet_id) sprzetIds.add(before.sprzet_id);
+      if (after.sprzet_id) sprzetIds.add(after.sprzet_id);
+    }
+  }
+
+  const machineMap = new Map();
+  const equipmentMap = new Map();
+
+  if (maszynyIds.size) {
+    const { rows: machineRows } = await pool.query(
+      `SELECT id, nr FROM maszyny WHERE id = ANY($1::int[])`,
+      [Array.from(maszynyIds)]
+    );
+    machineRows.forEach((row) => machineMap.set(row.id, row.nr));
+  }
+
+  if (sprzetIds.size) {
+    const { rows: equipmentRows } = await pool.query(
+      `SELECT id, nr FROM sprzet WHERE id = ANY($1::int[])`,
+      [Array.from(sprzetIds)]
+    );
+    equipmentRows.forEach((row) => equipmentMap.set(row.id, row.nr));
+  }
+
+  return { machineMap, equipmentMap };
+}
+
+function buildObjectLabel(entity, entityId, beforeRow, afterRow, lookups) {
   const row = afterRow || beforeRow || {};
 
   if (entity === "maszyny") {
-    return row.nr || `Maszyna #${entityId}`;
+    return row.nr || lookups.machineMap.get(entityId) || `Maszyna #${entityId}`;
   }
 
   if (entity === "sprzet") {
-    return row.nr || `Sprzęt #${entityId}`;
+    return row.nr || lookups.equipmentMap.get(entityId) || `Sprzęt #${entityId}`;
   }
 
   if (entity === "brygady") {
@@ -78,11 +120,21 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow) {
   }
 
   if (entity === "maszyny_details") {
-    return row.maszyna_nr || row.nr || `Maszyna #${row.maszyna_id || entityId}`;
+    return (
+      row.maszyna_nr ||
+      row.nr ||
+      lookups.machineMap.get(row.maszyna_id) ||
+      `Maszyna #${row.maszyna_id || entityId}`
+    );
   }
 
   if (entity === "sprzet_details") {
-    return row.sprzet_nr || row.nr || `Sprzęt #${row.sprzet_id || entityId}`;
+    return (
+      row.sprzet_nr ||
+      row.nr ||
+      lookups.equipmentMap.get(row.sprzet_id) ||
+      `Sprzęt #${row.sprzet_id || entityId}`
+    );
   }
 
   if (entity === "auth") {
@@ -157,6 +209,8 @@ export async function GET(req) {
       values
     );
 
+    const lookups = await buildLookups(rows);
+
     const result = rows.map((row) => {
       const finalChanges = buildChanges({
         action: row.action,
@@ -189,7 +243,8 @@ export async function GET(req) {
           row.entity,
           row.entityId,
           row.before_row,
-          row.after_row
+          row.after_row,
+          lookups
         ),
         changes: trimmed,
         ip: row.ip || "-",
