@@ -19,7 +19,9 @@ export async function POST(req) {
     }
 
     const { rows } = await pool.query(
-      "SELECT id, username, password_hash, role FROM users WHERE username = $1",
+      `SELECT id, username, password_hash, role, blocked
+       FROM users
+       WHERE username = $1`,
       [username]
     );
 
@@ -32,8 +34,14 @@ export async function POST(req) {
       );
     }
 
-    const ok = await bcrypt.compare(password, user.password_hash);
+    if (user.blocked) {
+      return Response.json(
+        { error: "To konto jest zablokowane. Skontaktuj się z administratorem." },
+        { status: 403 }
+      );
+    }
 
+    const ok = await bcrypt.compare(password, user.password_hash);
     if (!ok) {
       return Response.json(
         { error: "Podane hasło jest nieprawidłowe." },
