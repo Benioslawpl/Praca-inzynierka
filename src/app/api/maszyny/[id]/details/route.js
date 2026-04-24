@@ -56,6 +56,11 @@ export async function POST(req, { params }) {
     const wykonawca = body?.wykonawca?.trim() || null;
     const uwagi = body?.uwagi?.trim() || null;
 
+    const maszynaResult = await pool.query(`SELECT nr FROM maszyny WHERE id=$1`, [
+      maszynaId,
+    ]);
+    const maszynaNr = maszynaResult.rows[0]?.nr || null;
+
     const { rows } = await pool.query(
       `INSERT INTO maszyny_details (maszyna_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi)
        VALUES ($1, $2, $3, $4, $5, $6)
@@ -74,7 +79,7 @@ export async function POST(req, { params }) {
       action: "create",
       entity: "maszyny_details",
       entityId: rows[0].id,
-      after: { maszyna_id: maszynaId, ...rows[0] },
+      after: { maszyna_id: maszynaId, maszyna_nr: maszynaNr, ...rows[0] },
       req,
     });
 

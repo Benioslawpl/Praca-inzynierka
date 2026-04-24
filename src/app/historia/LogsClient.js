@@ -82,8 +82,6 @@ function humanizeValue(value) {
   if (typeof value === "boolean") return value ? "tak" : "nie";
   if (value === "admin") return "administrator";
   if (value === "user") return "użytkownik";
-  if (value === true) return "tak";
-  if (value === false) return "nie";
   return String(value);
 }
 
@@ -196,9 +194,6 @@ export default function LogsClient() {
                   <td data-label="Obiekt">
                     <div className="historyObjectCell">
                       <strong>{humanizeObject(row)}</strong>
-                      <span className="historyObjectMeta">
-                        {humanizeEntity(row?.entity, row?.entityId)}
-                      </span>
                     </div>
                   </td>
                   <td data-label="Zmiany" className="historyChangesCell">

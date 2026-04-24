@@ -22,6 +22,11 @@ function getIds(req, params) {
   };
 }
 
+async function getMaszynaNr(maszynaId) {
+  const result = await pool.query(`SELECT nr FROM maszyny WHERE id=$1`, [maszynaId]);
+  return result.rows[0]?.nr || null;
+}
+
 export async function PUT(req, { params }) {
   try {
     const { maszynaId, detailId } = getIds(req, params);
@@ -48,6 +53,7 @@ export async function PUT(req, { params }) {
     const awaria = body?.awaria?.trim() || null;
     const wykonawca = body?.wykonawca?.trim() || null;
     const uwagi = body?.uwagi?.trim() || null;
+    const maszynaNr = await getMaszynaNr(maszynaId);
 
     const { rows } = await pool.query(
       `UPDATE maszyny_details
@@ -69,8 +75,8 @@ export async function PUT(req, { params }) {
       action: "update",
       entity: "maszyny_details",
       entityId: detailId,
-      before: { maszyna_id: maszynaId, ...before },
-      after: { maszyna_id: maszynaId, ...rows[0] },
+      before: { maszyna_id: maszynaId, maszyna_nr: maszynaNr, ...before },
+      after: { maszyna_id: maszynaId, maszyna_nr: maszynaNr, ...rows[0] },
       req,
     });
 
@@ -96,11 +102,13 @@ export async function DELETE(req, { params }) {
 
     if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
 
+    const maszynaNr = await getMaszynaNr(maszynaId);
+
     await audit({
       action: "delete",
       entity: "maszyny_details",
       entityId: detailId,
-      before: { maszyna_id: maszynaId, ...rows[0] },
+      before: { maszyna_id: maszynaId, maszyna_nr: maszynaNr, ...rows[0] },
       req,
     });
 

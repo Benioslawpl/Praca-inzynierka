@@ -74,26 +74,15 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow) {
   }
 
   if (entity === "users") {
-    const label = row.username;
-    return label || `Użytkownik #${entityId}`;
+    return row.username || `Użytkownik #${entityId}`;
   }
 
   if (entity === "maszyny_details") {
-    const parts = [
-      row.maszyna_id ? `Maszyna #${row.maszyna_id}` : null,
-      row.data_zdarzenia || null,
-      row.awaria || null,
-    ].filter(Boolean);
-    return parts.join(" • ") || `Wpis historii maszyny #${entityId}`;
+    return row.maszyna_nr || row.nr || `Maszyna #${row.maszyna_id || entityId}`;
   }
 
   if (entity === "sprzet_details") {
-    const parts = [
-      row.sprzet_id ? `Sprzęt #${row.sprzet_id}` : null,
-      row.data_zdarzenia || null,
-      row.awaria || null,
-    ].filter(Boolean);
-    return parts.join(" • ") || `Wpis historii sprzętu #${entityId}`;
+    return row.sprzet_nr || row.nr || `Sprzęt #${row.sprzet_id || entityId}`;
   }
 
   if (entity === "auth") {

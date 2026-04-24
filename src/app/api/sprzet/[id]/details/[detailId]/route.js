@@ -22,6 +22,11 @@ function getIds(req, params) {
   };
 }
 
+async function getSprzetNr(sprzetId) {
+  const result = await pool.query(`SELECT nr FROM sprzet WHERE id=$1`, [sprzetId]);
+  return result.rows[0]?.nr || null;
+}
+
 export async function PUT(req, { params }) {
   try {
     const { sprzetId, detailId } = getIds(req, params);
@@ -48,6 +53,7 @@ export async function PUT(req, { params }) {
     const awaria = body?.awaria?.trim() || null;
     const wykonawca = body?.wykonawca?.trim() || null;
     const uwagi = body?.uwagi?.trim() || null;
+    const sprzetNr = await getSprzetNr(sprzetId);
 
     const { rows } = await pool.query(
       `UPDATE sprzet_details
@@ -69,8 +75,8 @@ export async function PUT(req, { params }) {
       action: "update",
       entity: "sprzet_details",
       entityId: detailId,
-      before: { sprzet_id: sprzetId, ...before },
-      after: { sprzet_id: sprzetId, ...rows[0] },
+      before: { sprzet_id: sprzetId, sprzet_nr: sprzetNr, ...before },
+      after: { sprzet_id: sprzetId, sprzet_nr: sprzetNr, ...rows[0] },
       req,
     });
 
@@ -96,11 +102,13 @@ export async function DELETE(req, { params }) {
 
     if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
 
+    const sprzetNr = await getSprzetNr(sprzetId);
+
     await audit({
       action: "delete",
       entity: "sprzet_details",
       entityId: detailId,
-      before: { sprzet_id: sprzetId, ...rows[0] },
+      before: { sprzet_id: sprzetId, sprzet_nr: sprzetNr, ...rows[0] },
       req,
     });
 
