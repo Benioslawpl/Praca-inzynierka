@@ -53,6 +53,15 @@ function buildChanges({ action, before_row, after_row, changes }) {
   return out;
 }
 
+function getFieldFromChanges(changes, fieldName) {
+  if (!Array.isArray(changes)) return null;
+
+  const match = changes.find((change) => change?.field === fieldName);
+  if (!match) return null;
+
+  return match.to ?? match.from ?? null;
+}
+
 async function buildLookups(rows) {
   const maszynyIds = new Set();
   const sprzetIds = new Set();
@@ -95,15 +104,25 @@ async function buildLookups(rows) {
   return { machineMap, equipmentMap };
 }
 
-function buildObjectLabel(entity, entityId, beforeRow, afterRow, lookups) {
+function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookups) {
   const row = afterRow || beforeRow || {};
 
   if (entity === "maszyny") {
-    return row.nr || lookups.machineMap.get(entityId) || `Maszyna #${entityId}`;
+    return (
+      row.nr ||
+      getFieldFromChanges(changes, "nr") ||
+      lookups.machineMap.get(entityId) ||
+      `Maszyna #${entityId}`
+    );
   }
 
   if (entity === "sprzet") {
-    return row.nr || lookups.equipmentMap.get(entityId) || `Sprzęt #${entityId}`;
+    return (
+      row.nr ||
+      getFieldFromChanges(changes, "nr") ||
+      lookups.equipmentMap.get(entityId) ||
+      `Sprzęt #${entityId}`
+    );
   }
 
   if (entity === "brygady") {
@@ -123,6 +142,8 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, lookups) {
     return (
       row.maszyna_nr ||
       row.nr ||
+      getFieldFromChanges(changes, "maszyna_nr") ||
+      getFieldFromChanges(changes, "nr") ||
       lookups.machineMap.get(row.maszyna_id) ||
       `Maszyna #${row.maszyna_id || entityId}`
     );
@@ -132,6 +153,8 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, lookups) {
     return (
       row.sprzet_nr ||
       row.nr ||
+      getFieldFromChanges(changes, "sprzet_nr") ||
+      getFieldFromChanges(changes, "nr") ||
       lookups.equipmentMap.get(row.sprzet_id) ||
       `Sprzęt #${row.sprzet_id || entityId}`
     );
@@ -244,6 +267,7 @@ export async function GET(req) {
           row.entityId,
           row.before_row,
           row.after_row,
+          row.changes,
           lookups
         ),
         changes: trimmed,
