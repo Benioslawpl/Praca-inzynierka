@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-import { getUserFromRequest } from "../../../lib/auth";
+import { getUserFromRequest } from "../../../../lib/auth";
 import { audit } from "../../../../lib/audit";
 
 export async function POST(req) {
