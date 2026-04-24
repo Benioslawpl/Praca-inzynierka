@@ -156,14 +156,18 @@ export default function BudowaDetailsPage() {
     setSectionErrors((current) => ({ ...current, [section]: "" }));
   };
 
-  const openSection = (section) => {
+  const toggleSection = (section) => {
     setPanelOpen((current) => ({
       ...current,
-      brygady: section === "brygady",
-      maszyny: section === "maszyny",
+      [section]: !current[section],
     }));
+
+    if (panelOpen[section]) {
+      resetSection(section);
+      return;
+    }
+
     setSectionErrors((current) => ({ ...current, [section]: "" }));
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openForEdit = (section, item, targetIdField) => {
@@ -177,7 +181,9 @@ export default function BudowaDetailsPage() {
         uwagi: item.uwagi ?? "",
       },
     }));
-    openSection(section);
+    setPanelOpen((current) => ({ ...current, [section]: true }));
+    setSectionErrors((current) => ({ ...current, [section]: "" }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const submitAssignment = async (section, targetField) => {
@@ -252,84 +258,121 @@ export default function BudowaDetailsPage() {
     await loadAssignments();
   };
 
-  const renderForm = (section, targetField, targetLabel, options, renderOptionLabel) => {
+  const renderFormPanel = (section, targetField, targetLabel, options, renderOptionLabel) => {
     const form = forms[section];
     const editId = editIds[section];
     const isSaving = saving[section];
     const sectionError = sectionErrors[section];
-
-    if (!panelOpen[section]) return null;
+    const isOpen = panelOpen[section];
 
     return (
-      <form
-        className="card"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submitAssignment(section, targetField);
-        }}
-      >
-        <div className="grid">
-          <label>
-            <span>{targetLabel}</span>
-            <select
-              value={form.targetId}
-              onChange={(e) => setFormFor(section, { ...form, targetId: e.target.value })}
-              required
-              disabled={options.length === 0}
-            >
-              <option value="">
-                {options.length === 0
-                  ? "Brak dostępnych elementów"
-                  : `Wybierz ${targetLabel.toLowerCase()}`}
-              </option>
-              {options.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {renderOptionLabel(option)}
-                </option>
-              ))}
-            </select>
-          </label>
+      <section className={`formPanel ${isOpen ? "formPanelOpen" : ""}`}>
+        <div className="formPanelHeader">
+          <div>
+            <h3>{editId ? "Edytuj przypisanie" : `Dodaj ${targetLabel.toLowerCase()}`}</h3>
+            <p>
+              {editId
+                ? "Zmień dane wybranego przypisania."
+                : `Dodaj ${targetLabel.toLowerCase()} do tej budowy.`}
+            </p>
+          </div>
 
-          <label>
-            <span>Data od</span>
-            <input
-              type="date"
-              value={form.data_od}
-              onChange={(e) => setFormFor(section, { ...form, data_od: e.target.value })}
-            />
-          </label>
-
-          <label>
-            <span>Data do</span>
-            <input
-              type="date"
-              value={form.data_do}
-              onChange={(e) => setFormFor(section, { ...form, data_do: e.target.value })}
-            />
-          </label>
-
-          <label style={{ gridColumn: "1 / -1" }}>
-            <span>Uwagi techniczne</span>
-            <textarea
-              rows={3}
-              value={form.uwagi}
-              onChange={(e) => setFormFor(section, { ...form, uwagi: e.target.value })}
-              placeholder="Krótka informacja o terminie, zakresie lub ograniczeniach..."
-            />
-          </label>
-        </div>
-
-        <div className="actions">
-          <button type="submit" disabled={isSaving || options.length === 0}>
-            {isSaving ? "Zapisywanie..." : editId ? "Zapisz" : "Przypisz"}
-          </button>
-          <button type="button" className="secondary" onClick={() => resetSection(section)}>
-            Anuluj
+          <button type="button" onClick={() => toggleSection(section)}>
+            <span className={`formPanelToggle ${isOpen ? "formPanelToggleOpen" : ""}`}>
+              <span className="formPanelToggleIcon" aria-hidden="true">
+                {editId ? "•" : "+"}
+              </span>
+              <span>
+                {isOpen
+                  ? editId
+                    ? "Tryb edycji"
+                    : "Ukryj formularz"
+                  : `Dodaj ${targetLabel.toLowerCase()}`}
+              </span>
+            </span>
           </button>
         </div>
 
-        {sectionError && <p className="error">{sectionError}</p>}
-      </form>
+        <div className={`formPanelBody ${isOpen ? "formPanelBodyOpen" : ""}`}>
+          <form
+            className="card"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitAssignment(section, targetField);
+            }}
+          >
+            <div className="grid">
+              <label>
+                <span>{targetLabel}</span>
+                <select
+                  value={form.targetId}
+                  onChange={(e) =>
+                    setFormFor(section, { ...form, targetId: e.target.value })
+                  }
+                  required
+                  disabled={options.length === 0}
+                >
+                  <option value="">
+                    {options.length === 0
+                      ? "Brak dostępnych elementów"
+                      : `Wybierz ${targetLabel.toLowerCase()}`}
+                  </option>
+                  {options.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {renderOptionLabel(option)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>Data od</span>
+                <input
+                  type="date"
+                  value={form.data_od}
+                  onChange={(e) =>
+                    setFormFor(section, { ...form, data_od: e.target.value })
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Data do</span>
+                <input
+                  type="date"
+                  value={form.data_do}
+                  onChange={(e) =>
+                    setFormFor(section, { ...form, data_do: e.target.value })
+                  }
+                />
+              </label>
+
+              <label style={{ gridColumn: "1 / -1" }}>
+                <span>Uwagi techniczne</span>
+                <textarea
+                  rows={3}
+                  value={form.uwagi}
+                  onChange={(e) =>
+                    setFormFor(section, { ...form, uwagi: e.target.value })
+                  }
+                  placeholder="Krótka informacja o terminie, zakresie lub ograniczeniach..."
+                />
+              </label>
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={isSaving || options.length === 0}>
+                {isSaving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+              </button>
+              <button type="button" className="secondary" onClick={() => resetSection(section)}>
+                Anuluj
+              </button>
+            </div>
+
+            {sectionError && <p className="error">{sectionError}</p>}
+          </form>
+        </div>
+      </section>
     );
   };
 
@@ -399,29 +442,20 @@ export default function BudowaDetailsPage() {
 
       {error && <p className="error">{error}</p>}
 
-      <div className="actions">
-        <button type="button" onClick={() => openSection("brygady")}>
-          Dodaj brygadę
-        </button>
-        <button type="button" onClick={() => openSection("maszyny")}>
-          Dodaj maszynę
-        </button>
-      </div>
-
-      {renderForm(
-        "brygady",
-        "brygada_id",
-        "Brygada",
-        availableBrygady,
-        (option) => `${option.numer} - ${option.brygadzista || "bez brygadzisty"}`
-      )}
-
       <section className="stackSection">
         <div className="sectionIntro">
           <span className="rowEyebrow">Obsada</span>
           <h2>Brygady</h2>
           <p>Brygady pracujące obecnie lub planowane na tej budowie.</p>
         </div>
+
+        {renderFormPanel(
+          "brygady",
+          "brygada_id",
+          "Brygadę",
+          availableBrygady,
+          (option) => `${option.numer} - ${option.brygadzista || "bez brygadzisty"}`
+        )}
 
         <div className="tableWrap">
           {assignedBrygady.length === 0 ? (
@@ -470,20 +504,20 @@ export default function BudowaDetailsPage() {
         </div>
       </section>
 
-      {renderForm(
-        "maszyny",
-        "maszyna_id",
-        "Maszyna",
-        availableMaszyny,
-        (option) => `${option.nr || "-"} - ${option.rodzaj} ${option.marka} ${option.model}`
-      )}
-
       <section className="stackSection">
         <div className="sectionIntro">
           <span className="rowEyebrow">Zasoby</span>
           <h2>Maszyny</h2>
           <p>Główne maszyny przypisane do realizacji wraz z operatorem i terminem.</p>
         </div>
+
+        {renderFormPanel(
+          "maszyny",
+          "maszyna_id",
+          "Maszynę",
+          availableMaszyny,
+          (option) => `${option.nr || "-"} - ${option.rodzaj} ${option.marka} ${option.model}`
+        )}
 
         <div className="tableWrap">
           {assignedMaszyny.length === 0 ? (
