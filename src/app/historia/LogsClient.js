@@ -2,6 +2,86 @@
 
 import { useEffect, useState } from "react";
 
+const ENTITY_OPTIONS = [
+  { value: "", label: "Wszystkie" },
+  { value: "maszyny", label: "Maszyny" },
+  { value: "brygady", label: "Brygady" },
+  { value: "members", label: "Członkowie brygad" },
+  { value: "maszyny_details", label: "Historia maszyn" },
+  { value: "sprzet", label: "Sprzęt" },
+  { value: "sprzet_details", label: "Historia sprzętu" },
+  { value: "users", label: "Użytkownicy" },
+  { value: "auth", label: "Logowanie" },
+];
+
+const ACTION_OPTIONS = [
+  { value: "", label: "Wszystkie" },
+  { value: "create", label: "Utworzono" },
+  { value: "update", label: "Zmieniono" },
+  { value: "delete", label: "Usunięto" },
+  { value: "login", label: "Zalogowano" },
+  { value: "logout", label: "Wylogowano" },
+];
+
+const ENTITY_LABELS = Object.fromEntries(
+  ENTITY_OPTIONS.filter((item) => item.value).map((item) => [item.value, item.label])
+);
+
+const ACTION_LABELS = Object.fromEntries(
+  ACTION_OPTIONS.filter((item) => item.value).map((item) => [item.value, item.label])
+);
+
+const FIELD_LABELS = {
+  username: "Login",
+  role: "Rola",
+  blocked: "Blokada",
+  rodzaj: "Rodzaj",
+  marka: "Marka",
+  model: "Model",
+  operator: "Operator",
+  brygadzista: "Brygadzista",
+  numer: "Numer",
+  nr: "Numer",
+  imie: "Imię",
+  nazwisko: "Nazwisko",
+  rola: "Rola",
+  telefon: "Telefon",
+  przebieg: "Przebieg",
+  awaria: "Awaria",
+  wykonawca: "Wykonawca",
+  uwagi: "Uwagi",
+  data_zdarzenia: "Data zdarzenia",
+  created_at: "Data utworzenia",
+  password_reset: "Hasło",
+  brygada_id: "Brygada",
+  maszyna_id: "Maszyna",
+  sprzet_id: "Sprzęt",
+  entityId: "ID",
+};
+
+function humanizeEntity(entity, entityId) {
+  const base = ENTITY_LABELS[entity] || entity || "-";
+  return entityId ? `${base} #${entityId}` : base;
+}
+
+function humanizeAction(action) {
+  return ACTION_LABELS[action] || action || "-";
+}
+
+function humanizeField(field) {
+  return FIELD_LABELS[field] || field;
+}
+
+function humanizeValue(value) {
+  if (value === null || value === undefined || value === "") return "brak";
+  if (typeof value === "boolean") return value ? "tak" : "nie";
+  if (value === "admin") return "administrator";
+  if (value === "user") return "użytkownik";
+  if (value === true) return "tak";
+  if (value === false) return "nie";
+  return String(value);
+}
+
 export default function LogsClient() {
   const [rows, setRows] = useState([]);
   const [filters, setFilters] = useState({ entity: "", action: "" });
@@ -49,18 +129,16 @@ export default function LogsClient() {
       <div className="card historyFiltersCard">
         <div className="grid historyFiltersGrid">
           <label>
-            <span>Encja</span>
+            <span>Obszar</span>
             <select
               value={filters.entity}
               onChange={(e) => setFilters({ ...filters, entity: e.target.value })}
             >
-              <option value="">Wszystkie</option>
-              <option>maszyny</option>
-              <option>brygady</option>
-              <option>members</option>
-              <option>maszyny_details</option>
-              <option>sprzet</option>
-              <option>sprzet_details</option>
+              {ENTITY_OPTIONS.map((item) => (
+                <option key={item.value || "all"} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -70,12 +148,11 @@ export default function LogsClient() {
               value={filters.action}
               onChange={(e) => setFilters({ ...filters, action: e.target.value })}
             >
-              <option value="">Wszystkie</option>
-              <option>create</option>
-              <option>update</option>
-              <option>delete</option>
-              <option>login</option>
-              <option>logout</option>
+              {ACTION_OPTIONS.map((item) => (
+                <option key={item.value || "all"} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -109,11 +186,10 @@ export default function LogsClient() {
                   <td data-label="Data">{fmtDate(row?.date)}</td>
                   <td data-label="Użytkownik">{row?.username ?? "-"}</td>
                   <td data-label="Akcja">
-                    <span className="pill">{row?.action ?? "-"}</span>
+                    <span className="pill">{humanizeAction(row?.action)}</span>
                   </td>
                   <td data-label="Obiekt">
-                    {row?.entity}
-                    {row?.entityId ? ` #${row.entityId}` : ""}
+                    {humanizeEntity(row?.entity, row?.entityId)}
                   </td>
                   <td data-label="Zmiany" className="historyChangesCell">
                     {Array.isArray(row?.changes) && row.changes.length ? (
@@ -121,19 +197,19 @@ export default function LogsClient() {
                         {row.changes.map((change, changeIndex) => (
                           <div className="historyChangeItem" key={changeIndex}>
                             <span className="historyChangeField">
-                              {change.field}
+                              {humanizeField(change.field)}
                             </span>
                             <span className="historyChangeArrow" aria-hidden="true">
                               →
                             </span>
                             <span className="historyChangeValue">
-                              {String(change.from)}
+                              {humanizeValue(change.from)}
                             </span>
                             <span className="historyChangeArrow" aria-hidden="true">
                               →
                             </span>
                             <span className="historyChangeValue historyChangeValueNew">
-                              {String(change.to)}
+                              {humanizeValue(change.to)}
                             </span>
                           </div>
                         ))}
