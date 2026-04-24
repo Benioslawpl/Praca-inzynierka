@@ -71,9 +71,7 @@ export default function BudowaDetailsPage() {
 
     if (!brygadyRes.ok || !maszynyRes.ok) {
       setError(
-        brygadyData?.error ||
-          maszynyData?.error ||
-          "Błąd pobierania przypisań"
+        brygadyData?.error || maszynyData?.error || "Błąd pobierania przypisań"
       );
       return;
     }
@@ -158,10 +156,18 @@ export default function BudowaDetailsPage() {
     setSectionErrors((current) => ({ ...current, [section]: "" }));
   };
 
+  const openSection = (section) => {
+    setPanelOpen((current) => ({
+      ...current,
+      brygady: section === "brygady",
+      maszyny: section === "maszyny",
+    }));
+    setSectionErrors((current) => ({ ...current, [section]: "" }));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const openForEdit = (section, item, targetIdField) => {
     setEditIds((current) => ({ ...current, [section]: item.id }));
-    setPanelOpen((current) => ({ ...current, [section]: true }));
-    setSectionErrors((current) => ({ ...current, [section]: "" }));
     setForms((current) => ({
       ...current,
       [section]: {
@@ -171,6 +177,7 @@ export default function BudowaDetailsPage() {
         uwagi: item.uwagi ?? "",
       },
     }));
+    openSection(section);
   };
 
   const submitAssignment = async (section, targetField) => {
@@ -245,196 +252,84 @@ export default function BudowaDetailsPage() {
     await loadAssignments();
   };
 
-  const toggleSection = (section) => {
-    if (editIds[section]) {
-      setPanelOpen((current) => ({ ...current, [section]: true }));
-      return;
-    }
-
-    if (panelOpen[section]) {
-      resetSection(section);
-      return;
-    }
-
-    setPanelOpen((current) => ({ ...current, [section]: true }));
-    setSectionErrors((current) => ({ ...current, [section]: "" }));
-  };
-
-  const renderAssignmentSection = ({
-    section,
-    title,
-    eyebrow,
-    description,
-    targetField,
-    targetLabel,
-    options,
-    rows,
-    renderOptionLabel,
-    renderRowCells,
-    columns,
-  }) => {
+  const renderForm = (section, targetField, targetLabel, options, renderOptionLabel) => {
     const form = forms[section];
     const editId = editIds[section];
-    const isOpen = panelOpen[section];
-    const sectionError = sectionErrors[section];
     const isSaving = saving[section];
+    const sectionError = sectionErrors[section];
+
+    if (!panelOpen[section]) return null;
 
     return (
-      <section className="stackSection">
-        <div className="sectionIntro">
-          <span className="rowEyebrow">{eyebrow}</span>
-          <h2>{title}</h2>
-          <p>{description}</p>
-        </div>
-
-        <div className={`formPanel ${isOpen ? "formPanelOpen" : ""}`}>
-          <div className="formPanelHeader">
-            <div>
-              <h3>{editId ? `Edytuj przypisanie` : `Nowe przypisanie`}</h3>
-              <p>{description}</p>
-            </div>
-
-            <button type="button" onClick={() => toggleSection(section)}>
-              <span className={`formPanelToggle ${isOpen ? "formPanelToggleOpen" : ""}`}>
-                <span className="formPanelToggleIcon" aria-hidden="true">
-                  {editId ? "•" : "+"}
-                </span>
-                <span>
-                  {isOpen
-                    ? editId
-                      ? "Tryb edycji"
-                      : "Ukryj formularz"
-                    : `Przypisz ${title.toLowerCase()}`}
-                </span>
-              </span>
-            </button>
-          </div>
-
-          <div className={`formPanelBody ${isOpen ? "formPanelBodyOpen" : ""}`}>
-            <form
-              className="card"
-              onSubmit={(e) => {
-                e.preventDefault();
-                submitAssignment(section, targetField);
-              }}
+      <form
+        className="card"
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitAssignment(section, targetField);
+        }}
+      >
+        <div className="grid">
+          <label>
+            <span>{targetLabel}</span>
+            <select
+              value={form.targetId}
+              onChange={(e) => setFormFor(section, { ...form, targetId: e.target.value })}
+              required
+              disabled={options.length === 0}
             >
-              <div className="grid">
-                <label>
-                  <span>{targetLabel}</span>
-                  <select
-                    value={form.targetId}
-                    onChange={(e) =>
-                      setFormFor(section, { ...form, targetId: e.target.value })
-                    }
-                    required
-                    disabled={options.length === 0}
-                  >
-                    <option value="">
-                      {options.length === 0
-                        ? "Brak dostępnych elementów"
-                        : `Wybierz ${targetLabel.toLowerCase()}`}
-                    </option>
-                    {options.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {renderOptionLabel(option)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              <option value="">
+                {options.length === 0
+                  ? "Brak dostępnych elementów"
+                  : `Wybierz ${targetLabel.toLowerCase()}`}
+              </option>
+              {options.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {renderOptionLabel(option)}
+                </option>
+              ))}
+            </select>
+          </label>
 
-                <label>
-                  <span>Data od</span>
-                  <input
-                    type="date"
-                    value={form.data_od}
-                    onChange={(e) =>
-                      setFormFor(section, { ...form, data_od: e.target.value })
-                    }
-                  />
-                </label>
+          <label>
+            <span>Data od</span>
+            <input
+              type="date"
+              value={form.data_od}
+              onChange={(e) => setFormFor(section, { ...form, data_od: e.target.value })}
+            />
+          </label>
 
-                <label>
-                  <span>Data do</span>
-                  <input
-                    type="date"
-                    value={form.data_do}
-                    onChange={(e) =>
-                      setFormFor(section, { ...form, data_do: e.target.value })
-                    }
-                  />
-                </label>
+          <label>
+            <span>Data do</span>
+            <input
+              type="date"
+              value={form.data_do}
+              onChange={(e) => setFormFor(section, { ...form, data_do: e.target.value })}
+            />
+          </label>
 
-                <label style={{ gridColumn: "1 / -1" }}>
-                  <span>Uwagi techniczne</span>
-                  <textarea
-                    rows={3}
-                    value={form.uwagi}
-                    onChange={(e) =>
-                      setFormFor(section, { ...form, uwagi: e.target.value })
-                    }
-                    placeholder="Krótka informacja o terminie, zakresie lub ograniczeniach..."
-                  />
-                </label>
-              </div>
-
-              <div className="actions">
-                <button type="submit" disabled={isSaving || options.length === 0}>
-                  {isSaving ? "Zapisywanie..." : editId ? "Zapisz" : "Przypisz"}
-                </button>
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => resetSection(section)}
-                >
-                  Anuluj
-                </button>
-              </div>
-
-              {sectionError && <p className="error">{sectionError}</p>}
-            </form>
-          </div>
+          <label style={{ gridColumn: "1 / -1" }}>
+            <span>Uwagi techniczne</span>
+            <textarea
+              rows={3}
+              value={form.uwagi}
+              onChange={(e) => setFormFor(section, { ...form, uwagi: e.target.value })}
+              placeholder="Krótka informacja o terminie, zakresie lub ograniczeniach..."
+            />
+          </label>
         </div>
 
-        <div className="tableWrap">
-          {rows.length === 0 ? (
-            <p>Brak przypisań</p>
-          ) : (
-            <table className="table">
-              <thead>
-                <tr>
-                  {columns.map((column) => (
-                    <th key={column}>{column}</th>
-                  ))}
-                  <th>Akcje</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id}>
-                    {renderRowCells(row)}
-                    <td className="actionsCell" data-label="Akcje">
-                      <button
-                        type="button"
-                        className="secondary"
-                        onClick={() => openForEdit(section, row, targetField)}
-                      >
-                        Edytuj
-                      </button>
-                      <button
-                        type="button"
-                        className="danger"
-                        onClick={() => deleteAssignment(section, row.id)}
-                      >
-                        Usuń
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="actions">
+          <button type="submit" disabled={isSaving || options.length === 0}>
+            {isSaving ? "Zapisywanie..." : editId ? "Zapisz" : "Przypisz"}
+          </button>
+          <button type="button" className="secondary" onClick={() => resetSection(section)}>
+            Anuluj
+          </button>
         </div>
-      </section>
+
+        {sectionError && <p className="error">{sectionError}</p>}
+      </form>
     );
   };
 
@@ -504,55 +399,142 @@ export default function BudowaDetailsPage() {
 
       {error && <p className="error">{error}</p>}
 
-      {renderAssignmentSection({
-        section: "brygady",
-        title: "Brygady",
-        eyebrow: "Obsada",
-        description: "Brygady pracujące obecnie lub planowane na tej budowie.",
-        targetField: "brygada_id",
-        targetLabel: "Brygada",
-        options: availableBrygady,
-        rows: assignedBrygady,
-        renderOptionLabel: (option) =>
-          `${option.numer} - ${option.brygadzista || "bez brygadzisty"}`,
-        columns: ["Brygada", "Brygadzista", "Data od", "Data do", "Uwagi"],
-        renderRowCells: (row) => (
-          <>
-            <td data-label="Brygada">{row.brygada_numer}</td>
-            <td data-label="Brygadzista">{row.brygadzista || "-"}</td>
-            <td data-label="Data od">{formatDate(row.data_od)}</td>
-            <td data-label="Data do">{formatDate(row.data_do)}</td>
-            <td data-label="Uwagi">{row.uwagi || "-"}</td>
-          </>
-        ),
-      })}
+      <div className="actions">
+        <button type="button" onClick={() => openSection("brygady")}>
+          Dodaj brygadę
+        </button>
+        <button type="button" onClick={() => openSection("maszyny")}>
+          Dodaj maszynę
+        </button>
+      </div>
 
-      {renderAssignmentSection({
-        section: "maszyny",
-        title: "Maszyny",
-        eyebrow: "Zasoby",
-        description:
-          "Główne maszyny przypisane do realizacji wraz z operatorem i zakresem terminów.",
-        targetField: "maszyna_id",
-        targetLabel: "Maszyna",
-        options: availableMaszyny,
-        rows: assignedMaszyny,
-        renderOptionLabel: (option) =>
-          `${option.nr || "-"} - ${option.rodzaj} ${option.marka} ${option.model}`,
-        columns: ["Numer", "Rodzaj", "Marka/Model", "Operator", "Data od", "Data do"],
-        renderRowCells: (row) => (
-          <>
-            <td data-label="Numer">{row.nr || "-"}</td>
-            <td data-label="Rodzaj">{row.rodzaj || "-"}</td>
-            <td data-label="Marka/Model">
-              {`${row.marka || "-"} ${row.model || ""}`.trim()}
-            </td>
-            <td data-label="Operator">{row.operator || "-"}</td>
-            <td data-label="Data od">{formatDate(row.data_od)}</td>
-            <td data-label="Data do">{formatDate(row.data_do)}</td>
-          </>
-        ),
-      })}
+      {renderForm(
+        "brygady",
+        "brygada_id",
+        "Brygada",
+        availableBrygady,
+        (option) => `${option.numer} - ${option.brygadzista || "bez brygadzisty"}`
+      )}
+
+      <section className="stackSection">
+        <div className="sectionIntro">
+          <span className="rowEyebrow">Obsada</span>
+          <h2>Brygady</h2>
+          <p>Brygady pracujące obecnie lub planowane na tej budowie.</p>
+        </div>
+
+        <div className="tableWrap">
+          {assignedBrygady.length === 0 ? (
+            <p>Brak przypisań</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Brygada</th>
+                  <th>Brygadzista</th>
+                  <th>Data od</th>
+                  <th>Data do</th>
+                  <th>Uwagi</th>
+                  <th>Akcje</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignedBrygady.map((row) => (
+                  <tr key={row.id}>
+                    <td data-label="Brygada">{row.brygada_numer}</td>
+                    <td data-label="Brygadzista">{row.brygadzista || "-"}</td>
+                    <td data-label="Data od">{formatDate(row.data_od)}</td>
+                    <td data-label="Data do">{formatDate(row.data_do)}</td>
+                    <td data-label="Uwagi">{row.uwagi || "-"}</td>
+                    <td className="actionsCell" data-label="Akcje">
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => openForEdit("brygady", row, "brygada_id")}
+                      >
+                        Edytuj
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => deleteAssignment("brygady", row.id)}
+                      >
+                        Usuń
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
+
+      {renderForm(
+        "maszyny",
+        "maszyna_id",
+        "Maszyna",
+        availableMaszyny,
+        (option) => `${option.nr || "-"} - ${option.rodzaj} ${option.marka} ${option.model}`
+      )}
+
+      <section className="stackSection">
+        <div className="sectionIntro">
+          <span className="rowEyebrow">Zasoby</span>
+          <h2>Maszyny</h2>
+          <p>Główne maszyny przypisane do realizacji wraz z operatorem i terminem.</p>
+        </div>
+
+        <div className="tableWrap">
+          {assignedMaszyny.length === 0 ? (
+            <p>Brak przypisań</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Numer</th>
+                  <th>Rodzaj</th>
+                  <th>Marka/Model</th>
+                  <th>Operator</th>
+                  <th>Data od</th>
+                  <th>Data do</th>
+                  <th>Akcje</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assignedMaszyny.map((row) => (
+                  <tr key={row.id}>
+                    <td data-label="Numer">{row.nr || "-"}</td>
+                    <td data-label="Rodzaj">{row.rodzaj || "-"}</td>
+                    <td data-label="Marka/Model">
+                      {`${row.marka || "-"} ${row.model || ""}`.trim()}
+                    </td>
+                    <td data-label="Operator">{row.operator || "-"}</td>
+                    <td data-label="Data od">{formatDate(row.data_od)}</td>
+                    <td data-label="Data do">{formatDate(row.data_do)}</td>
+                    <td className="actionsCell" data-label="Akcje">
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => openForEdit("maszyny", row, "maszyna_id")}
+                      >
+                        Edytuj
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => deleteAssignment("maszyny", row.id)}
+                      >
+                        Usuń
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
