@@ -65,6 +65,7 @@ function getFieldFromChanges(changes, fieldName) {
 async function buildLookups(rows) {
   const maszynyIds = new Set();
   const sprzetIds = new Set();
+  const budowyIds = new Set();
 
   for (const row of rows) {
     const before = row.before_row || {};
@@ -72,18 +73,31 @@ async function buildLookups(rows) {
 
     if (row.entity === "maszyny" && row.entityId) maszynyIds.add(row.entityId);
     if (row.entity === "sprzet" && row.entityId) sprzetIds.add(row.entityId);
+    if (row.entity === "budowy" && row.entityId) budowyIds.add(row.entityId);
+
     if (row.entity === "maszyny_details") {
       if (before.maszyna_id) maszynyIds.add(before.maszyna_id);
       if (after.maszyna_id) maszynyIds.add(after.maszyna_id);
     }
+
     if (row.entity === "sprzet_details") {
       if (before.sprzet_id) sprzetIds.add(before.sprzet_id);
       if (after.sprzet_id) sprzetIds.add(after.sprzet_id);
+    }
+
+    if (
+      row.entity === "budowy_brygady" ||
+      row.entity === "budowy_maszyny" ||
+      row.entity === "budowy_sprzet"
+    ) {
+      if (before.budowa_id) budowyIds.add(before.budowa_id);
+      if (after.budowa_id) budowyIds.add(after.budowa_id);
     }
   }
 
   const machineMap = new Map();
   const equipmentMap = new Map();
+  const budowaMap = new Map();
 
   if (maszynyIds.size) {
     const { rows: machineRows } = await pool.query(
@@ -101,7 +115,15 @@ async function buildLookups(rows) {
     equipmentRows.forEach((row) => equipmentMap.set(row.id, row.nr));
   }
 
-  return { machineMap, equipmentMap };
+  if (budowyIds.size) {
+    const { rows: budowaRows } = await pool.query(
+      `SELECT id, numer FROM budowy WHERE id = ANY($1::int[])`,
+      [Array.from(budowyIds)]
+    );
+    budowaRows.forEach((row) => budowaMap.set(row.id, row.numer));
+  }
+
+  return { machineMap, equipmentMap, budowaMap };
 }
 
 function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookups) {
@@ -127,6 +149,15 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
 
   if (entity === "brygady") {
     return row.numer || `Brygada #${entityId}`;
+  }
+
+  if (entity === "budowy") {
+    return (
+      row.numer ||
+      getFieldFromChanges(changes, "numer") ||
+      lookups.budowaMap.get(entityId) ||
+      `Budowa #${entityId}`
+    );
   }
 
   if (entity === "members") {
@@ -157,6 +188,19 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
       getFieldFromChanges(changes, "nr") ||
       lookups.equipmentMap.get(row.sprzet_id) ||
       `Sprzęt #${row.sprzet_id || entityId}`
+    );
+  }
+
+  if (
+    entity === "budowy_brygady" ||
+    entity === "budowy_maszyny" ||
+    entity === "budowy_sprzet"
+  ) {
+    return (
+      row.budowa_numer ||
+      getFieldFromChanges(changes, "budowa_numer") ||
+      lookups.budowaMap.get(row.budowa_id) ||
+      `Budowa #${row.budowa_id || entityId}`
     );
   }
 

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 const BASE_LINKS = [
   { href: "/", label: "Home" },
+  { href: "/pages/budowy", label: "Budowy" },
   { href: "/pages/maszyny", label: "Maszyny" },
   { href: "/pages/brygady", label: "Brygady" },
   { href: "/pages/sprzet", label: "Sprzęt" },

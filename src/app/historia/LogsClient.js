@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 
 const ENTITY_OPTIONS = [
   { value: "", label: "Wszystkie" },
+  { value: "budowy", label: "Budowy" },
+  { value: "budowy_brygady", label: "Przypisania brygad" },
+  { value: "budowy_maszyny", label: "Przypisania maszyn" },
+  { value: "budowy_sprzet", label: "Przypisania sprzętu" },
   { value: "maszyny", label: "Maszyny" },
   { value: "brygady", label: "Brygady" },
   { value: "members", label: "Członkowie brygad" },
@@ -40,6 +44,12 @@ const FIELD_LABELS = {
   model: "Model",
   operator: "Operator",
   brygadzista: "Brygadzista",
+  lokalizacja: "Lokalizacja",
+  inwestor: "Inwestor",
+  kierownik: "Kierownik",
+  status: "Status",
+  data_rozpoczecia: "Data rozpoczęcia",
+  data_zakonczenia: "Data zakończenia",
   numer: "Numer",
   nr: "Numer",
   imie: "Imię",
@@ -54,8 +64,13 @@ const FIELD_LABELS = {
   created_at: "Data utworzenia",
   password_reset: "Hasło",
   brygada_id: "Brygada",
+  brygada_numer: "Brygada",
   maszyna_id: "Maszyna",
   sprzet_id: "Sprzęt",
+  budowa_id: "Budowa",
+  budowa_numer: "Budowa",
+  data_od: "Data od",
+  data_do: "Data do",
 };
 
 function humanizeEntity(entity, entityId) {
@@ -87,6 +102,10 @@ function humanizeValue(value) {
   if (typeof value === "boolean") return value ? "tak" : "nie";
   if (value === "admin") return "administrator";
   if (value === "user") return "użytkownik";
+  if (value === "planowana") return "planowana";
+  if (value === "w_toku") return "w toku";
+  if (value === "wstrzymana") return "wstrzymana";
+  if (value === "zakonczona") return "zakończona";
   return String(value);
 }
 
