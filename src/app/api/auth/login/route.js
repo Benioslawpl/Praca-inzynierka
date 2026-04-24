@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
 import pool from "../../../../../db";
+import { audit } from "../../../../lib/audit";
 
 const SECRET = process.env.JWT_SECRET || "Test123!";
 
@@ -54,6 +55,14 @@ export async function POST(req) {
       secure: process.env.NODE_ENV === "production",
       path: "/",
       maxAge: 60 * 60 * 8,
+    });
+
+    await audit({
+      action: "login",
+      entity: "auth",
+      entityId: user.id,
+      after: { id: user.id, username: user.username, role },
+      req,
     });
 
     return Response.json({ ok: true, username: user.username, role });

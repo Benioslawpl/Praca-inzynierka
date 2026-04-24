@@ -1,8 +1,9 @@
 import pool from "../../../../../../db";
+import { audit } from "../../../../../lib/audit";
 
-function intOrNull(v) {
-  const n = Number(v);
-  return Number.isInteger(n) && n > 0 ? n : null;
+function intOrNull(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 function getSprzetId(req, params) {
@@ -21,10 +22,7 @@ export async function GET(req, { params }) {
   try {
     const sprzetId = getSprzetId(req, params);
     if (!sprzetId) {
-      return Response.json(
-        { error: "Bad id", params: params ?? null },
-        { status: 400 }
-      );
+      return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
     }
 
     const { rows } = await pool.query(
@@ -36,8 +34,8 @@ export async function GET(req, { params }) {
     );
 
     return Response.json(rows);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -45,22 +43,15 @@ export async function POST(req, { params }) {
   try {
     const sprzetId = getSprzetId(req, params);
     if (!sprzetId) {
-      return Response.json(
-        { error: "Bad id", params: params ?? null },
-        { status: 400 }
-      );
+      return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
     }
 
     const body = await req.json().catch(() => ({}));
-
     const data_zdarzenia = body?.data_zdarzenia || null;
     const przebieg =
-      body?.przebieg === "" ||
-      body?.przebieg === null ||
-      body?.przebieg === undefined
+      body?.przebieg === "" || body?.przebieg === null || body?.przebieg === undefined
         ? null
         : Number(body.przebieg);
-
     const awaria = body?.awaria?.trim() || null;
     const wykonawca = body?.wykonawca?.trim() || null;
     const uwagi = body?.uwagi?.trim() || null;
@@ -79,8 +70,16 @@ export async function POST(req, { params }) {
       ]
     );
 
+    await audit({
+      action: "create",
+      entity: "sprzet_details",
+      entityId: rows[0].id,
+      after: { sprzet_id: sprzetId, ...rows[0] },
+      req,
+    });
+
     return Response.json(rows[0]);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }

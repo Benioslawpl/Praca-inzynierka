@@ -1,19 +1,17 @@
 import pool from "../../../../../../db";
+import { audit } from "../../../../../lib/audit";
 
-function intOrNull(v) {
-  const n = Number(v);
-  return Number.isInteger(n) && n > 0 ? n : null;
+function intOrNull(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-// fallback: wyciągnij id z URL: /api/brygady/{id}/members
 function getBrygadaId(req, params) {
-  // 1) normalnie z params
   const fromParams = intOrNull(params?.id);
   if (fromParams) return fromParams;
 
-  // 2) fallback z URL
   const url = new URL(req.url);
-  const parts = url.pathname.split("/").filter(Boolean); // ["api","brygady","4","members"]
+  const parts = url.pathname.split("/").filter(Boolean);
   const idx = parts.indexOf("brygady");
   if (idx >= 0 && parts[idx + 1]) return intOrNull(parts[idx + 1]);
 
@@ -36,8 +34,8 @@ export async function GET(req, { params }) {
     );
 
     return Response.json(rows);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -65,8 +63,16 @@ export async function POST(req, { params }) {
       [brygadaId, imie, nazwisko, rola, telefon]
     );
 
+    await audit({
+      action: "create",
+      entity: "members",
+      entityId: rows[0].id,
+      after: { brygada_id: brygadaId, ...rows[0] },
+      req,
+    });
+
     return Response.json(rows[0]);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }

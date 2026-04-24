@@ -1,6 +1,6 @@
 import pool from "../../../../db";
+import { audit } from "../../../lib/audit";
 
-// GET /api/brygady
 export async function GET() {
   try {
     const { rows } = await pool.query(`
@@ -8,13 +8,13 @@ export async function GET() {
       FROM brygady
       ORDER BY CAST(regexp_replace(numer, '\\D', '', 'g') AS INTEGER) ASC NULLS LAST, numer ASC
     `);
+
     return Response.json(rows);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
-// POST /api/brygady
 export async function POST(req) {
   try {
     const { numer, brygadzista } = await req.json();
@@ -34,6 +34,14 @@ export async function POST(req) {
       `,
       [numer.trim(), brygadzista.trim()]
     );
+
+    await audit({
+      action: "create",
+      entity: "brygady",
+      entityId: rows[0].id,
+      after: rows[0],
+      req,
+    });
 
     return Response.json(rows[0]);
   } catch (error) {

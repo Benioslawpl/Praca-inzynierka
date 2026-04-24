@@ -1,8 +1,9 @@
 import pool from "../../../../../db";
+import { audit } from "../../../../lib/audit";
 
-function intOrNull(v) {
-  const n = Number(v);
-  return Number.isInteger(n) && n > 0 ? n : null;
+function intOrNull(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 function getId(req, params) {
@@ -36,8 +37,8 @@ export async function GET(req, ctx) {
 
     if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
     return Response.json(rows[0]);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -50,6 +51,16 @@ export async function PUT(req, { params }) {
         { status: 400 }
       );
     }
+
+    const beforeResult = await pool.query(
+      `SELECT id, nr, rodzaj, marka, model, operator
+       FROM maszyny
+       WHERE id=$1`,
+      [id]
+    );
+    const before = beforeResult.rows[0];
+
+    if (!before) return Response.json({ error: "Not found" }, { status: 404 });
 
     const body = await req.json().catch(() => ({}));
     const rodzaj = body?.rodzaj?.trim();
@@ -71,10 +82,18 @@ export async function PUT(req, { params }) {
       [rodzaj, marka, model, operator, id]
     );
 
-    if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
+    await audit({
+      action: "update",
+      entity: "maszyny",
+      entityId: id,
+      before,
+      after: rows[0],
+      req,
+    });
+
     return Response.json(rows[0]);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -88,13 +107,24 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    const { rowCount } = await pool.query(`DELETE FROM maszyny WHERE id=$1`, [
-      id,
-    ]);
-    if (!rowCount) return Response.json({ error: "Not found" }, { status: 404 });
+    const { rows } = await pool.query(
+      `DELETE FROM maszyny WHERE id=$1
+       RETURNING id, nr, rodzaj, marka, model, operator`,
+      [id]
+    );
+
+    if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
+
+    await audit({
+      action: "delete",
+      entity: "maszyny",
+      entityId: id,
+      before: rows[0],
+      req,
+    });
 
     return Response.json({ ok: true });
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }

@@ -1,8 +1,9 @@
 import pool from "../../../../../../../db";
+import { audit } from "../../../../../../lib/audit";
 
-function intOrNull(v) {
-  const n = Number(v);
-  return Number.isInteger(n) && n > 0 ? n : null;
+function intOrNull(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 function getIds(req, params) {
@@ -12,36 +13,38 @@ function getIds(req, params) {
 
   const url = new URL(req.url);
   const parts = url.pathname.split("/").filter(Boolean);
-
   const idxS = parts.indexOf("sprzet");
   const idxD = parts.indexOf("details");
 
-  const s = idxS >= 0 ? intOrNull(parts[idxS + 1]) : null;
-  const d = idxD >= 0 ? intOrNull(parts[idxD + 1]) : null;
-
-  return { sprzetId: s, detailId: d };
+  return {
+    sprzetId: idxS >= 0 ? intOrNull(parts[idxS + 1]) : null,
+    detailId: idxD >= 0 ? intOrNull(parts[idxD + 1]) : null,
+  };
 }
 
 export async function PUT(req, { params }) {
   try {
     const { sprzetId, detailId } = getIds(req, params);
     if (!sprzetId || !detailId) {
-      return Response.json(
-        { error: "Bad id", params: params ?? null },
-        { status: 400 }
-      );
+      return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const beforeResult = await pool.query(
+      `SELECT id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi
+       FROM sprzet_details
+       WHERE id=$1 AND sprzet_id=$2`,
+      [detailId, sprzetId]
+    );
+    const before = beforeResult.rows[0];
 
+    if (!before) return Response.json({ error: "Not found" }, { status: 404 });
+
+    const body = await req.json().catch(() => ({}));
     const data_zdarzenia = body?.data_zdarzenia || null;
     const przebieg =
-      body?.przebieg === "" ||
-      body?.przebieg === null ||
-      body?.przebieg === undefined
+      body?.przebieg === "" || body?.przebieg === null || body?.przebieg === undefined
         ? null
         : Number(body.przebieg);
-
     const awaria = body?.awaria?.trim() || null;
     const wykonawca = body?.wykonawca?.trim() || null;
     const uwagi = body?.uwagi?.trim() || null;
@@ -62,10 +65,18 @@ export async function PUT(req, { params }) {
       ]
     );
 
-    if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
+    await audit({
+      action: "update",
+      entity: "sprzet_details",
+      entityId: detailId,
+      before: { sprzet_id: sprzetId, ...before },
+      after: { sprzet_id: sprzetId, ...rows[0] },
+      req,
+    });
+
     return Response.json(rows[0]);
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -73,20 +84,28 @@ export async function DELETE(req, { params }) {
   try {
     const { sprzetId, detailId } = getIds(req, params);
     if (!sprzetId || !detailId) {
-      return Response.json(
-        { error: "Bad id", params: params ?? null },
-        { status: 400 }
-      );
+      return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
     }
 
-    const { rowCount } = await pool.query(
-      `DELETE FROM sprzet_details WHERE id=$1 AND sprzet_id=$2`,
+    const { rows } = await pool.query(
+      `DELETE FROM sprzet_details
+       WHERE id=$1 AND sprzet_id=$2
+       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi`,
       [detailId, sprzetId]
     );
 
-    if (!rowCount) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
+
+    await audit({
+      action: "delete",
+      entity: "sprzet_details",
+      entityId: detailId,
+      before: { sprzet_id: sprzetId, ...rows[0] },
+      req,
+    });
+
     return Response.json({ ok: true });
-  } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }

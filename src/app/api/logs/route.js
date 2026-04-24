@@ -1,52 +1,66 @@
 import pool from "../../../../db";
 import { verifyJwt } from "../../../lib/auth";
 
-function toStr(v) {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "string") return v;
-  try { return JSON.stringify(v); } catch { return String(v); }
+function toStr(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
 }
 
-// Wyliczanie zmian jeśli brakuje `changes`
+function normalizeValue(value) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed === "" ? null : trimmed;
+  }
+  return value;
+}
+
 function buildChanges({ action, before_row, after_row, changes }) {
   if (Array.isArray(changes) && changes.length) return changes;
 
   const before = before_row || {};
-  const after  = after_row  || {};
-  const out    = [];
+  const after = after_row || {};
+  const out = [];
 
   if (action === "create") {
-    for (const k of Object.keys(after)) {
-      out.push({ field: k, from: undefined, to: after[k] });
+    for (const key of Object.keys(after)) {
+      const to = normalizeValue(after[key]);
+      if (to !== null) out.push({ field: key, from: null, to });
     }
     return out;
   }
 
   if (action === "delete") {
-    for (const k of Object.keys(before)) {
-      out.push({ field: k, from: before[k], to: undefined });
+    for (const key of Object.keys(before)) {
+      const from = normalizeValue(before[key]);
+      if (from !== null) out.push({ field: key, from, to: null });
     }
     return out;
   }
 
-  // update
   const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
-  for (const k of keys) {
-    const a = toStr(before[k]);
-    const b = toStr(after[k]);
-    if (a !== b) out.push({ field: k, from: before[k], to: after[k] });
+  for (const key of keys) {
+    const from = normalizeValue(before[key]);
+    const to = normalizeValue(after[key]);
+    if (toStr(from) !== toStr(to)) out.push({ field: key, from, to });
   }
+
   return out;
 }
 
 export async function GET(req) {
   try {
-    // 🔥 Pobranie ciasteczka ręcznie — DZIAŁA ZAWSZE W ROUTE HANDLERACH
     const cookie = req.headers.get("cookie") || "";
-    const token = cookie
-      .split("; ")
-      .find((x) => x.startsWith("token="))
-      ?.split("=")[1] || null;
+    const token =
+      cookie
+        .split("; ")
+        .find((item) => item.startsWith("token="))
+        ?.split("=")[1] || null;
 
     if (!token) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
@@ -63,20 +77,26 @@ export async function GET(req) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 🔍 Filtry
     const { searchParams } = new URL(req.url);
-    const limit  = Math.min(Number(searchParams.get("limit") || 200), 500);
+    const limit = Math.min(Number(searchParams.get("limit") || 200), 500);
     const entity = searchParams.get("entity");
     const action = searchParams.get("action");
 
     const where = [];
-    const vals = [];
+    const values = [];
 
-    if (entity) { vals.push(entity); where.push(`entity = $${vals.length}`); }
-    if (action) { vals.push(action); where.push(`action = $${vals.length}`); }
+    if (entity) {
+      values.push(entity);
+      where.push(`entity = $${values.length}`);
+    }
 
-    const WHERE = where.length ? `WHERE ${where.join(" AND ")}` : "";
-    vals.push(limit);
+    if (action) {
+      values.push(action);
+      where.push(`action = $${values.length}`);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    values.push(limit);
 
     const { rows } = await pool.query(
       `
@@ -91,47 +111,49 @@ export async function GET(req) {
         after_row           AS "after_row",
         ip                  AS "ip"
       FROM audit_logs
-      ${WHERE}
+      ${whereClause}
       ORDER BY COALESCE(at, NOW()) DESC, id DESC
-      LIMIT $${vals.length}
+      LIMIT $${values.length}
       `,
-      vals
+      values
     );
 
-    // 🔧 Budowanie finalnych zmian
-    const result = rows.map((r) => {
+    const result = rows.map((row) => {
       const finalChanges = buildChanges({
-        action: r.action,
-        before_row: r.before_row,
-        after_row: r.after_row,
-        changes: r.changes,
+        action: row.action,
+        before_row: row.before_row,
+        after_row: row.after_row,
+        changes: row.changes,
       });
 
-      // Przycięcie bardzo długich wartości
-      const trimmed = finalChanges.map(c => {
+      const trimmed = finalChanges.map((change) => {
         const MAX = 200;
-        const norm = (v) => {
-          const s = toStr(v);
-          return s.length > MAX ? s.slice(0, MAX) + "…" : v;
+        const trimLong = (value) => {
+          const str = toStr(value);
+          return str.length > MAX ? str.slice(0, MAX) + "…" : value;
         };
-        return { field: c.field, from: norm(c.from), to: norm(c.to) };
+
+        return {
+          field: change.field,
+          from: trimLong(change.from),
+          to: trimLong(change.to),
+        };
       });
 
       return {
-        date: r.date,
-        username: r.username || "-",
-        action: r.action || "-",
-        entity: r.entity || "-",
-        entityId: r.entityId,
+        date: row.date,
+        username: row.username || "-",
+        action: row.action || "-",
+        entity: row.entity || "-",
+        entityId: row.entityId,
         changes: trimmed,
-        ip: r.ip || "-",
+        ip: row.ip || "-",
       };
     });
 
     return Response.json(result);
-
-  } catch (e) {
-    console.error("API /logs error:", e);
-    return Response.json({ error: e.message }, { status: 500 });
+  } catch (error) {
+    console.error("API /logs error:", error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
