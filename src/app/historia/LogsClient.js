@@ -64,6 +64,11 @@ function humanizeEntity(entity, entityId) {
   return entityId ? `${base} #${entityId}` : base;
 }
 
+function humanizeObject(row) {
+  if (row?.objectLabel) return row.objectLabel;
+  return humanizeEntity(row?.entity, row?.entityId);
+}
+
 function humanizeAction(action) {
   return ACTION_LABELS[action] || action || "-";
 }
@@ -189,7 +194,12 @@ export default function LogsClient() {
                     <span className="pill">{humanizeAction(row?.action)}</span>
                   </td>
                   <td data-label="Obiekt">
-                    {humanizeEntity(row?.entity, row?.entityId)}
+                    <div className="historyObjectCell">
+                      <strong>{humanizeObject(row)}</strong>
+                      <span className="historyObjectMeta">
+                        {humanizeEntity(row?.entity, row?.entityId)}
+                      </span>
+                    </div>
                   </td>
                   <td data-label="Zmiany" className="historyChangesCell">
                     {Array.isArray(row?.changes) && row.changes.length ? (

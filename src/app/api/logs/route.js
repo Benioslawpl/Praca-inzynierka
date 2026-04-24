@@ -53,6 +53,59 @@ function buildChanges({ action, before_row, after_row, changes }) {
   return out;
 }
 
+function buildObjectLabel(entity, entityId, beforeRow, afterRow) {
+  const row = afterRow || beforeRow || {};
+
+  if (entity === "maszyny") {
+    const label = [row.nr, row.rodzaj, row.marka, row.model].filter(Boolean).join(" • ");
+    return label || `Maszyna #${entityId}`;
+  }
+
+  if (entity === "sprzet") {
+    const label = [row.nr, row.rodzaj, row.marka, row.model].filter(Boolean).join(" • ");
+    return label || `Sprzęt #${entityId}`;
+  }
+
+  if (entity === "brygady") {
+    const label = [row.numer, row.brygadzista].filter(Boolean).join(" • ");
+    return label || `Brygada #${entityId}`;
+  }
+
+  if (entity === "members") {
+    const label = [row.imie, row.nazwisko, row.rola].filter(Boolean).join(" ");
+    return label || `Członek #${entityId}`;
+  }
+
+  if (entity === "users") {
+    const label = [row.username, row.role].filter(Boolean).join(" • ");
+    return label || `Użytkownik #${entityId}`;
+  }
+
+  if (entity === "maszyny_details") {
+    const parts = [
+      row.maszyna_id ? `Maszyna #${row.maszyna_id}` : null,
+      row.data_zdarzenia || null,
+      row.awaria || null,
+    ].filter(Boolean);
+    return parts.join(" • ") || `Wpis historii maszyny #${entityId}`;
+  }
+
+  if (entity === "sprzet_details") {
+    const parts = [
+      row.sprzet_id ? `Sprzęt #${row.sprzet_id}` : null,
+      row.data_zdarzenia || null,
+      row.awaria || null,
+    ].filter(Boolean);
+    return parts.join(" • ") || `Wpis historii sprzętu #${entityId}`;
+  }
+
+  if (entity === "auth") {
+    return row.username ? `Sesja ${row.username}` : "Sesja użytkownika";
+  }
+
+  return entityId ? `${entity} #${entityId}` : entity || "-";
+}
+
 export async function GET(req) {
   try {
     const cookie = req.headers.get("cookie") || "";
@@ -146,6 +199,12 @@ export async function GET(req) {
         action: row.action || "-",
         entity: row.entity || "-",
         entityId: row.entityId,
+        objectLabel: buildObjectLabel(
+          row.entity,
+          row.entityId,
+          row.before_row,
+          row.after_row
+        ),
         changes: trimmed,
         ip: row.ip || "-",
       };

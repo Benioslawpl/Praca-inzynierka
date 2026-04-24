@@ -1093,6 +1093,21 @@ label {
   gap: 8px;
 }
 
+.historyObjectCell {
+  display: grid;
+  gap: 4px;
+}
+
+.historyObjectCell strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.historyObjectMeta {
+  color: #64748b;
+  font-size: 12px;
+}
+
 .historyChangeItem {
   display: flex;
   flex-wrap: wrap;
