@@ -57,27 +57,24 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow) {
   const row = afterRow || beforeRow || {};
 
   if (entity === "maszyny") {
-    const label = [row.nr, row.rodzaj, row.marka, row.model].filter(Boolean).join(" • ");
-    return label || `Maszyna #${entityId}`;
+    return row.nr || `Maszyna #${entityId}`;
   }
 
   if (entity === "sprzet") {
-    const label = [row.nr, row.rodzaj, row.marka, row.model].filter(Boolean).join(" • ");
-    return label || `Sprzęt #${entityId}`;
+    return row.nr || `Sprzęt #${entityId}`;
   }
 
   if (entity === "brygady") {
-    const label = [row.numer, row.brygadzista].filter(Boolean).join(" • ");
-    return label || `Brygada #${entityId}`;
+    return row.numer || `Brygada #${entityId}`;
   }
 
   if (entity === "members") {
-    const label = [row.imie, row.nazwisko, row.rola].filter(Boolean).join(" ");
+    const label = [row.imie, row.nazwisko].filter(Boolean).join(" ");
     return label || `Członek #${entityId}`;
   }
 
   if (entity === "users") {
-    const label = [row.username, row.role].filter(Boolean).join(" • ");
+    const label = row.username;
     return label || `Użytkownik #${entityId}`;
   }
 
