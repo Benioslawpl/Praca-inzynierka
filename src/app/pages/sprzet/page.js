@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 export default function SprzetPage() {
   const [rows, setRows] = useState([]);
   const [brygady, setBrygady] = useState([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [form, setForm] = useState({
     rodzaj: "",
     marka: "",
@@ -18,6 +19,7 @@ export default function SprzetPage() {
 
   const brygadzisci = useMemo(() => {
     const seen = new Set();
+
     return brygady.filter((item) => {
       const name = item?.brygadzista?.trim();
       if (!name || seen.has(name)) return false;
@@ -73,6 +75,7 @@ export default function SprzetPage() {
       brygadzista: brygadzisci[0]?.brygadzista || "",
     });
     setEditId(null);
+    setIsFormOpen(false);
     setError("");
   };
 
@@ -84,7 +87,6 @@ export default function SprzetPage() {
     try {
       const url = editId ? `/api/sprzet/${editId}` : "/api/sprzet";
       const method = editId ? "PUT" : "POST";
-
       const payload = {
         rodzaj: form.rodzaj.trim(),
         marka: form.marka.trim(),
@@ -113,6 +115,7 @@ export default function SprzetPage() {
   };
 
   const handleEdit = (row) => {
+    setIsFormOpen(true);
     setEditId(row.id);
     setForm({
       rodzaj: row.rodzaj ?? "",
@@ -138,86 +141,116 @@ export default function SprzetPage() {
     load();
   };
 
+  const toggleForm = () => {
+    if (editId) {
+      setIsFormOpen(true);
+      return;
+    }
+
+    if (isFormOpen) {
+      reset();
+      return;
+    }
+
+    setIsFormOpen(true);
+    setError("");
+  };
+
   return (
     <div>
       <h1>Sprzęt</h1>
 
-      <form className="card" onSubmit={submit}>
-        <div className="grid">
-          <label>
-            <span>Rodzaj*</span>
-            <input
-              value={form.rodzaj}
-              onChange={(e) => setForm({ ...form, rodzaj: e.target.value })}
-              required
-              placeholder="np. Zagęszczarka"
-            />
-          </label>
+      <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
+        <div className="formPanelHeader">
+          <div>
+            <h2>{editId ? "Edytuj sprzęt" : "Dodaj sprzęt"}</h2>
+            <p>
+              {editId
+                ? "Zmień dane wybranego sprzętu."
+                : "Dodaj nowy sprzęt i przypisz go do brygadzisty."}
+            </p>
+          </div>
 
-          <label>
-            <span>Marka*</span>
-            <input
-              value={form.marka}
-              onChange={(e) => setForm({ ...form, marka: e.target.value })}
-              required
-              placeholder="np. Husqvarna"
-            />
-          </label>
-
-          <label>
-            <span>Model*</span>
-            <input
-              value={form.model}
-              onChange={(e) => setForm({ ...form, model: e.target.value })}
-              required
-              placeholder="np. LF 75"
-            />
-          </label>
-
-          <label>
-            <span>Brygadzista*</span>
-            <select
-              value={form.brygadzista}
-              onChange={(e) =>
-                setForm({ ...form, brygadzista: e.target.value })
-              }
-              required
-              disabled={brygadzisci.length === 0}
-            >
-              {brygadzisci.length === 0 ? (
-                <option value="">Brak dostępnych brygadzistów</option>
-              ) : (
-                brygadzisci.map((item) => (
-                  <option key={item.id} value={item.brygadzista}>
-                    {item.brygadzista} ({item.numer})
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
-        </div>
-
-        <div className="actions">
-          <button type="submit" disabled={saving || brygadzisci.length === 0}>
-            {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+          <button type="button" onClick={toggleForm}>
+            {isFormOpen ? (editId ? "Edytujesz" : "Ukryj formularz") : "Dodaj"}
           </button>
-
-          {editId && (
-            <button type="button" className="secondary" onClick={reset}>
-              Anuluj
-            </button>
-          )}
         </div>
 
-        {brygadzisci.length === 0 && !error && (
-          <p className="error">
-            Najpierw dodaj przynajmniej jedną brygadę z przypisanym
-            brygadzistą.
-          </p>
-        )}
+        <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
+          <form className="card" onSubmit={submit}>
+            <div className="grid">
+              <label>
+                <span>Rodzaj*</span>
+                <input
+                  value={form.rodzaj}
+                  onChange={(e) => setForm({ ...form, rodzaj: e.target.value })}
+                  required
+                  placeholder="np. Zagęszczarka"
+                />
+              </label>
 
-        {error && <p className="error">{error}</p>}
-      </form>
+              <label>
+                <span>Marka*</span>
+                <input
+                  value={form.marka}
+                  onChange={(e) => setForm({ ...form, marka: e.target.value })}
+                  required
+                  placeholder="np. Husqvarna"
+                />
+              </label>
+
+              <label>
+                <span>Model*</span>
+                <input
+                  value={form.model}
+                  onChange={(e) => setForm({ ...form, model: e.target.value })}
+                  required
+                  placeholder="np. LF 75"
+                />
+              </label>
+
+              <label>
+                <span>Brygadzista*</span>
+                <select
+                  value={form.brygadzista}
+                  onChange={(e) => setForm({ ...form, brygadzista: e.target.value })}
+                  required
+                  disabled={brygadzisci.length === 0}
+                >
+                  {brygadzisci.length === 0 ? (
+                    <option value="">Brak dostępnych brygadzistów</option>
+                  ) : (
+                    brygadzisci.map((item) => (
+                      <option key={item.id} value={item.brygadzista}>
+                        {item.brygadzista} ({item.numer})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </label>
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={saving || brygadzisci.length === 0}>
+                {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+              </button>
+
+              <button type="button" className="secondary" onClick={reset}>
+                Anuluj
+              </button>
+            </div>
+
+            {brygadzisci.length === 0 && !error && (
+              <p className="error">
+                Najpierw dodaj przynajmniej jedną brygadę z przypisanym
+                brygadzistą.
+              </p>
+            )}
+
+            {error && <p className="error">{error}</p>}
+          </form>
+        </div>
+      </section>
 
       <div className="tableWrap">
         {rows.length === 0 ? (
@@ -234,7 +267,6 @@ export default function SprzetPage() {
                 <th style={{ width: 240 }}>Akcje</th>
               </tr>
             </thead>
-
             <tbody>
               {rows.map((row, index) => {
                 const uiNr = row.nr || `S-${String(index + 1).padStart(2, "0")}`;

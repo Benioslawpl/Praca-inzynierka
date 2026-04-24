@@ -1,11 +1,12 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
 export default function UsersPage() {
   const [list, setList] = useState([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -14,15 +15,25 @@ export default function UsersPage() {
     blocked: false,
   });
 
+  const emptyForm = {
+    username: "",
+    password: "",
+    email: "",
+    role: "user",
+    blocked: false,
+  };
+
   const fetchUsers = async () => {
     setError("");
     const res = await fetch("/api/users", { cache: "no-store" });
+
     if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error || "Błąd pobierania użytkowników");
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Błąd pobierania użytkowników");
       setList([]);
       return;
     }
+
     const data = await res.json();
     setList(Array.isArray(data) ? data : []);
   };
@@ -35,6 +46,7 @@ export default function UsersPage() {
     e.preventDefault();
     setSaving(true);
     setError("");
+
     try {
       const payload = {
         username: form.username,
@@ -53,17 +65,12 @@ export default function UsersPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Błąd dodawania");
 
-      setForm({
-        username: "",
-        password: "",
-        email: "",
-        role: "user",
-        blocked: false,
-      });
+      setForm(emptyForm);
+      setIsFormOpen(false);
       fetchUsers();
       alert(`Użytkownik dodany: ${data.username}`);
-    } catch (e) {
-      setError(e.message);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setSaving(false);
     }
@@ -77,11 +84,12 @@ export default function UsersPage() {
       body: JSON.stringify({ blocked: !blocked }),
     });
 
-    const d = await res.json().catch(() => ({}));
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      setError(d.error || `Błąd ${res.status}`);
+      setError(data.error || `Błąd ${res.status}`);
       return;
     }
+
     fetchUsers();
   };
 
@@ -96,12 +104,12 @@ export default function UsersPage() {
       body: JSON.stringify({ reset_password: true, new_password: newPass }),
     });
 
-    const d = await res.json().catch(() => ({}));
+    const data = await res.json().catch(() => ({}));
     if (res.ok) {
       alert("Hasło zresetowane.");
       fetchUsers();
     } else {
-      setError(d.error || "Błąd resetu hasła");
+      setError(data.error || "Błąd resetu hasła");
     }
   };
 
@@ -110,59 +118,96 @@ export default function UsersPage() {
 
     setError("");
     const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
-    const d = await res.json().catch(() => ({}));
+    const data = await res.json().catch(() => ({}));
+
     if (!res.ok) {
-      setError(d.error || `Błąd ${res.status}`);
+      setError(data.error || `Błąd ${res.status}`);
       return;
     }
+
     fetchUsers();
+  };
+
+  const toggleForm = () => {
+    if (isFormOpen) {
+      setForm(emptyForm);
+      setError("");
+    }
+
+    setIsFormOpen((open) => !open);
   };
 
   return (
     <div>
       <h1>Użytkownicy</h1>
 
-      <form className="card" onSubmit={addUser}>
-        <div className="grid">
-          <label>
-            <span>Login*</span>
-            <input
-              value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              required
-            />
-          </label>
+      <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
+        <div className="formPanelHeader">
+          <div>
+            <h2>Dodaj użytkownika</h2>
+            <p>Utwórz nowe konto i od razu nadaj odpowiednią rolę.</p>
+          </div>
 
-          <label>
-            <span>Hasło*</span>
-            <input
-              type="text"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-            />
-          </label>
-
-          <label>
-            <span>Rola</span>
-            <select
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-            >
-              <option value="user">user</option>
-              <option value="admin">admin</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="actions">
-          <button type="submit" disabled={saving}>
-            {saving ? "Zapisywanie..." : "Dodaj użytkownika"}
+          <button type="button" onClick={toggleForm}>
+            {isFormOpen ? "Ukryj formularz" : "Dodaj"}
           </button>
         </div>
 
-        {error && <p className="error">{error}</p>}
-      </form>
+        <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
+          <form className="card" onSubmit={addUser}>
+            <div className="grid">
+              <label>
+                <span>Login*</span>
+                <input
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Hasło*</span>
+                <input
+                  type="text"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Rola</span>
+                <select
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                >
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={saving}>
+                {saving ? "Zapisywanie..." : "Dodaj użytkownika"}
+              </button>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  setForm(emptyForm);
+                  setError("");
+                  setIsFormOpen(false);
+                }}
+              >
+                Anuluj
+              </button>
+            </div>
+
+            {error && <p className="error">{error}</p>}
+          </form>
+        </div>
+      </section>
 
       <div className="tableWrap">
         {list.length === 0 ? (
@@ -182,40 +227,40 @@ export default function UsersPage() {
             </thead>
 
             <tbody>
-              {list.map((u, i) => (
-                <tr key={u.id}>
-                  <td data-label="Numer">{i + 1}</td>
-                  <td data-label="Login">{u.username}</td>
+              {list.map((user, index) => (
+                <tr key={user.id}>
+                  <td data-label="Numer">{index + 1}</td>
+                  <td data-label="Login">{user.username}</td>
                   <td data-label="Hasło">{"•".repeat(8)}</td>
-                  <td data-label="Rola">{u.role}</td>
+                  <td data-label="Rola">{user.role}</td>
                   <td data-label="Data utworzenia">
-                    {u.created_at
-                      ? String(u.created_at).slice(0, 19).replace("T", " ")
+                    {user.created_at
+                      ? String(user.created_at).slice(0, 19).replace("T", " ")
                       : "-"}
                   </td>
                   <td data-label="Zablokowany">
-                    <span className={`badge ${u.blocked ? "bad" : "ok"}`}>
-                      {u.blocked ? "TAK" : "NIE"}
+                    <span className={`pill ${user.blocked ? "bad" : "ok"}`}>
+                      {user.blocked ? "TAK" : "NIE"}
                     </span>
                   </td>
 
                   <td className="actionsCell" data-label="Akcje">
                     <button
                       type="button"
-                      className={u.blocked ? "secondary" : "danger"}
-                      onClick={() => toggleBlocked(u.id, u.blocked)}
+                      className={user.blocked ? "secondary" : "danger"}
+                      onClick={() => toggleBlocked(user.id, user.blocked)}
                     >
-                      {u.blocked ? "Odblokuj" : "Zablokuj"}
+                      {user.blocked ? "Odblokuj" : "Zablokuj"}
                     </button>
 
-                    <button type="button" onClick={() => resetPassword(u.id)}>
+                    <button type="button" onClick={() => resetPassword(user.id)}>
                       Reset hasła
                     </button>
 
                     <button
                       type="button"
                       className="danger"
-                      onClick={() => removeUser(u.id)}
+                      onClick={() => removeUser(user.id)}
                     >
                       Usuń
                     </button>

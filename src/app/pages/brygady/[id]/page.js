@@ -9,6 +9,7 @@ export default function BrygadaDetails() {
 
   const [header, setHeader] = useState(null);
   const [items, setItems] = useState([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const [form, setForm] = useState({
     imie: "",
     nazwisko: "",
@@ -23,6 +24,7 @@ export default function BrygadaDetails() {
 
   useEffect(() => {
     setErr("");
+
     if (!validId) {
       setItems([]);
       setHeader(null);
@@ -32,10 +34,10 @@ export default function BrygadaDetails() {
 
     const loadHeader = async () => {
       const list = await fetch("/api/brygady", { cache: "no-store" })
-        .then((r) => r.json())
+        .then((res) => res.json())
         .catch(() => []);
       const found = Array.isArray(list)
-        ? list.find((x) => String(x.id) === String(id))
+        ? list.find((item) => String(item.id) === String(id))
         : null;
       setHeader(found || null);
     };
@@ -51,6 +53,7 @@ export default function BrygadaDetails() {
         setItems([]);
         return;
       }
+
       setItems(Array.isArray(data) ? data : []);
     };
 
@@ -71,12 +74,14 @@ export default function BrygadaDetails() {
       setItems([]);
       return;
     }
+
     setItems(Array.isArray(data) ? data : []);
   };
 
   const reset = () => {
     setForm({ imie: "", nazwisko: "", rola: "", telefon: "" });
     setEditId(null);
+    setIsFormOpen(false);
   };
 
   const submit = async (e) => {
@@ -115,22 +120,22 @@ export default function BrygadaDetails() {
 
       reset();
       loadMembers();
-    } catch (e) {
-      setErr(e.message || "Błąd zapisu");
+    } catch (error) {
+      setErr(error.message || "Błąd zapisu");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleEdit = (m) => {
-    const mid = Number(m.id);
-    setEditId(Number.isInteger(mid) ? mid : null);
-
+  const handleEdit = (member) => {
+    const memberId = Number(member.id);
+    setIsFormOpen(true);
+    setEditId(Number.isInteger(memberId) ? memberId : null);
     setForm({
-      imie: m.imie ?? m.Imie ?? "",
-      nazwisko: m.nazwisko ?? m.Nazwisko ?? "",
-      rola: m.rola ?? m.Rola ?? "",
-      telefon: m.telefon ?? m.Telefon ?? "",
+      imie: member.imie ?? member.Imie ?? "",
+      nazwisko: member.nazwisko ?? member.Nazwisko ?? "",
+      rola: member.rola ?? member.Rola ?? "",
+      telefon: member.telefon ?? member.Telefon ?? "",
     });
   };
 
@@ -138,13 +143,13 @@ export default function BrygadaDetails() {
     if (!validId) return;
     if (!confirm("Usunąć członka?")) return;
 
-    const mid = Number(memberId);
-    if (!Number.isInteger(mid) || mid <= 0) {
+    const numericId = Number(memberId);
+    if (!Number.isInteger(numericId) || numericId <= 0) {
       setErr("Nieprawidłowe ID członka.");
       return;
     }
 
-    const res = await fetch(`/api/brygady/${id}/members/${mid}`, {
+    const res = await fetch(`/api/brygady/${id}/members/${numericId}`, {
       method: "DELETE",
     });
     const data = await res.json().catch(() => ({}));
@@ -154,8 +159,23 @@ export default function BrygadaDetails() {
       return;
     }
 
-    if (editId === mid) reset();
+    if (editId === numericId) reset();
     loadMembers();
+  };
+
+  const toggleForm = () => {
+    if (editId !== null) {
+      setIsFormOpen(true);
+      return;
+    }
+
+    if (isFormOpen) {
+      reset();
+      return;
+    }
+
+    setIsFormOpen(true);
+    setErr("");
   };
 
   return (
@@ -183,60 +203,75 @@ export default function BrygadaDetails() {
         <p>Ładowanie...</p>
       )}
 
-      <h2>{editId !== null ? "Edytuj członka" : "Dodaj członka"}</h2>
+      <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
+        <div className="formPanelHeader">
+          <div>
+            <h2>{editId !== null ? "Edytuj członka" : "Dodaj członka"}</h2>
+            <p>
+              {editId !== null
+                ? "Zmień dane wybranego członka brygady."
+                : "Dodaj nową osobę do tej brygady."}
+            </p>
+          </div>
 
-      <form className="card" onSubmit={submit}>
-        <div className="grid">
-          <label>
-            <span>Imię*</span>
-            <input
-              value={form.imie}
-              onChange={(e) => setForm({ ...form, imie: e.target.value })}
-              required
-            />
-          </label>
-
-          <label>
-            <span>Nazwisko*</span>
-            <input
-              value={form.nazwisko}
-              onChange={(e) => setForm({ ...form, nazwisko: e.target.value })}
-              required
-            />
-          </label>
-
-          <label>
-            <span>Rola</span>
-            <input
-              value={form.rola}
-              onChange={(e) => setForm({ ...form, rola: e.target.value })}
-              placeholder="np. Operator"
-            />
-          </label>
-
-          <label>
-            <span>Telefon</span>
-            <input
-              value={form.telefon}
-              onChange={(e) => setForm({ ...form, telefon: e.target.value })}
-              placeholder="+48 ..."
-            />
-          </label>
-        </div>
-
-        <div className="actions">
-          <button type="submit" disabled={saving}>
-            {saving ? "Zapisywanie..." : editId !== null ? "Zapisz" : "Dodaj"}
+          <button type="button" onClick={toggleForm}>
+            {isFormOpen ? (editId !== null ? "Edytujesz" : "Ukryj formularz") : "Dodaj"}
           </button>
-          {editId !== null && (
-            <button type="button" className="secondary" onClick={reset}>
-              Anuluj
-            </button>
-          )}
         </div>
 
-        {err && <p className="error">{err}</p>}
-      </form>
+        <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
+          <form className="card" onSubmit={submit}>
+            <div className="grid">
+              <label>
+                <span>Imię*</span>
+                <input
+                  value={form.imie}
+                  onChange={(e) => setForm({ ...form, imie: e.target.value })}
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Nazwisko*</span>
+                <input
+                  value={form.nazwisko}
+                  onChange={(e) => setForm({ ...form, nazwisko: e.target.value })}
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Rola</span>
+                <input
+                  value={form.rola}
+                  onChange={(e) => setForm({ ...form, rola: e.target.value })}
+                  placeholder="np. Operator"
+                />
+              </label>
+
+              <label>
+                <span>Telefon</span>
+                <input
+                  value={form.telefon}
+                  onChange={(e) => setForm({ ...form, telefon: e.target.value })}
+                  placeholder="+48 ..."
+                />
+              </label>
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={saving}>
+                {saving ? "Zapisywanie..." : editId !== null ? "Zapisz" : "Dodaj"}
+              </button>
+              <button type="button" className="secondary" onClick={reset}>
+                Anuluj
+              </button>
+            </div>
+
+            {err && <p className="error">{err}</p>}
+          </form>
+        </div>
+      </section>
 
       <h2>Członkowie</h2>
 
@@ -256,25 +291,25 @@ export default function BrygadaDetails() {
               </tr>
             </thead>
             <tbody>
-              {items.map((m, i) => (
-                <tr key={m.id}>
-                  <td data-label="Lp.">{i + 1}</td>
-                  <td data-label="Imię">{m.imie ?? m.Imie ?? "-"}</td>
-                  <td data-label="Nazwisko">{m.nazwisko ?? m.Nazwisko ?? "-"}</td>
-                  <td data-label="Rola">{m.rola ?? m.Rola ?? "-"}</td>
-                  <td data-label="Telefon">{m.telefon ?? m.Telefon ?? "-"}</td>
+              {items.map((member, index) => (
+                <tr key={member.id}>
+                  <td data-label="Lp.">{index + 1}</td>
+                  <td data-label="Imię">{member.imie ?? member.Imie ?? "-"}</td>
+                  <td data-label="Nazwisko">{member.nazwisko ?? member.Nazwisko ?? "-"}</td>
+                  <td data-label="Rola">{member.rola ?? member.Rola ?? "-"}</td>
+                  <td data-label="Telefon">{member.telefon ?? member.Telefon ?? "-"}</td>
                   <td className="actionsCell" data-label="Akcje">
                     <button
                       type="button"
                       className="secondary"
-                      onClick={() => handleEdit(m)}
+                      onClick={() => handleEdit(member)}
                     >
                       Edytuj
                     </button>
                     <button
                       type="button"
                       className="danger"
-                      onClick={() => handleDelete(m.id)}
+                      onClick={() => handleDelete(member.id)}
                     >
                       Usuń
                     </button>

@@ -9,6 +9,7 @@ export default function SprzetDetailsPage() {
 
   const [header, setHeader] = useState(null);
   const [items, setItems] = useState([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
   const emptyForm = {
@@ -82,6 +83,7 @@ export default function SprzetDetailsPage() {
   const reset = () => {
     setForm(emptyForm);
     setEditId(null);
+    setIsFormOpen(false);
     setErr("");
   };
 
@@ -115,22 +117,23 @@ export default function SprzetDetailsPage() {
 
       reset();
       await loadDetails(id);
-    } catch (e2) {
-      setErr(e2.message || "Błąd zapisu");
+    } catch (error) {
+      setErr(error.message || "Błąd zapisu");
     } finally {
       setSaving(false);
     }
   };
 
-  const edit = (it) => {
-    setEditId(it.id);
+  const edit = (item) => {
+    setIsFormOpen(true);
+    setEditId(item.id);
     setForm({
-      przebieg: it.przebieg ?? "",
-      awaria: it.awaria ?? "",
-      wykonawca: it.wykonawca ?? "",
-      uwagi: it.uwagi ?? "",
-      data_zdarzenia: it.data_zdarzenia
-        ? String(it.data_zdarzenia).slice(0, 10)
+      przebieg: item.przebieg ?? "",
+      awaria: item.awaria ?? "",
+      wykonawca: item.wykonawca ?? "",
+      uwagi: item.uwagi ?? "",
+      data_zdarzenia: item.data_zdarzenia
+        ? String(item.data_zdarzenia).slice(0, 10)
         : today,
     });
   };
@@ -149,6 +152,21 @@ export default function SprzetDetailsPage() {
 
     const data = await res.json().catch(() => ({}));
     setErr(data?.error || "Błąd usuwania");
+  };
+
+  const toggleForm = () => {
+    if (editId) {
+      setIsFormOpen(true);
+      return;
+    }
+
+    if (isFormOpen) {
+      reset();
+      return;
+    }
+
+    setIsFormOpen(true);
+    setErr("");
   };
 
   return (
@@ -180,90 +198,105 @@ export default function SprzetDetailsPage() {
         <p>Ładowanie...</p>
       )}
 
-      <h2>{editId ? "Edytuj zdarzenie" : "Nowe zdarzenie"}</h2>
+      <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
+        <div className="formPanelHeader">
+          <div>
+            <h2>{editId ? "Edytuj zdarzenie" : "Dodaj zdarzenie"}</h2>
+            <p>
+              {editId
+                ? "Zmień dane wybranego wpisu w historii."
+                : "Dodaj nowy wpis do historii zdarzeń tego sprzętu."}
+            </p>
+          </div>
 
-      <form className="card" onSubmit={submit}>
-        <div className="grid">
-          <label>
-            <span>Data zdarzenia</span>
-            <input
-              type="date"
-              value={form.data_zdarzenia}
-              onChange={(e) =>
-                setForm({ ...form, data_zdarzenia: e.target.value })
-              }
-              required
-            />
-          </label>
-
-          <label>
-            <span>Przebieg / licznik</span>
-            <input
-              type="number"
-              value={form.przebieg}
-              onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
-              min="0"
-              placeholder="np. 320"
-            />
-          </label>
-
-          <label>
-            <span>Awaria</span>
-            <input
-              value={form.awaria}
-              onChange={(e) =>
-                setForm({ ...form, awaria: e.target.value.slice(0, 30) })
-              }
-              placeholder="np. Uszkodzony przewód"
-            />
-          </label>
-
-          <label>
-            <span>Wykonawca</span>
-            <input
-              value={form.wykonawca}
-              onChange={(e) =>
-                setForm({ ...form, wykonawca: e.target.value })
-              }
-              placeholder="np. Serwis wewnętrzny"
-            />
-          </label>
-
-          <label style={{ gridColumn: "1 / -1" }}>
-            <span>Uwagi</span>
-            <textarea
-              value={form.uwagi}
-              onChange={(e) =>
-                setForm({ ...form, uwagi: e.target.value.slice(0, 200) })
-              }
-              rows={3}
-              placeholder="Krótki opis zdarzenia..."
-              style={{
-                width: "100%",
-                resize: "vertical",
-                padding: 8,
-                borderRadius: 6,
-                border: "1px solid #cfd4dc",
-                background: "#fff",
-              }}
-            />
-          </label>
-        </div>
-
-        <div className="actions">
-          <button type="submit" disabled={saving}>
-            {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+          <button type="button" onClick={toggleForm}>
+            {isFormOpen ? (editId ? "Edytujesz" : "Ukryj formularz") : "Dodaj"}
           </button>
-
-          {editId && (
-            <button type="button" className="secondary" onClick={reset}>
-              Anuluj
-            </button>
-          )}
         </div>
 
-        {err && <p className="error">{err}</p>}
-      </form>
+        <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
+          <form className="card" onSubmit={submit}>
+            <div className="grid">
+              <label>
+                <span>Data zdarzenia</span>
+                <input
+                  type="date"
+                  value={form.data_zdarzenia}
+                  onChange={(e) =>
+                    setForm({ ...form, data_zdarzenia: e.target.value })
+                  }
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Przebieg / licznik</span>
+                <input
+                  type="number"
+                  value={form.przebieg}
+                  onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
+                  min="0"
+                  placeholder="np. 320"
+                />
+              </label>
+
+              <label>
+                <span>Awaria</span>
+                <input
+                  value={form.awaria}
+                  onChange={(e) =>
+                    setForm({ ...form, awaria: e.target.value.slice(0, 30) })
+                  }
+                  placeholder="np. Uszkodzony przewód"
+                />
+              </label>
+
+              <label>
+                <span>Wykonawca</span>
+                <input
+                  value={form.wykonawca}
+                  onChange={(e) =>
+                    setForm({ ...form, wykonawca: e.target.value })
+                  }
+                  placeholder="np. Serwis wewnętrzny"
+                />
+              </label>
+
+              <label style={{ gridColumn: "1 / -1" }}>
+                <span>Uwagi</span>
+                <textarea
+                  value={form.uwagi}
+                  onChange={(e) =>
+                    setForm({ ...form, uwagi: e.target.value.slice(0, 200) })
+                  }
+                  rows={3}
+                  placeholder="Krótki opis zdarzenia..."
+                  style={{
+                    width: "100%",
+                    resize: "vertical",
+                    padding: 8,
+                    borderRadius: 6,
+                    border: "1px solid #cfd4dc",
+                    background: "#fff",
+                  }}
+                />
+              </label>
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={saving}>
+                {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+              </button>
+
+              <button type="button" className="secondary" onClick={reset}>
+                Anuluj
+              </button>
+            </div>
+
+            {err && <p className="error">{err}</p>}
+          </form>
+        </div>
+      </section>
 
       <h2>Historia zdarzeń</h2>
 
@@ -284,30 +317,30 @@ export default function SprzetDetailsPage() {
             </thead>
 
             <tbody>
-              {items.map((it) => (
-                <tr key={it.id}>
+              {items.map((item) => (
+                <tr key={item.id}>
                   <td data-label="Data">
-                    {it.data_zdarzenia
-                      ? String(it.data_zdarzenia).slice(0, 10)
+                    {item.data_zdarzenia
+                      ? String(item.data_zdarzenia).slice(0, 10)
                       : "-"}
                   </td>
-                  <td data-label="Przebieg">{it.przebieg ?? "-"}</td>
-                  <td data-label="Awaria">{it.awaria || "-"}</td>
-                  <td data-label="Wykonawca">{it.wykonawca || "-"}</td>
+                  <td data-label="Przebieg">{item.przebieg ?? "-"}</td>
+                  <td data-label="Awaria">{item.awaria || "-"}</td>
+                  <td data-label="Wykonawca">{item.wykonawca || "-"}</td>
                   <td
                     data-label="Uwagi"
                     style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
                   >
-                    {it.uwagi || "-"}
+                    {item.uwagi || "-"}
                   </td>
                   <td className="actionsCell" data-label="Akcje">
-                    <button type="button" onClick={() => edit(it)}>
+                    <button type="button" onClick={() => edit(item)}>
                       Edytuj
                     </button>
                     <button
                       type="button"
                       className="danger"
-                      onClick={() => del(it.id)}
+                      onClick={() => del(item.id)}
                     >
                       Usuń
                     </button>
