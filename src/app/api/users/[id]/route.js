@@ -31,7 +31,7 @@ async function getUserRow(id) {
 
 export async function PUT(req, ctx) {
   try {
-    const me = getUserFromRequest(req);
+    const me = await getUserFromRequest(req);
     if (!me?.isAdmin) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -146,7 +146,7 @@ export async function PUT(req, ctx) {
 
 export async function DELETE(req, ctx) {
   try {
-    const me = getUserFromRequest(req);
+    const me = await getUserFromRequest(req);
     if (!me?.isAdmin) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -156,7 +156,7 @@ export async function DELETE(req, ctx) {
       return Response.json({ error: "Bad id" }, { status: 400 });
     }
 
-    if (me?.id === parsed.id) {
+    if (me.id === parsed.id) {
       return Response.json(
         { error: "Nie możesz usunąć samego siebie" },
         { status: 400 }

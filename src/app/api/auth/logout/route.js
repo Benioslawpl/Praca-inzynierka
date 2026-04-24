@@ -4,7 +4,7 @@ import { getUserFromRequest } from "../../../../lib/auth";
 import { audit } from "../../../../lib/audit";
 
 export async function POST(req) {
-  const user = getUserFromRequest(req);
+  const user = await getUserFromRequest(req);
 
   await audit({
     action: "logout",

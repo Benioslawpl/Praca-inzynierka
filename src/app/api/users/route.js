@@ -7,7 +7,7 @@ import { audit } from "../../../lib/audit";
 export const runtime = "nodejs";
 
 export async function GET(req) {
-  const user = getUserFromRequest(req);
+  const user = await getUserFromRequest(req);
   if (!user?.isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -22,7 +22,7 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  const user = getUserFromRequest(req);
+  const user = await getUserFromRequest(req);
   if (!user?.isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }

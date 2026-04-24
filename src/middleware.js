@@ -3,9 +3,11 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
+import pool from "../db";
+
 const SECRET = process.env.JWT_SECRET || "Test123!";
 
-export function middleware(req) {
+export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
   const isAuthApi = pathname.startsWith("/api/auth");
@@ -25,10 +27,43 @@ export function middleware(req) {
   }
 
   try {
-    jwt.verify(token, SECRET);
+    const payload = jwt.verify(token, SECRET);
+    const userId = Number(payload?.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      throw new Error("INVALID_USER");
+    }
+
+    const { rows } = await pool.query(
+      `SELECT blocked
+       FROM users
+       WHERE id=$1`,
+      [userId]
+    );
+
+    if (!rows[0] || rows[0].blocked) {
+      const response = NextResponse.redirect(new URL("/login", req.url));
+      response.cookies.set("token", "", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 0,
+      });
+      return response;
+    }
+
     return NextResponse.next();
   } catch {
-    return NextResponse.redirect(new URL("/login", req.url));
+    const response = NextResponse.redirect(new URL("/login", req.url));
+    response.cookies.set("token", "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+    return response;
   }
 }
 

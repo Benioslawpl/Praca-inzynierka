@@ -1,49 +1,61 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
+import pool from "../../db";
+
 const JWT_SECRET = process.env.JWT_SECRET || "Test123!";
 
 export function verifyJwt(token) {
   return jwt.verify(token, JWT_SECRET);
 }
 
-/* ===== SERVER COMPONENTS (layout.js, server pages) ===== */
+async function getActiveUserByPayload(payload) {
+  const id = Number(payload?.id);
+  if (!Number.isInteger(id) || id <= 0) return null;
+
+  const { rows } = await pool.query(
+    `SELECT id, username, role, blocked
+     FROM users
+     WHERE id=$1`,
+    [id]
+  );
+
+  const user = rows[0];
+  if (!user || user.blocked) return null;
+
+  return {
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    isAdmin: user.role === "admin",
+  };
+}
+
 export async function getUserFromCookies() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
     if (!token) return null;
 
-    const p = verifyJwt(token);
-    return {
-      id: p.id,
-      username: p.username,
-      role: p.role,
-      isAdmin: p.role === "admin",
-    };
+    const payload = verifyJwt(token);
+    return getActiveUserByPayload(payload);
   } catch {
     return null;
   }
 }
 
-/* ===== API ROUTES (route.js) ===== */
-export function getUserFromRequest(req) {
+export async function getUserFromRequest(req) {
   try {
     const cookieHeader = req.headers.get("cookie") || "";
     const token = cookieHeader
       .split("; ")
-      .find((c) => c.startsWith("token="))
+      .find((cookie) => cookie.startsWith("token="))
       ?.split("=")[1];
 
     if (!token) return null;
 
-    const p = verifyJwt(token);
-    return {
-      id: p.id,
-      username: p.username,
-      role: p.role,
-      isAdmin: p.role === "admin",
-    };
+    const payload = verifyJwt(token);
+    return getActiveUserByPayload(payload);
   } catch {
     return null;
   }

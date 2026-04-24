@@ -2,7 +2,7 @@ import pool from "../../db";
 import { getUserFromCookies, getUserFromRequest } from "./auth";
 
 async function getAuditUser(req) {
-  const fromRequest = req ? getUserFromRequest(req) : null;
+  const fromRequest = req ? await getUserFromRequest(req) : null;
   if (fromRequest) return fromRequest;
 
   const fromCookies = await getUserFromCookies();
