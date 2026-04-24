@@ -40,7 +40,8 @@ export async function GET(req, { params }) {
          m.nr,
          m.rodzaj,
          m.marka,
-         m.model
+         m.model,
+         m.operator
        FROM budowy_maszyny bm
        JOIN maszyny m ON m.id = bm.maszyna_id
        WHERE bm.budowa_id=$1
@@ -95,7 +96,7 @@ export async function POST(req, { params }) {
 
     const budowaNumer = await getBudowaNumer(budowaId);
     const { rows: metaRows } = await pool.query(
-      `SELECT nr, rodzaj, marka, model FROM maszyny WHERE id=$1`,
+      `SELECT nr, rodzaj, marka, model, operator FROM maszyny WHERE id=$1`,
       [maszynaId]
     );
 
@@ -106,6 +107,7 @@ export async function POST(req, { params }) {
       rodzaj: metaRows[0]?.rodzaj || null,
       marka: metaRows[0]?.marka || null,
       model: metaRows[0]?.model || null,
+      operator: metaRows[0]?.operator || null,
     };
 
     await audit({

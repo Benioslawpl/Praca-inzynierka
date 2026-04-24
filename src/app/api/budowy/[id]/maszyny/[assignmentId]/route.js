@@ -34,7 +34,8 @@ async function getAssignment(budowaId, assignmentId) {
        m.nr,
        m.rodzaj,
        m.marka,
-       m.model
+       m.model,
+       m.operator
      FROM budowy_maszyny bm
      JOIN budowy bld ON bld.id = bm.budowa_id
      JOIN maszyny m ON m.id = bm.maszyna_id

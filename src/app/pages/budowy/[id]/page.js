@@ -12,6 +12,10 @@ const EMPTY_ASSIGNMENT = {
   uwagi: "",
 };
 
+function formatDate(value) {
+  return value ? String(value).slice(0, 10) : "-";
+}
+
 export default function BudowaDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -259,6 +263,7 @@ export default function BudowaDetailsPage() {
   const renderAssignmentSection = ({
     section,
     title,
+    eyebrow,
     description,
     targetField,
     targetLabel,
@@ -276,10 +281,16 @@ export default function BudowaDetailsPage() {
 
     return (
       <section className="stackSection">
+        <div className="sectionIntro">
+          <span className="rowEyebrow">{eyebrow}</span>
+          <h2>{title}</h2>
+          <p>{description}</p>
+        </div>
+
         <div className={`formPanel ${isOpen ? "formPanelOpen" : ""}`}>
           <div className="formPanelHeader">
             <div>
-              <h2>{editId ? `Edytuj: ${title}` : `Przypisz: ${title}`}</h2>
+              <h3>{editId ? `Edytuj przypisanie` : `Nowe przypisanie`}</h3>
               <p>{description}</p>
             </div>
 
@@ -354,14 +365,14 @@ export default function BudowaDetailsPage() {
                 </label>
 
                 <label style={{ gridColumn: "1 / -1" }}>
-                  <span>Uwagi</span>
+                  <span>Uwagi techniczne</span>
                   <textarea
                     rows={3}
                     value={form.uwagi}
                     onChange={(e) =>
                       setFormFor(section, { ...form, uwagi: e.target.value })
                     }
-                    placeholder="Krótka informacja o zakresie lub terminie..."
+                    placeholder="Krótka informacja o terminie, zakresie lub ograniczeniach..."
                   />
                 </label>
               </div>
@@ -447,7 +458,7 @@ export default function BudowaDetailsPage() {
   }
 
   return (
-    <div>
+    <div className="stackSection">
       <button
         type="button"
         className="secondary"
@@ -456,9 +467,16 @@ export default function BudowaDetailsPage() {
         Wróć do listy
       </button>
 
-      <h1>Szczegóły budowy</h1>
+      <div className="sectionIntro">
+        <span className="rowEyebrow">Budowa</span>
+        <h1>Szczegóły budowy</h1>
+        <p>
+          Przypisuj brygady i maszyny do konkretnej realizacji. Sprzęt pozostaje
+          po stronie brygad, więc tutaj skupiamy się na głównych zasobach.
+        </p>
+      </div>
 
-      <div className="card detailsSummary" style={{ marginBottom: 16 }}>
+      <div className="card detailsSummary" style={{ marginBottom: 8 }}>
         <div className="detailsSummaryContent">
           <div className="detailsSummaryLine">
             <b>Numer:</b> <span>{header.numer}</span>
@@ -473,18 +491,8 @@ export default function BudowaDetailsPage() {
             <b>Kierownik:</b> <span>{header.kierownik || "-"}</span>
           </div>
           <div className="detailsSummaryLine">
-            <b>Start:</b>{" "}
-            <span>
-              {header.data_rozpoczecia
-                ? String(header.data_rozpoczecia).slice(0, 10)
-                : "-"}
-            </span>
-            <b>Koniec:</b>{" "}
-            <span>
-              {header.data_zakonczenia
-                ? String(header.data_zakonczenia).slice(0, 10)
-                : "-"}
-            </span>
+            <b>Start:</b> <span>{formatDate(header.data_rozpoczecia)}</span>
+            <b>Koniec:</b> <span>{formatDate(header.data_zakonczenia)}</span>
           </div>
           {header.uwagi ? (
             <div className="detailsSummaryLine">
@@ -498,8 +506,9 @@ export default function BudowaDetailsPage() {
 
       {renderAssignmentSection({
         section: "brygady",
-        title: "Brygadę",
-        description: "Przypisz brygadę do tej budowy i określ zakres dat.",
+        title: "Brygady",
+        eyebrow: "Obsada",
+        description: "Brygady pracujące obecnie lub planowane na tej budowie.",
         targetField: "brygada_id",
         targetLabel: "Brygada",
         options: availableBrygady,
@@ -511,12 +520,8 @@ export default function BudowaDetailsPage() {
           <>
             <td data-label="Brygada">{row.brygada_numer}</td>
             <td data-label="Brygadzista">{row.brygadzista || "-"}</td>
-            <td data-label="Data od">
-              {row.data_od ? String(row.data_od).slice(0, 10) : "-"}
-            </td>
-            <td data-label="Data do">
-              {row.data_do ? String(row.data_do).slice(0, 10) : "-"}
-            </td>
+            <td data-label="Data od">{formatDate(row.data_od)}</td>
+            <td data-label="Data do">{formatDate(row.data_do)}</td>
             <td data-label="Uwagi">{row.uwagi || "-"}</td>
           </>
         ),
@@ -524,16 +529,17 @@ export default function BudowaDetailsPage() {
 
       {renderAssignmentSection({
         section: "maszyny",
-        title: "Maszynę",
+        title: "Maszyny",
+        eyebrow: "Zasoby",
         description:
-          "Przypisz maszynę do budowy. System pilnuje nakładających się terminów.",
+          "Główne maszyny przypisane do realizacji wraz z operatorem i zakresem terminów.",
         targetField: "maszyna_id",
         targetLabel: "Maszyna",
         options: availableMaszyny,
         rows: assignedMaszyny,
         renderOptionLabel: (option) =>
           `${option.nr || "-"} - ${option.rodzaj} ${option.marka} ${option.model}`,
-        columns: ["Numer", "Rodzaj", "Marka/Model", "Data od", "Data do", "Uwagi"],
+        columns: ["Numer", "Rodzaj", "Marka/Model", "Operator", "Data od", "Data do"],
         renderRowCells: (row) => (
           <>
             <td data-label="Numer">{row.nr || "-"}</td>
@@ -541,13 +547,9 @@ export default function BudowaDetailsPage() {
             <td data-label="Marka/Model">
               {`${row.marka || "-"} ${row.model || ""}`.trim()}
             </td>
-            <td data-label="Data od">
-              {row.data_od ? String(row.data_od).slice(0, 10) : "-"}
-            </td>
-            <td data-label="Data do">
-              {row.data_do ? String(row.data_do).slice(0, 10) : "-"}
-            </td>
-            <td data-label="Uwagi">{row.uwagi || "-"}</td>
+            <td data-label="Operator">{row.operator || "-"}</td>
+            <td data-label="Data od">{formatDate(row.data_od)}</td>
+            <td data-label="Data do">{formatDate(row.data_do)}</td>
           </>
         ),
       })}
