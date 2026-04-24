@@ -22,64 +22,53 @@ export default function BudowaDetailsPage() {
 
   const [brygady, setBrygady] = useState([]);
   const [maszyny, setMaszyny] = useState([]);
-  const [sprzet, setSprzet] = useState([]);
 
   const [assignedBrygady, setAssignedBrygady] = useState([]);
   const [assignedMaszyny, setAssignedMaszyny] = useState([]);
-  const [assignedSprzet, setAssignedSprzet] = useState([]);
 
   const [panelOpen, setPanelOpen] = useState({
     brygady: false,
     maszyny: false,
-    sprzet: false,
   });
   const [editIds, setEditIds] = useState({
     brygady: null,
     maszyny: null,
-    sprzet: null,
   });
   const [forms, setForms] = useState({
     brygady: EMPTY_ASSIGNMENT,
     maszyny: EMPTY_ASSIGNMENT,
-    sprzet: EMPTY_ASSIGNMENT,
   });
   const [saving, setSaving] = useState({
     brygady: false,
     maszyny: false,
-    sprzet: false,
   });
   const [sectionErrors, setSectionErrors] = useState({
     brygady: "",
     maszyny: "",
-    sprzet: "",
   });
 
   const validId = Number.isInteger(Number(id)) && Number(id) > 0;
 
   const availableBrygady = useMemo(() => brygady, [brygady]);
   const availableMaszyny = useMemo(() => maszyny, [maszyny]);
-  const availableSprzet = useMemo(() => sprzet, [sprzet]);
 
   const loadAssignments = async () => {
     if (!validId) return;
 
-    const [brygadyRes, maszynyRes, sprzetRes] = await Promise.all([
+    const [brygadyRes, maszynyRes] = await Promise.all([
       fetch(`/api/budowy/${id}/brygady`, { cache: "no-store" }),
       fetch(`/api/budowy/${id}/maszyny`, { cache: "no-store" }),
-      fetch(`/api/budowy/${id}/sprzet`, { cache: "no-store" }),
     ]);
 
-    const [brygadyData, maszynyData, sprzetData] = await Promise.all([
+    const [brygadyData, maszynyData] = await Promise.all([
       brygadyRes.json().catch(() => ({})),
       maszynyRes.json().catch(() => ({})),
-      sprzetRes.json().catch(() => ({})),
     ]);
 
-    if (!brygadyRes.ok || !maszynyRes.ok || !sprzetRes.ok) {
+    if (!brygadyRes.ok || !maszynyRes.ok) {
       setError(
         brygadyData?.error ||
           maszynyData?.error ||
-          sprzetData?.error ||
           "Błąd pobierania przypisań"
       );
       return;
@@ -87,7 +76,6 @@ export default function BudowaDetailsPage() {
 
     setAssignedBrygady(Array.isArray(brygadyData) ? brygadyData : []);
     setAssignedMaszyny(Array.isArray(maszynyData) ? maszynyData : []);
-    setAssignedSprzet(Array.isArray(sprzetData) ? sprzetData : []);
   };
 
   useEffect(() => {
@@ -107,10 +95,8 @@ export default function BudowaDetailsPage() {
         fetch(`/api/budowy/${id}`, { cache: "no-store" }),
         fetch("/api/brygady", { cache: "no-store" }),
         fetch("/api/maszyny", { cache: "no-store" }),
-        fetch("/api/sprzet", { cache: "no-store" }),
         fetch(`/api/budowy/${id}/brygady`, { cache: "no-store" }),
         fetch(`/api/budowy/${id}/maszyny`, { cache: "no-store" }),
-        fetch(`/api/budowy/${id}/sprzet`, { cache: "no-store" }),
       ]);
 
       const payloads = await Promise.all(
@@ -123,32 +109,19 @@ export default function BudowaDetailsPage() {
         budowaData,
         brygadyData,
         maszynyData,
-        sprzetData,
         assignedBrygadyData,
         assignedMaszynyData,
-        assignedSprzetData,
       ] = payloads;
 
-      const [budowaRes, brygadyRes, maszynyRes, sprzetRes, abRes, amRes, asRes] =
-        responses;
+      const [budowaRes, brygadyRes, maszynyRes, abRes, amRes] = responses;
 
-      if (
-        !budowaRes.ok ||
-        !brygadyRes.ok ||
-        !maszynyRes.ok ||
-        !sprzetRes.ok ||
-        !abRes.ok ||
-        !amRes.ok ||
-        !asRes.ok
-      ) {
+      if (!budowaRes.ok || !brygadyRes.ok || !maszynyRes.ok || !abRes.ok || !amRes.ok) {
         setError(
           budowaData?.error ||
             brygadyData?.error ||
             maszynyData?.error ||
-            sprzetData?.error ||
             assignedBrygadyData?.error ||
             assignedMaszynyData?.error ||
-            assignedSprzetData?.error ||
             "Błąd pobierania danych budowy"
         );
         setLoading(false);
@@ -158,10 +131,8 @@ export default function BudowaDetailsPage() {
       setHeader(budowaData);
       setBrygady(Array.isArray(brygadyData) ? brygadyData : []);
       setMaszyny(Array.isArray(maszynyData) ? maszynyData : []);
-      setSprzet(Array.isArray(sprzetData) ? sprzetData : []);
       setAssignedBrygady(Array.isArray(assignedBrygadyData) ? assignedBrygadyData : []);
       setAssignedMaszyny(Array.isArray(assignedMaszynyData) ? assignedMaszynyData : []);
-      setAssignedSprzet(Array.isArray(assignedSprzetData) ? assignedSprzetData : []);
       setLoading(false);
     };
 
@@ -554,7 +525,8 @@ export default function BudowaDetailsPage() {
       {renderAssignmentSection({
         section: "maszyny",
         title: "Maszynę",
-        description: "Przypisz maszynę do budowy. System pilnuje nakładających się terminów.",
+        description:
+          "Przypisz maszynę do budowy. System pilnuje nakładających się terminów.",
         targetField: "maszyna_id",
         targetLabel: "Maszyna",
         options: availableMaszyny,
@@ -566,34 +538,9 @@ export default function BudowaDetailsPage() {
           <>
             <td data-label="Numer">{row.nr || "-"}</td>
             <td data-label="Rodzaj">{row.rodzaj || "-"}</td>
-            <td data-label="Marka/Model">{`${row.marka || "-"} ${row.model || ""}`.trim()}</td>
-            <td data-label="Data od">
-              {row.data_od ? String(row.data_od).slice(0, 10) : "-"}
+            <td data-label="Marka/Model">
+              {`${row.marka || "-"} ${row.model || ""}`.trim()}
             </td>
-            <td data-label="Data do">
-              {row.data_do ? String(row.data_do).slice(0, 10) : "-"}
-            </td>
-            <td data-label="Uwagi">{row.uwagi || "-"}</td>
-          </>
-        ),
-      })}
-
-      {renderAssignmentSection({
-        section: "sprzet",
-        title: "Sprzęt",
-        description: "Przypisz sprzęt pomocniczy do budowy i zapisz termin użycia.",
-        targetField: "sprzet_id",
-        targetLabel: "Sprzęt",
-        options: availableSprzet,
-        rows: assignedSprzet,
-        renderOptionLabel: (option) =>
-          `${option.nr || "-"} - ${option.rodzaj} ${option.marka} ${option.model}`,
-        columns: ["Numer", "Rodzaj", "Marka/Model", "Data od", "Data do", "Uwagi"],
-        renderRowCells: (row) => (
-          <>
-            <td data-label="Numer">{row.nr || "-"}</td>
-            <td data-label="Rodzaj">{row.rodzaj || "-"}</td>
-            <td data-label="Marka/Model">{`${row.marka || "-"} ${row.model || ""}`.trim()}</td>
             <td data-label="Data od">
               {row.data_od ? String(row.data_od).slice(0, 10) : "-"}
             </td>
