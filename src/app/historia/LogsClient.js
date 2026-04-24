@@ -56,7 +56,6 @@ const FIELD_LABELS = {
   brygada_id: "Brygada",
   maszyna_id: "Maszyna",
   sprzet_id: "Sprzęt",
-  entityId: "ID",
 };
 
 function humanizeEntity(entity, entityId) {
@@ -71,6 +70,12 @@ function humanizeObject(row) {
 
 function humanizeAction(action) {
   return ACTION_LABELS[action] || action || "-";
+}
+
+function actionClass(action) {
+  if (action === "create" || action === "login") return "pill ok";
+  if (action === "delete") return "pill bad";
+  return "pill";
 }
 
 function humanizeField(field) {
@@ -128,14 +133,16 @@ export default function LogsClient() {
   };
 
   return (
-    <>
-      <div className="card historyFiltersCard">
-        <div className="grid historyFiltersGrid">
-          <label>
+    <div className="historyStack">
+      <div className="historyToolbar">
+        <div className="historyFilters">
+          <label className="historyFilterField">
             <span>Obszar</span>
             <select
               value={filters.entity}
-              onChange={(e) => setFilters({ ...filters, entity: e.target.value })}
+              onChange={(e) =>
+                setFilters((current) => ({ ...current, entity: e.target.value }))
+              }
             >
               {ENTITY_OPTIONS.map((item) => (
                 <option key={item.value || "all"} value={item.value}>
@@ -145,11 +152,13 @@ export default function LogsClient() {
             </select>
           </label>
 
-          <label>
+          <label className="historyFilterField">
             <span>Akcja</span>
             <select
               value={filters.action}
-              onChange={(e) => setFilters({ ...filters, action: e.target.value })}
+              onChange={(e) =>
+                setFilters((current) => ({ ...current, action: e.target.value }))
+              }
             >
               {ACTION_OPTIONS.map((item) => (
                 <option key={item.value || "all"} value={item.value}>
@@ -160,76 +169,76 @@ export default function LogsClient() {
           </label>
         </div>
 
-        {error && <p className="error historyError">{error}</p>}
+        <div className="historyCount">
+          <strong>{rows.length}</strong>
+          <span>rekordów</span>
+        </div>
       </div>
 
-      <div className="tableWrap">
-        <table className="table historyTable">
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Użytkownik</th>
-              <th>Akcja</th>
-              <th>Obiekt</th>
-              <th>Zmiany</th>
-              <th>IP</th>
-            </tr>
-          </thead>
+      {error && <p className="error historyError">{error}</p>}
 
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={6} style={{ textAlign: "center", padding: 16 }}>
-                  Brak danych
-                </td>
-              </tr>
-            ) : (
-              rows.map((row, index) => (
-                <tr key={index}>
-                  <td data-label="Data">{fmtDate(row?.date)}</td>
-                  <td data-label="Użytkownik">{row?.username ?? "-"}</td>
-                  <td data-label="Akcja">
-                    <span className="pill">{humanizeAction(row?.action)}</span>
-                  </td>
-                  <td data-label="Obiekt">
-                    <div className="historyObjectCell">
-                      <strong>{humanizeObject(row)}</strong>
+      <div className="historyFeed">
+        {rows.length === 0 ? (
+          <div className="historyEmpty">
+            <strong>Brak danych</strong>
+            <p>Nie znaleziono wpisów dla wybranych filtrów.</p>
+          </div>
+        ) : (
+          rows.map((row, index) => (
+            <article className="historyEntry" key={index}>
+              <div className="historyEntryTop">
+                <div className="historyEntryMain">
+                  <strong className="historyEntryObject">{humanizeObject(row)}</strong>
+                  <span className="historyEntryMeta">
+                    {row?.username ?? "-"} • {fmtDate(row?.date)}
+                  </span>
+                </div>
+
+                <div className="historyEntrySide">
+                  <span className={actionClass(row?.action)}>
+                    {humanizeAction(row?.action)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="historyEntryBody">
+                <div className="historyEntryInfo">
+                  <span className="historyInfoLabel">Obszar</span>
+                  <span>{ENTITY_LABELS[row?.entity] || row?.entity || "-"}</span>
+                </div>
+
+                <div className="historyEntryInfo">
+                  <span className="historyInfoLabel">IP</span>
+                  <span>{row?.ip ?? "-"}</span>
+                </div>
+              </div>
+
+              <div className="historyEntryChanges">
+                {Array.isArray(row?.changes) && row.changes.length ? (
+                  row.changes.slice(0, 3).map((change, changeIndex) => (
+                    <div className="historyChangeLine" key={changeIndex}>
+                      <span className="historyChangeLineField">
+                        {humanizeField(change.field)}
+                      </span>
+                      <span className="historyChangeLineValue">
+                        {humanizeValue(change.from)}
+                      </span>
+                      <span className="historyChangeLineArrow" aria-hidden="true">
+                        →
+                      </span>
+                      <span className="historyChangeLineValueNew">
+                        {humanizeValue(change.to)}
+                      </span>
                     </div>
-                  </td>
-                  <td data-label="Zmiany" className="historyChangesCell">
-                    {Array.isArray(row?.changes) && row.changes.length ? (
-                      <div className="historyChangesList">
-                        {row.changes.map((change, changeIndex) => (
-                          <div className="historyChangeItem" key={changeIndex}>
-                            <span className="historyChangeField">
-                              {humanizeField(change.field)}
-                            </span>
-                            <span className="historyChangeArrow" aria-hidden="true">
-                              →
-                            </span>
-                            <span className="historyChangeValue">
-                              {humanizeValue(change.from)}
-                            </span>
-                            <span className="historyChangeArrow" aria-hidden="true">
-                              →
-                            </span>
-                            <span className="historyChangeValue historyChangeValueNew">
-                              {humanizeValue(change.to)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td data-label="IP">{row?.ip ?? "-"}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  ))
+                ) : (
+                  <span className="historyNoChanges">Brak szczegółowych zmian</span>
+                )}
+              </div>
+            </article>
+          ))
+        )}
       </div>
-    </>
+    </div>
   );
 }

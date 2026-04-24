@@ -1081,61 +1081,206 @@ label {
 }
 
 .historyError {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
-.historyTable .historyChangesCell {
-  min-width: 300px;
+.historyPage {
+  display: grid;
+  gap: 20px;
 }
 
-.historyChangesList {
+.historyPageIntro {
   display: grid;
   gap: 8px;
 }
 
-.historyObjectCell {
-  display: grid;
-  gap: 4px;
+.historyPageIntro p {
+  max-width: 62ch;
+  color: #64748b;
 }
 
-.historyObjectCell strong {
-  color: #0f172a;
+.historyEyebrow {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
-.historyObjectMeta {
+.historyStack {
+  display: grid;
+  gap: 14px;
+}
+
+.historyToolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 14px 0 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.historyFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.historyFilterField {
+  min-width: 210px;
+}
+
+.historyFilterField span {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.historyCount {
+  display: grid;
+  gap: 2px;
+  justify-items: end;
+  min-width: 82px;
+}
+
+.historyCount strong {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #0f172a;
+}
+
+.historyCount span {
   color: #64748b;
   font-size: 12px;
 }
 
-.historyChangeItem {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+.historyFeed {
+  display: grid;
+  gap: 12px;
 }
 
-.historyChangeField {
+.historyEntry {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.historyEntryTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.historyEntryMain {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.historyEntryObject {
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.historyEntryMeta {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.historyEntrySide {
+  flex: 0 0 auto;
+}
+
+.historyEntryBody {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 2px;
+}
+
+.historyEntryInfo {
+  display: grid;
+  gap: 2px;
+}
+
+.historyInfoLabel {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.historyEntryChanges {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #edf2f7;
+}
+
+.historyChangeLine {
+  display: grid;
+  grid-template-columns: minmax(120px, 160px) minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.historyChangeLine + .historyChangeLine {
+  border-top: 1px solid #f1f5f9;
+}
+
+.historyChangeLineField {
   font-weight: 700;
   color: #0f172a;
 }
 
-.historyChangeArrow {
+.historyChangeLineValue {
+  color: #64748b;
+  word-break: break-word;
+}
+
+.historyChangeLineArrow {
   color: #94a3b8;
   font-weight: 700;
 }
 
-.historyChangeValue {
-  color: #475569;
+.historyChangeLineValueNew {
+  color: #1d4ed8;
   word-break: break-word;
 }
 
-.historyChangeValueNew {
-  color: #1d4ed8;
+.historyNoChanges {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.historyEmpty {
+  display: grid;
+  gap: 6px;
+  padding: 24px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+}
+
+.historyEmpty p {
+  color: #64748b;
 }
 
 @media (max-width: 900px) {
@@ -1329,6 +1474,37 @@ label {
 
   .historyFiltersGrid {
     grid-template-columns: 1fr;
+  }
+
+  .historyToolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .historyFilters {
+    flex-direction: column;
+  }
+
+  .historyFilterField {
+    min-width: 0;
+  }
+
+  .historyCount {
+    justify-items: start;
+  }
+
+  .historyEntryTop {
+    flex-direction: column;
+  }
+
+  .historyChangeLine {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .historyChangeLineArrow {
+    display: none;
   }
 }
 
@@ -1555,27 +1731,21 @@ label {
     transform: none;
   }
 
-  .historyTable tbody td.historyChangesCell {
-    padding-left: 0;
-    padding-top: 14px;
+  .historyPage {
+    gap: 16px;
   }
 
-  .historyTable tbody td.historyChangesCell::before {
-    position: static;
-    width: auto;
-    display: block;
-    margin-bottom: 8px;
+  .historyEntry {
+    padding: 16px;
+    border-radius: 18px;
   }
 
-  .historyChangeItem {
-    padding: 10px 12px;
-    gap: 4px 6px;
+  .historyEntryBody {
+    gap: 12px;
   }
 
-  .historyChangeField,
-  .historyChangeValue,
-  .historyChangeArrow {
-    font-size: 13px;
+  .historyChangeLine {
+    padding: 6px 0;
   }
 }
 
