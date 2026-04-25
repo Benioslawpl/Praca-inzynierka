@@ -76,8 +76,8 @@ const FIELD_LABELS = {
   data_do: "Data do",
   serwis_co_ile_mth: "Serwis co ile mth",
   ostatni_serwis_mth: "Ostatni serwis przy mth",
-  assigned_machine_id: "Przypisana maszyna",
-  assigned_machine_nr: "Przypisana maszyna",
+  assigned_operator_id: "Konto operatora",
+  assigned_operator_username: "Konto operatora",
 };
 
 function humanizeEntity(entity, entityId) {

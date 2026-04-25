@@ -10,8 +10,8 @@ export async function getVisibleMachineIdsForUser(user) {
 
   const { rows } = await pool.query(
     `SELECT maszyna_id
-     FROM user_maszyny
-     WHERE user_id=$1`,
+     FROM maszyna_operatorzy
+     WHERE user_id=$1 AND aktywne = true`,
     [user.id]
   );
 
@@ -24,11 +24,39 @@ export async function canAccessMachine(user, machineId) {
 
   const { rowCount } = await pool.query(
     `SELECT 1
-     FROM user_maszyny
-     WHERE user_id=$1 AND maszyna_id=$2`,
+     FROM maszyna_operatorzy
+     WHERE user_id=$1 AND maszyna_id=$2 AND aktywne = true`,
     [user.id, Number(machineId)]
   );
 
   return rowCount > 0;
 }
 
+export async function setActiveOperatorForMachine(req, machineId, userId) {
+  await pool.query(
+    `UPDATE maszyna_operatorzy
+     SET aktywne = false,
+         data_do = current_date
+     WHERE maszyna_id = $1 AND aktywne = true`,
+    [machineId]
+  );
+
+  if (!userId) return null;
+
+  await pool.query(
+    `UPDATE maszyna_operatorzy
+     SET aktywne = false,
+         data_do = current_date
+     WHERE user_id = $1 AND aktywne = true`,
+    [userId]
+  );
+
+  const { rows } = await pool.query(
+    `INSERT INTO maszyna_operatorzy (maszyna_id, user_id, data_od, aktywne)
+     VALUES ($1,$2,current_date,true)
+     RETURNING *`,
+    [machineId, userId]
+  );
+
+  return rows[0] || null;
+}

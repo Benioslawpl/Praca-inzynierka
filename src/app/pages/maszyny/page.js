@@ -1,19 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const EMPTY_FORM = {
   rodzaj: "",
   marka: "",
   model: "",
   operator: "",
+  assigned_operator_id: "",
   serwis_co_ile_mth: "",
   ostatni_serwis_mth: "",
 };
 
 export default function MaszynyPage() {
   const [rows, setRows] = useState([]);
+  const [operators, setOperators] = useState([]);
   const [me, setMe] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -23,30 +25,43 @@ export default function MaszynyPage() {
 
   const load = async () => {
     setError("");
-    const res = await fetch("/api/maszyny", { cache: "no-store" });
-    const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
+    const [machinesRes, meRes, usersRes] = await Promise.all([
+      fetch("/api/maszyny", { cache: "no-store" }),
+      fetch("/api/me", { cache: "no-store" }),
+      fetch("/api/users", { cache: "no-store" }),
+    ]);
+
+    const [machinesData, meData, usersData] = await Promise.all([
+      machinesRes.json().catch(() => ({})),
+      meRes.json().catch(() => ({})),
+      usersRes.json().catch(() => ([])),
+    ]);
+
+    if (!machinesRes.ok) {
       setRows([]);
-      setError(data?.error || "Błąd pobierania");
-      return;
+      setError(machinesData?.error || "Błąd pobierania");
+    } else {
+      setRows(Array.isArray(machinesData) ? machinesData : []);
     }
 
-    setRows(Array.isArray(data) ? data : []);
+    setMe(meData?.ok ? meData : null);
+
+    if (usersRes.ok) {
+      const list = Array.isArray(usersData) ? usersData : [];
+      setOperators(list.filter((item) => item.role === "operator"));
+    } else {
+      setOperators([]);
+    }
   };
 
   useEffect(() => {
     load();
   }, []);
 
-  useEffect(() => {
-    fetch("/api/me", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => setMe(data?.ok ? data : null))
-      .catch(() => setMe(null));
-  }, []);
-
   const canManage = me?.role !== "operator";
+
+  const operatorOptions = useMemo(() => operators, [operators]);
 
   const reset = () => {
     setForm(EMPTY_FORM);
@@ -68,8 +83,13 @@ export default function MaszynyPage() {
         marka: form.marka.trim(),
         model: form.model.trim(),
         operator: form.operator.trim(),
-        serwis_co_ile_mth: form.serwis_co_ile_mth === "" ? null : Number(form.serwis_co_ile_mth),
-        ostatni_serwis_mth: form.ostatni_serwis_mth === "" ? null : Number(form.ostatni_serwis_mth),
+        assigned_operator_id: form.assigned_operator_id
+          ? Number(form.assigned_operator_id)
+          : null,
+        serwis_co_ile_mth:
+          form.serwis_co_ile_mth === "" ? null : Number(form.serwis_co_ile_mth),
+        ostatni_serwis_mth:
+          form.ostatni_serwis_mth === "" ? null : Number(form.ostatni_serwis_mth),
       };
 
       const res = await fetch(url, {
@@ -98,6 +118,7 @@ export default function MaszynyPage() {
       marka: row.marka ?? "",
       model: row.model ?? "",
       operator: row.operator ?? "",
+      assigned_operator_id: row.assigned_operator_id ? String(row.assigned_operator_id) : "",
       serwis_co_ile_mth: row.serwis_co_ile_mth ?? "",
       ostatni_serwis_mth: row.ostatni_serwis_mth ?? "",
     });
@@ -131,116 +152,133 @@ export default function MaszynyPage() {
 
       {canManage ? (
         <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
-        <div className="formPanelHeader">
-          <div>
-            <h2>{editId ? "Edytuj maszynę" : "Dodaj maszynę"}</h2>
-            <p>
-              {editId
-                ? "Zaktualizuj dane wybranej maszyny i ustawienia serwisowe."
-                : "Dodaj nową maszynę do ewidencji."}
-            </p>
+          <div className="formPanelHeader">
+            <div>
+              <h2>{editId ? "Edytuj maszynę" : "Dodaj maszynę"}</h2>
+              <p>
+                {editId
+                  ? "Zaktualizuj dane maszyny, serwis i przypisane konto operatora."
+                  : "Dodaj nową maszynę do ewidencji."}
+              </p>
+            </div>
+
+            <button type="button" onClick={toggleForm}>
+              <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
+                <span className="formPanelToggleIcon" aria-hidden="true">
+                  {isFormOpen ? "−" : "+"}
+                </span>
+                <span>
+                  {isFormOpen
+                    ? editId
+                      ? "Tryb edycji"
+                      : "Ukryj formularz"
+                    : "Dodaj maszynę"}
+                </span>
+              </span>
+            </button>
           </div>
 
-          <button type="button" onClick={toggleForm}>
-            <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
-              <span className="formPanelToggleIcon" aria-hidden="true">
-                {isFormOpen ? "−" : "+"}
-              </span>
-              <span>
-                {isFormOpen
-                  ? editId
-                    ? "Tryb edycji"
-                    : "Ukryj formularz"
-                  : "Dodaj maszynę"}
-              </span>
-            </span>
-          </button>
-        </div>
+          <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
+            <form className="card" onSubmit={submit}>
+              <div className="grid">
+                <label>
+                  <span>Rodzaj*</span>
+                  <input
+                    value={form.rodzaj}
+                    onChange={(e) => setForm({ ...form, rodzaj: e.target.value })}
+                    required
+                    placeholder="np. Koparka"
+                  />
+                </label>
 
-        <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
-          <form className="card" onSubmit={submit}>
-            <div className="grid">
-              <label>
-                <span>Rodzaj*</span>
-                <input
-                  value={form.rodzaj}
-                  onChange={(e) => setForm({ ...form, rodzaj: e.target.value })}
-                  required
-                  placeholder="np. Koparka"
-                />
-              </label>
+                <label>
+                  <span>Marka*</span>
+                  <input
+                    value={form.marka}
+                    onChange={(e) => setForm({ ...form, marka: e.target.value })}
+                    required
+                    placeholder="np. CAT"
+                  />
+                </label>
 
-              <label>
-                <span>Marka*</span>
-                <input
-                  value={form.marka}
-                  onChange={(e) => setForm({ ...form, marka: e.target.value })}
-                  required
-                  placeholder="np. CAT"
-                />
-              </label>
+                <label>
+                  <span>Model*</span>
+                  <input
+                    value={form.model}
+                    onChange={(e) => setForm({ ...form, model: e.target.value })}
+                    required
+                    placeholder="np. 320D"
+                  />
+                </label>
 
-              <label>
-                <span>Model*</span>
-                <input
-                  value={form.model}
-                  onChange={(e) => setForm({ ...form, model: e.target.value })}
-                  required
-                  placeholder="np. 320D"
-                />
-              </label>
+                <label>
+                  <span>Operator opisowy*</span>
+                  <input
+                    value={form.operator}
+                    onChange={(e) => setForm({ ...form, operator: e.target.value })}
+                    required
+                    placeholder="np. Jan Kowalski"
+                  />
+                </label>
 
-              <label>
-                <span>Operator*</span>
-                <input
-                  value={form.operator}
-                  onChange={(e) => setForm({ ...form, operator: e.target.value })}
-                  required
-                  placeholder="np. Jan Kowalski"
-                />
-              </label>
+                <label>
+                  <span>Konto operatora</span>
+                  <select
+                    value={form.assigned_operator_id}
+                    onChange={(e) =>
+                      setForm({ ...form, assigned_operator_id: e.target.value })
+                    }
+                  >
+                    <option value="">brak przypisanego konta</option>
+                    {operatorOptions.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.username}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-              <label>
-                <span>Serwis co ile mth</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={form.serwis_co_ile_mth}
-                  onChange={(e) =>
-                    setForm({ ...form, serwis_co_ile_mth: e.target.value })
-                  }
-                  placeholder="np. 250"
-                />
-              </label>
+                <label>
+                  <span>Serwis co ile mth</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.serwis_co_ile_mth}
+                    onChange={(e) =>
+                      setForm({ ...form, serwis_co_ile_mth: e.target.value })
+                    }
+                    placeholder="np. 250"
+                  />
+                </label>
 
-              <label>
-                <span>Ostatni serwis przy mth</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={form.ostatni_serwis_mth}
-                  onChange={(e) =>
-                    setForm({ ...form, ostatni_serwis_mth: e.target.value })
-                  }
-                  placeholder="np. 1200"
-                />
-              </label>
-            </div>
+                <label>
+                  <span>Ostatni serwis przy mth</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={form.ostatni_serwis_mth}
+                    onChange={(e) =>
+                      setForm({ ...form, ostatni_serwis_mth: e.target.value })
+                    }
+                    placeholder="np. 1200"
+                  />
+                </label>
+              </div>
 
-            <div className="actions">
-              <button type="submit" disabled={saving}>
-                {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
-              </button>
-              <button type="button" className="secondary" onClick={reset}>
-                Anuluj
-              </button>
-            </div>
+              <div className="actions">
+                <button type="submit" disabled={saving}>
+                  {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+                </button>
+                <button type="button" className="secondary" onClick={reset}>
+                  Anuluj
+                </button>
+              </div>
 
-            {error && <p className="error">{error}</p>}
-          </form>
-        </div>
+              {error && <p className="error">{error}</p>}
+            </form>
+          </div>
         </section>
       ) : null}
 
@@ -256,6 +294,7 @@ export default function MaszynyPage() {
                 <th>Marka</th>
                 <th>Model</th>
                 <th>Operator</th>
+                <th>Konto operatora</th>
                 <th>Serwis</th>
                 <th style={{ width: 360 }}>Akcje</th>
               </tr>
@@ -271,10 +310,11 @@ export default function MaszynyPage() {
                     <td data-label="Marka">{row.marka}</td>
                     <td data-label="Model">{row.model}</td>
                     <td data-label="Operator">{row.operator}</td>
+                    <td data-label="Konto operatora">
+                      {row.assigned_operator_username || "-"}
+                    </td>
                     <td data-label="Serwis">
-                      {row.serwis_co_ile_mth
-                        ? `co ${row.serwis_co_ile_mth} mth`
-                        : "brak"}
+                      {row.serwis_co_ile_mth ? `co ${row.serwis_co_ile_mth} mth` : "brak"}
                     </td>
                     <td className="actionsCell" data-label="Akcje">
                       <Link

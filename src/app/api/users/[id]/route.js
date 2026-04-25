@@ -21,12 +21,8 @@ function getIdFrom(req, ctx) {
 
 async function getUserRow(id) {
   const { rows } = await pool.query(
-    `SELECT u.id, u.username, u.role, u.created_at, u.blocked,
-            um.maszyna_id as assigned_machine_id,
-            m.nr as assigned_machine_nr
+    `SELECT u.id, u.username, u.role, u.created_at, u.blocked
      FROM users u
-     LEFT JOIN user_maszyny um ON um.user_id = u.id
-     LEFT JOIN maszyny m ON m.id = um.maszyna_id
      WHERE u.id=$1`,
     [id]
   );
@@ -110,13 +106,11 @@ export async function PUT(req, ctx) {
 
     if (
       typeof body?.username === "string" ||
-      typeof body?.role === "string" ||
-      Object.prototype.hasOwnProperty.call(body || {}, "assigned_machine_id")
+      typeof body?.role === "string"
     ) {
       const before = await getUserRow(parsed.id);
       const role = normalizeRole(body.role || before?.role);
       const username = String(body.username || before?.username || "").trim();
-      const assignedMachineId = Number(body?.assigned_machine_id) || null;
 
       if (!username) {
         return Response.json({ error: "Wymagany login" }, { status: 400 });
@@ -134,16 +128,6 @@ export async function PUT(req, ctx) {
         return Response.json(
           { error: "Nie znaleziono użytkownika" },
           { status: 404 }
-        );
-      }
-
-      await pool.query(`DELETE FROM user_maszyny WHERE user_id=$1`, [parsed.id]);
-
-      if (assignedMachineId) {
-        await pool.query(
-          `INSERT INTO user_maszyny (user_id, maszyna_id)
-           VALUES ($1,$2)`,
-          [parsed.id, assignedMachineId]
         );
       }
 

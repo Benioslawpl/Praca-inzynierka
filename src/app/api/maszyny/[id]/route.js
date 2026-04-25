@@ -1,6 +1,6 @@
 import pool from "../../../../../db";
 import { getUserFromRequest } from "../../../../lib/auth";
-import { canAccessMachine } from "../../../../lib/machine-access";
+import { canAccessMachine, setActiveOperatorForMachine } from "../../../../lib/machine-access";
 import { audit } from "../../../../lib/audit";
 
 function intOrNull(value) {
@@ -18,6 +18,24 @@ function getId(req, params) {
   if (idx >= 0 && parts[idx + 1]) return intOrNull(parts[idx + 1]);
 
   return null;
+}
+
+async function getMachineRow(id) {
+  const { rows } = await pool.query(
+    `SELECT m.id, m.nr, m.rodzaj, m.marka, m.model, m.operator,
+            m.serwis_co_ile_mth, m.ostatni_serwis_mth,
+            mo.user_id as assigned_operator_id,
+            u.username as assigned_operator_username
+     FROM maszyny m
+     LEFT JOIN maszyna_operatorzy mo
+       ON mo.maszyna_id = m.id AND mo.aktywne = true
+     LEFT JOIN users u
+       ON u.id = mo.user_id
+     WHERE m.id=$1`,
+    [id]
+  );
+
+  return rows[0] || null;
 }
 
 export async function GET(req, ctx) {
@@ -40,16 +58,9 @@ export async function GET(req, ctx) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { rows } = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator,
-              serwis_co_ile_mth, ostatni_serwis_mth
-       FROM maszyny
-       WHERE id=$1`,
-      [id]
-    );
-
-    if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
-    return Response.json(rows[0]);
+    const row = await getMachineRow(id);
+    if (!row) return Response.json({ error: "Not found" }, { status: 404 });
+    return Response.json(row);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
@@ -70,15 +81,7 @@ export async function PUT(req, { params }) {
       );
     }
 
-    const beforeResult = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator,
-              serwis_co_ile_mth, ostatni_serwis_mth
-       FROM maszyny
-       WHERE id=$1`,
-      [id]
-    );
-    const before = beforeResult.rows[0];
-
+    const before = await getMachineRow(id);
     if (!before) return Response.json({ error: "Not found" }, { status: 404 });
 
     const body = await req.json().catch(() => ({}));
@@ -98,6 +101,10 @@ export async function PUT(req, { params }) {
       body?.ostatni_serwis_mth === undefined
         ? null
         : Number(body.ostatni_serwis_mth);
+    const assignedOperatorId =
+      Object.prototype.hasOwnProperty.call(body || {}, "assigned_operator_id")
+        ? Number(body.assigned_operator_id) || null
+        : before.assigned_operator_id || null;
 
     if (!rodzaj || !marka || !model || !operator) {
       return Response.json(
@@ -106,7 +113,7 @@ export async function PUT(req, { params }) {
       );
     }
 
-    const { rows } = await pool.query(
+    await pool.query(
       `UPDATE maszyny
        SET rodzaj=$1,
            marka=$2,
@@ -114,22 +121,23 @@ export async function PUT(req, { params }) {
            operator=$4,
            serwis_co_ile_mth=$5,
            ostatni_serwis_mth=$6
-       WHERE id=$7
-       RETURNING id, nr, rodzaj, marka, model, operator,
-                 serwis_co_ile_mth, ostatni_serwis_mth`,
+       WHERE id=$7`,
       [rodzaj, marka, model, operator, serviceEvery, lastServiceHours, id]
     );
+
+    await setActiveOperatorForMachine(req, id, assignedOperatorId);
+    const after = await getMachineRow(id);
 
     await audit({
       action: "update",
       entity: "maszyny",
       entityId: id,
       before,
-      after: rows[0],
+      after,
       req,
     });
 
-    return Response.json(rows[0]);
+    return Response.json(after);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
@@ -150,20 +158,16 @@ export async function DELETE(req, { params }) {
       );
     }
 
-    const { rows } = await pool.query(
-      `DELETE FROM maszyny WHERE id=$1
-       RETURNING id, nr, rodzaj, marka, model, operator,
-                 serwis_co_ile_mth, ostatni_serwis_mth`,
-      [id]
-    );
+    const before = await getMachineRow(id);
+    if (!before) return Response.json({ error: "Not found" }, { status: 404 });
 
-    if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
+    await pool.query(`DELETE FROM maszyny WHERE id=$1`, [id]);
 
     await audit({
       action: "delete",
       entity: "maszyny",
       entityId: id,
-      before: rows[0],
+      before,
       req,
     });
 

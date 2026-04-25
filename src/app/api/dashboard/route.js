@@ -26,9 +26,13 @@ export async function GET(req) {
   const { rows: machines } = await pool.query(
     `SELECT m.id, m.nr, m.rodzaj, m.marka, m.model, m.operator,
             m.serwis_co_ile_mth, m.ostatni_serwis_mth,
-            um.user_id as assigned_user_id
+            mo.user_id as assigned_operator_id,
+            u.username as assigned_operator_username
      FROM maszyny m
-     LEFT JOIN user_maszyny um ON um.maszyna_id = m.id
+     LEFT JOIN maszyna_operatorzy mo
+       ON mo.maszyna_id = m.id AND mo.aktywne = true
+     LEFT JOIN users u
+       ON u.id = mo.user_id
      WHERE m.id = ANY($1::int[])
      ORDER BY m.nr ASC, m.id ASC`,
     [visibleMachineIds]

@@ -8,12 +8,10 @@ const EMPTY_FORM = {
   username: "",
   password: "",
   role: "user",
-  assigned_machine_id: "",
 };
 
 export default function UsersPage() {
   const [list, setList] = useState([]);
-  const [machines, setMachines] = useState([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -22,30 +20,16 @@ export default function UsersPage() {
 
   const fetchData = async () => {
     setError("");
+    const res = await fetch("/api/users", { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
 
-    const [usersRes, machinesRes] = await Promise.all([
-      fetch("/api/users", { cache: "no-store" }),
-      fetch("/api/maszyny", { cache: "no-store" }),
-    ]);
-
-    const [usersData, machinesData] = await Promise.all([
-      usersRes.json().catch(() => ({})),
-      machinesRes.json().catch(() => ([])),
-    ]);
-
-    if (!usersRes.ok) {
+    if (!res.ok) {
       setList([]);
-      setError(usersData.error || "Błąd pobierania użytkowników");
-    } else {
-      setList(Array.isArray(usersData) ? usersData : []);
+      setError(data.error || "Błąd pobierania użytkowników");
+      return;
     }
 
-    if (!machinesRes.ok) {
-      setMachines([]);
-      setError((current) => current || "Błąd pobierania maszyn");
-    } else {
-      setMachines(Array.isArray(machinesData) ? machinesData : []);
-    }
+    setList(Array.isArray(data) ? data : []);
   };
 
   useEffect(() => {
@@ -65,9 +49,6 @@ export default function UsersPage() {
       username: user.username || "",
       password: "",
       role: user.role || "user",
-      assigned_machine_id: user.assigned_machine_id
-        ? String(user.assigned_machine_id)
-        : "",
     });
     setIsFormOpen(true);
     setError("");
@@ -84,10 +65,6 @@ export default function UsersPage() {
       const payload = {
         username: form.username.trim(),
         role: form.role,
-        assigned_machine_id:
-          form.role === "operator" && form.assigned_machine_id
-            ? Number(form.assigned_machine_id)
-            : null,
       };
 
       if (!isEdit) {
@@ -190,8 +167,8 @@ export default function UsersPage() {
             <h2>{editId ? "Edytuj użytkownika" : "Dodaj użytkownika"}</h2>
             <p>
               {editId
-                ? "Zmień rolę, login albo przypisaną maszynę operatora."
-                : "Utwórz nowe konto i od razu ustaw odpowiednią rolę."}
+                ? "Zmień rolę lub login wybranego konta."
+                : "Utwórz nowe konto i ustaw odpowiednią rolę."}
             </p>
           </div>
 
@@ -238,37 +215,11 @@ export default function UsersPage() {
                 <span>Rola</span>
                 <select
                   value={form.role}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      role: e.target.value,
-                      assigned_machine_id:
-                        e.target.value === "operator" ? form.assigned_machine_id : "",
-                    })
-                  }
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
                 >
                   {ROLE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <span>Przypisana maszyna</span>
-                <select
-                  value={form.assigned_machine_id}
-                  onChange={(e) =>
-                    setForm({ ...form, assigned_machine_id: e.target.value })
-                  }
-                  disabled={form.role !== "operator"}
-                >
-                  <option value="">brak przypisania</option>
-                  {machines.map((machine) => (
-                    <option key={machine.id} value={machine.id}>
-                      {machine.nr || `Maszyna #${machine.id}`} • {machine.rodzaj} {machine.marka}{" "}
-                      {machine.model}
                     </option>
                   ))}
                 </select>
@@ -299,7 +250,6 @@ export default function UsersPage() {
                 <th style={{ width: 70 }}>Numer</th>
                 <th>Login</th>
                 <th style={{ width: 140 }}>Rola</th>
-                <th>Maszyna operatora</th>
                 <th style={{ width: 180 }}>Data utworzenia</th>
                 <th style={{ width: 140 }}>Zablokowany</th>
                 <th style={{ width: 420 }}>Akcje</th>
@@ -312,7 +262,6 @@ export default function UsersPage() {
                   <td data-label="Numer">{index + 1}</td>
                   <td data-label="Login">{user.username}</td>
                   <td data-label="Rola">{user.role}</td>
-                  <td data-label="Maszyna operatora">{user.assigned_machine_nr || "-"}</td>
                   <td data-label="Data utworzenia">
                     {user.created_at
                       ? String(user.created_at).slice(0, 19).replace("T", " ")
