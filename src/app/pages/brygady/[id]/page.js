@@ -210,7 +210,7 @@ export default function BrygadaDetails() {
               className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}
             >
               <span className="formPanelToggleIcon" aria-hidden="true">
-                {editId !== null ? "•" : "+"}
+                {isFormOpen ? "−" : "+"}
               </span>
               <span>
                 {isFormOpen

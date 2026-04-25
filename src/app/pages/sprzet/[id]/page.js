@@ -212,7 +212,7 @@ export default function SprzetDetailsPage() {
           <button type="button" onClick={toggleForm}>
             <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
               <span className="formPanelToggleIcon" aria-hidden="true">
-                {editId ? "•" : "+"}
+                {isFormOpen ? "−" : "+"}
               </span>
               <span>
                 {isFormOpen

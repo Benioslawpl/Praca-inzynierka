@@ -280,7 +280,7 @@ export default function BudowaDetailsPage() {
           <button type="button" onClick={() => toggleSection(section)}>
             <span className={`formPanelToggle ${isOpen ? "formPanelToggleOpen" : ""}`}>
               <span className="formPanelToggleIcon" aria-hidden="true">
-                {editId ? "•" : "+"}
+                {isOpen ? "−" : "+"}
               </span>
               <span>
                 {isOpen

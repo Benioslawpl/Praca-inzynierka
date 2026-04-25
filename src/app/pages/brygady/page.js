@@ -136,7 +136,7 @@ export default function BrygadyPage() {
           <button type="button" onClick={toggleForm}>
             <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
               <span className="formPanelToggleIcon" aria-hidden="true">
-                {editId !== null ? "•" : "+"}
+                {isFormOpen ? "−" : "+"}
               </span>
               <span>
                 {isFormOpen
