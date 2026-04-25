@@ -12,6 +12,7 @@ const ENTITY_OPTIONS = [
   { value: "brygady", label: "Brygady" },
   { value: "members", label: "Członkowie brygad" },
   { value: "maszyny_details", label: "Historia maszyn" },
+  { value: "maszyna_raporty", label: "Raporty operatorskie" },
   { value: "sprzet", label: "Sprzęt" },
   { value: "sprzet_details", label: "Historia sprzętu" },
   { value: "users", label: "Użytkownicy" },
@@ -48,8 +49,10 @@ const FIELD_LABELS = {
   inwestor: "Inwestor",
   kierownik: "Kierownik",
   status: "Status",
+  status_awarii: "Status awarii",
   data_rozpoczecia: "Data rozpoczęcia",
   data_zakonczenia: "Data zakończenia",
+  data_raportu: "Data raportu",
   numer: "Numer",
   nr: "Numer",
   imie: "Imię",
@@ -71,6 +74,10 @@ const FIELD_LABELS = {
   budowa_numer: "Budowa",
   data_od: "Data od",
   data_do: "Data do",
+  serwis_co_ile_mth: "Serwis co ile mth",
+  ostatni_serwis_mth: "Ostatni serwis przy mth",
+  assigned_machine_id: "Przypisana maszyna",
+  assigned_machine_nr: "Przypisana maszyna",
 };
 
 function humanizeEntity(entity, entityId) {
@@ -101,6 +108,10 @@ function humanizeValue(value) {
   if (value === null || value === undefined || value === "") return "brak";
   if (typeof value === "boolean") return value ? "tak" : "nie";
   if (value === "admin") return "administrator";
+  if (value === "operator") return "operator";
+  if (value === "brygadzista") return "brygadzista";
+  if (value === "kierownik") return "kierownik";
+  if (value === "biuro") return "biuro";
   if (value === "user") return "użytkownik";
   if (value === "planowana") return "planowana";
   if (value === "w_toku") return "w toku";

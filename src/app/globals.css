@@ -932,6 +932,28 @@ label {
   color: #334155;
 }
 
+.dashboardHome {
+  gap: 22px;
+}
+
+.dashboardStats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboardLayout {
+  align-items: start;
+}
+
+.operatorMachines {
+  display: grid;
+  gap: 16px;
+}
+
+.operatorMachineCard {
+  display: grid;
+  gap: 16px;
+}
+
 .stackSection {
   display: grid;
   gap: 20px;

@@ -1,4 +1,6 @@
 import pool from "../../../../../../db";
+import { getUserFromRequest } from "../../../../../lib/auth";
+import { canAccessMachine } from "../../../../../lib/machine-access";
 import { audit } from "../../../../../lib/audit";
 
 function intOrNull(value) {
@@ -20,9 +22,19 @@ function getMaszynaId(req, params) {
 
 export async function GET(req, { params }) {
   try {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const maszynaId = getMaszynaId(req, params);
     if (!maszynaId) {
       return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
+    }
+
+    const allowed = await canAccessMachine(user, maszynaId);
+    if (!allowed) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { rows } = await pool.query(
@@ -41,6 +53,11 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
+    const user = await getUserFromRequest(req);
+    if (!user?.isAdmin && !user?.canViewOperations) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const maszynaId = getMaszynaId(req, params);
     if (!maszynaId) {
       return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });

@@ -1,4 +1,6 @@
 import pool from "../../../../../db";
+import { getUserFromRequest } from "../../../../lib/auth";
+import { canAccessMachine } from "../../../../lib/machine-access";
 import { audit } from "../../../../lib/audit";
 
 function intOrNull(value) {
@@ -20,6 +22,11 @@ function getId(req, params) {
 
 export async function GET(req, ctx) {
   try {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const id = getId(req, ctx?.params);
     if (!id) {
       return Response.json(
@@ -28,8 +35,14 @@ export async function GET(req, ctx) {
       );
     }
 
+    const allowed = await canAccessMachine(user, id);
+    if (!allowed) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { rows } = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator
+      `SELECT id, nr, rodzaj, marka, model, operator,
+              serwis_co_ile_mth, ostatni_serwis_mth
        FROM maszyny
        WHERE id=$1`,
       [id]
@@ -44,6 +57,11 @@ export async function GET(req, ctx) {
 
 export async function PUT(req, { params }) {
   try {
+    const user = await getUserFromRequest(req);
+    if (!user?.isAdmin && !user?.canViewOperations) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const id = getId(req, params);
     if (!id) {
       return Response.json(
@@ -53,7 +71,8 @@ export async function PUT(req, { params }) {
     }
 
     const beforeResult = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator
+      `SELECT id, nr, rodzaj, marka, model, operator,
+              serwis_co_ile_mth, ostatni_serwis_mth
        FROM maszyny
        WHERE id=$1`,
       [id]
@@ -67,6 +86,18 @@ export async function PUT(req, { params }) {
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
     const operator = body?.operator?.trim();
+    const serviceEvery =
+      body?.serwis_co_ile_mth === "" ||
+      body?.serwis_co_ile_mth === null ||
+      body?.serwis_co_ile_mth === undefined
+        ? null
+        : Number(body.serwis_co_ile_mth);
+    const lastServiceHours =
+      body?.ostatni_serwis_mth === "" ||
+      body?.ostatni_serwis_mth === null ||
+      body?.ostatni_serwis_mth === undefined
+        ? null
+        : Number(body.ostatni_serwis_mth);
 
     if (!rodzaj || !marka || !model || !operator) {
       return Response.json(
@@ -76,10 +107,17 @@ export async function PUT(req, { params }) {
     }
 
     const { rows } = await pool.query(
-      `UPDATE maszyny SET rodzaj=$1, marka=$2, model=$3, operator=$4
-       WHERE id=$5
-       RETURNING id, nr, rodzaj, marka, model, operator`,
-      [rodzaj, marka, model, operator, id]
+      `UPDATE maszyny
+       SET rodzaj=$1,
+           marka=$2,
+           model=$3,
+           operator=$4,
+           serwis_co_ile_mth=$5,
+           ostatni_serwis_mth=$6
+       WHERE id=$7
+       RETURNING id, nr, rodzaj, marka, model, operator,
+                 serwis_co_ile_mth, ostatni_serwis_mth`,
+      [rodzaj, marka, model, operator, serviceEvery, lastServiceHours, id]
     );
 
     await audit({
@@ -99,6 +137,11 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
+    const user = await getUserFromRequest(req);
+    if (!user?.isAdmin && !user?.canViewOperations) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const id = getId(req, params);
     if (!id) {
       return Response.json(
@@ -109,7 +152,8 @@ export async function DELETE(req, { params }) {
 
     const { rows } = await pool.query(
       `DELETE FROM maszyny WHERE id=$1
-       RETURNING id, nr, rodzaj, marka, model, operator`,
+       RETURNING id, nr, rodzaj, marka, model, operator,
+                 serwis_co_ile_mth, ostatni_serwis_mth`,
       [id]
     );
 

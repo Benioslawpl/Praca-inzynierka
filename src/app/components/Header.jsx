@@ -17,6 +17,11 @@ const ADMIN_LINKS = [
   { href: "/historia", label: "Historia" },
 ];
 
+const OPERATOR_LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/pages/maszyny", label: "Moja maszyna" },
+];
+
 function isActive(pathname, href) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -60,7 +65,12 @@ export default function Header({ user: userProp }) {
 
   if (pathname === "/login") return null;
 
-  const links = user?.role === "admin" ? [...BASE_LINKS, ...ADMIN_LINKS] : BASE_LINKS;
+  let links = BASE_LINKS;
+  if (user?.role === "operator") {
+    links = OPERATOR_LINKS;
+  } else if (user?.role === "admin") {
+    links = [...BASE_LINKS, ...ADMIN_LINKS];
+  }
 
   const handleLogout = async () => {
     try {

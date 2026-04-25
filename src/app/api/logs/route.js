@@ -75,7 +75,7 @@ async function buildLookups(rows) {
     if (row.entity === "sprzet" && row.entityId) sprzetIds.add(row.entityId);
     if (row.entity === "budowy" && row.entityId) budowyIds.add(row.entityId);
 
-    if (row.entity === "maszyny_details") {
+    if (row.entity === "maszyny_details" || row.entity === "maszyna_raporty") {
       if (before.maszyna_id) maszynyIds.add(before.maszyna_id);
       if (after.maszyna_id) maszynyIds.add(after.maszyna_id);
     }
@@ -170,6 +170,17 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
   }
 
   if (entity === "maszyny_details") {
+    return (
+      row.maszyna_nr ||
+      row.nr ||
+      getFieldFromChanges(changes, "maszyna_nr") ||
+      getFieldFromChanges(changes, "nr") ||
+      lookups.machineMap.get(row.maszyna_id) ||
+      `Maszyna #${row.maszyna_id || entityId}`
+    );
+  }
+
+  if (entity === "maszyna_raporty") {
     return (
       row.maszyna_nr ||
       row.nr ||

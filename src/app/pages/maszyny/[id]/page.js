@@ -7,6 +7,7 @@ export default function MaszynaDetails() {
   const { id } = useParams();
   const router = useRouter();
 
+  const [me, setMe] = useState(null);
   const [header, setHeader] = useState(null);
   const [items, setItems] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -79,6 +80,15 @@ export default function MaszynaDetails() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    fetch("/api/me", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setMe(data?.ok ? data : null))
+      .catch(() => setMe(null));
+  }, []);
+
+  const canManage = me?.role !== "operator";
 
   const reset = () => {
     setForm(emptyForm);
@@ -198,7 +208,8 @@ export default function MaszynaDetails() {
         <p>Ładowanie...</p>
       )}
 
-      <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
+      {canManage ? (
+        <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
           <div>
             <h2>{editId ? "Edytuj zdarzenie" : "Dodaj zdarzenie"}</h2>
@@ -307,7 +318,8 @@ export default function MaszynaDetails() {
             {err && <p className="error">{err}</p>}
           </form>
         </div>
-      </section>
+        </section>
+      ) : null}
 
       <h2>Historia zdarzeń</h2>
 
@@ -345,16 +357,22 @@ export default function MaszynaDetails() {
                     {item.uwagi || "-"}
                   </td>
                   <td className="actionsCell" data-label="Akcje">
-                    <button type="button" onClick={() => edit(item)}>
-                      Edytuj
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={() => del(item.id)}
-                    >
-                      Usuń
-                    </button>
+                    {canManage ? (
+                      <>
+                        <button type="button" onClick={() => edit(item)}>
+                          Edytuj
+                        </button>
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() => del(item.id)}
+                        >
+                          Usuń
+                        </button>
+                      </>
+                    ) : (
+                      <span className="mutedText">Tylko podgląd</span>
+                    )}
                   </td>
                 </tr>
               ))}

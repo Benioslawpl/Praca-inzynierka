@@ -1,4 +1,5 @@
 import pool from "../../../../../../../db";
+import { getUserFromRequest } from "../../../../../../lib/auth";
 import { audit } from "../../../../../../lib/audit";
 
 function intOrNull(value) {
@@ -29,6 +30,11 @@ async function getMaszynaNr(maszynaId) {
 
 export async function PUT(req, { params }) {
   try {
+    const user = await getUserFromRequest(req);
+    if (!user?.isAdmin && !user?.canViewOperations) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { maszynaId, detailId } = getIds(req, params);
     if (!maszynaId || !detailId) {
       return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
@@ -88,6 +94,11 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
+    const user = await getUserFromRequest(req);
+    if (!user?.isAdmin && !user?.canViewOperations) {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { maszynaId, detailId } = getIds(req, params);
     if (!maszynaId || !detailId) {
       return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });

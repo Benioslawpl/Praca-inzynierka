@@ -2,69 +2,113 @@
 
 import { useEffect, useState } from "react";
 
+import { ROLE_OPTIONS } from "../../lib/roles";
+
+const EMPTY_FORM = {
+  username: "",
+  password: "",
+  role: "user",
+  assigned_machine_id: "",
+};
+
 export default function UsersPage() {
   const [list, setList] = useState([]);
+  const [machines, setMachines] = useState([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    role: "user",
-  });
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
 
-  const emptyForm = {
-    username: "",
-    password: "",
-    role: "user",
-  };
-
-  const fetchUsers = async () => {
+  const fetchData = async () => {
     setError("");
-    const res = await fetch("/api/users", { cache: "no-store" });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error || "Błąd pobierania użytkowników");
+    const [usersRes, machinesRes] = await Promise.all([
+      fetch("/api/users", { cache: "no-store" }),
+      fetch("/api/maszyny", { cache: "no-store" }),
+    ]);
+
+    const [usersData, machinesData] = await Promise.all([
+      usersRes.json().catch(() => ({})),
+      machinesRes.json().catch(() => ([])),
+    ]);
+
+    if (!usersRes.ok) {
       setList([]);
-      return;
+      setError(usersData.error || "Błąd pobierania użytkowników");
+    } else {
+      setList(Array.isArray(usersData) ? usersData : []);
     }
 
-    const data = await res.json();
-    setList(Array.isArray(data) ? data : []);
+    if (!machinesRes.ok) {
+      setMachines([]);
+      setError((current) => current || "Błąd pobierania maszyn");
+    } else {
+      setMachines(Array.isArray(machinesData) ? machinesData : []);
+    }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchData();
   }, []);
 
-  const addUser = async (e) => {
+  const resetForm = () => {
+    setForm(EMPTY_FORM);
+    setEditId(null);
+    setIsFormOpen(false);
+    setError("");
+  };
+
+  const startEdit = (user) => {
+    setEditId(user.id);
+    setForm({
+      username: user.username || "",
+      password: "",
+      role: user.role || "user",
+      assigned_machine_id: user.assigned_machine_id
+        ? String(user.assigned_machine_id)
+        : "",
+    });
+    setIsFormOpen(true);
+    setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const submit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError("");
 
     try {
+      const isEdit = Number.isInteger(editId);
       const payload = {
-        username: form.username,
-        password: form.password,
+        username: form.username.trim(),
         role: form.role,
+        assigned_machine_id:
+          form.role === "operator" && form.assigned_machine_id
+            ? Number(form.assigned_machine_id)
+            : null,
       };
 
-      const res = await fetch("/api/users", {
-        method: "POST",
+      if (!isEdit) {
+        payload.password = form.password;
+      }
+
+      const res = await fetch(isEdit ? `/api/users/${editId}` : "/api/users", {
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Błąd dodawania");
+      if (!res.ok) {
+        throw new Error(data.error || "Błąd zapisu użytkownika");
+      }
 
-      setForm(emptyForm);
-      setIsFormOpen(false);
-      fetchUsers();
-      alert(`Użytkownik dodany: ${data.username}`);
+      resetForm();
+      fetchData();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Błąd zapisu użytkownika");
     } finally {
       setSaving(false);
     }
@@ -84,14 +128,13 @@ export default function UsersPage() {
       return;
     }
 
-    fetchUsers();
+    fetchData();
   };
 
   const resetPassword = async (id) => {
     const newPass = prompt("Podaj nowe hasło dla użytkownika:");
     if (!newPass) return;
 
-    setError("");
     const res = await fetch(`/api/users/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -99,18 +142,17 @@ export default function UsersPage() {
     });
 
     const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      alert("Hasło zresetowane.");
-      fetchUsers();
-    } else {
+    if (!res.ok) {
       setError(data.error || "Błąd resetu hasła");
+      return;
     }
+
+    alert("Hasło zresetowane.");
   };
 
   const removeUser = async (id) => {
     if (!confirm("Na pewno usunąć użytkownika?")) return;
 
-    setError("");
     const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
     const data = await res.json().catch(() => ({}));
 
@@ -119,16 +161,23 @@ export default function UsersPage() {
       return;
     }
 
-    fetchUsers();
+    if (editId === id) resetForm();
+    fetchData();
   };
 
   const toggleForm = () => {
-    if (isFormOpen) {
-      setForm(emptyForm);
-      setError("");
+    if (isFormOpen && !editId) {
+      resetForm();
+      return;
     }
 
-    setIsFormOpen((open) => !open);
+    if (editId) {
+      setIsFormOpen(true);
+      return;
+    }
+
+    setIsFormOpen(true);
+    setError("");
   };
 
   return (
@@ -138,8 +187,12 @@ export default function UsersPage() {
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
           <div>
-            <h2>Dodaj użytkownika</h2>
-            <p>Utwórz nowe konto i od razu nadaj odpowiednią rolę.</p>
+            <h2>{editId ? "Edytuj użytkownika" : "Dodaj użytkownika"}</h2>
+            <p>
+              {editId
+                ? "Zmień rolę, login albo przypisaną maszynę operatora."
+                : "Utwórz nowe konto i od razu ustaw odpowiednią rolę."}
+            </p>
           </div>
 
           <button type="button" onClick={toggleForm}>
@@ -153,7 +206,7 @@ export default function UsersPage() {
         </div>
 
         <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
-          <form className="card" onSubmit={addUser}>
+          <form className="card" onSubmit={submit}>
             <div className="grid">
               <label>
                 <span>Login*</span>
@@ -164,41 +217,69 @@ export default function UsersPage() {
                 />
               </label>
 
-              <label>
-                <span>Hasło*</span>
-                <input
-                  type="text"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                />
-              </label>
+              {!editId ? (
+                <label>
+                  <span>Hasło*</span>
+                  <input
+                    type="text"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    required
+                  />
+                </label>
+              ) : (
+                <label>
+                  <span>Hasło</span>
+                  <input value="reset oddzielnym przyciskiem" disabled />
+                </label>
+              )}
 
               <label>
                 <span>Rola</span>
                 <select
                   value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      role: e.target.value,
+                      assigned_machine_id:
+                        e.target.value === "operator" ? form.assigned_machine_id : "",
+                    })
+                  }
                 >
-                  <option value="user">user</option>
-                  <option value="admin">admin</option>
+                  {ROLE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>Przypisana maszyna</span>
+                <select
+                  value={form.assigned_machine_id}
+                  onChange={(e) =>
+                    setForm({ ...form, assigned_machine_id: e.target.value })
+                  }
+                  disabled={form.role !== "operator"}
+                >
+                  <option value="">brak przypisania</option>
+                  {machines.map((machine) => (
+                    <option key={machine.id} value={machine.id}>
+                      {machine.nr || `Maszyna #${machine.id}`} • {machine.rodzaj} {machine.marka}{" "}
+                      {machine.model}
+                    </option>
+                  ))}
                 </select>
               </label>
             </div>
 
             <div className="actions">
               <button type="submit" disabled={saving}>
-                {saving ? "Zapisywanie..." : "Dodaj użytkownika"}
+                {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj użytkownika"}
               </button>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => {
-                  setForm(emptyForm);
-                  setError("");
-                  setIsFormOpen(false);
-                }}
-              >
+              <button type="button" className="secondary" onClick={resetForm}>
                 Anuluj
               </button>
             </div>
@@ -217,11 +298,11 @@ export default function UsersPage() {
               <tr>
                 <th style={{ width: 70 }}>Numer</th>
                 <th>Login</th>
-                <th style={{ width: 140 }}>Hasło</th>
-                <th style={{ width: 120 }}>Rola</th>
+                <th style={{ width: 140 }}>Rola</th>
+                <th>Maszyna operatora</th>
                 <th style={{ width: 180 }}>Data utworzenia</th>
                 <th style={{ width: 140 }}>Zablokowany</th>
-                <th style={{ width: 360 }}>Akcje</th>
+                <th style={{ width: 420 }}>Akcje</th>
               </tr>
             </thead>
 
@@ -230,8 +311,8 @@ export default function UsersPage() {
                 <tr key={user.id}>
                   <td data-label="Numer">{index + 1}</td>
                   <td data-label="Login">{user.username}</td>
-                  <td data-label="Hasło">{"•".repeat(8)}</td>
                   <td data-label="Rola">{user.role}</td>
+                  <td data-label="Maszyna operatora">{user.assigned_machine_nr || "-"}</td>
                   <td data-label="Data utworzenia">
                     {user.created_at
                       ? String(user.created_at).slice(0, 19).replace("T", " ")
@@ -242,8 +323,10 @@ export default function UsersPage() {
                       {user.blocked ? "TAK" : "NIE"}
                     </span>
                   </td>
-
                   <td className="actionsCell" data-label="Akcje">
+                    <button type="button" className="secondary" onClick={() => startEdit(user)}>
+                      Edytuj
+                    </button>
                     <button
                       type="button"
                       className={user.blocked ? "secondary" : "danger"}
@@ -251,11 +334,9 @@ export default function UsersPage() {
                     >
                       {user.blocked ? "Odblokuj" : "Zablokuj"}
                     </button>
-
                     <button type="button" onClick={() => resetPassword(user.id)}>
                       Reset hasła
                     </button>
-
                     <button
                       type="button"
                       className="danger"

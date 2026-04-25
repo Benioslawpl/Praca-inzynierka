@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 
 import pool from "../../../../../db";
 import { audit } from "../../../../lib/audit";
+import { normalizeRole } from "../../../../lib/roles";
 
 const SECRET = process.env.JWT_SECRET || "Test123!";
 
@@ -49,7 +50,9 @@ export async function POST(req) {
       );
     }
 
-    const role = user.role || (user.username === "admin" ? "admin" : "user");
+    const role = normalizeRole(
+      user.role || (user.username === "admin" ? "admin" : "user")
+    );
     const token = jwt.sign(
       { id: user.id, username: user.username, role },
       SECRET,

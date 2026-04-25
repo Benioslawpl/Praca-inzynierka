@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
 import pool from "../../db";
+import { canViewOperationalData, isAdminRole } from "./roles";
 
 const JWT_SECRET = process.env.JWT_SECRET || "Test123!";
 
@@ -27,7 +28,8 @@ async function getActiveUserByPayload(payload) {
     id: user.id,
     username: user.username,
     role: user.role,
-    isAdmin: user.role === "admin",
+    isAdmin: isAdminRole(user.role),
+    canViewOperations: canViewOperationalData(user.role),
   };
 }
 

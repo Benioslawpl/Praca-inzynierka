@@ -3,15 +3,20 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+const EMPTY_FORM = {
+  rodzaj: "",
+  marka: "",
+  model: "",
+  operator: "",
+  serwis_co_ile_mth: "",
+  ostatni_serwis_mth: "",
+};
+
 export default function MaszynyPage() {
   const [rows, setRows] = useState([]);
+  const [me, setMe] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [form, setForm] = useState({
-    rodzaj: "",
-    marka: "",
-    model: "",
-    operator: "",
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -34,8 +39,17 @@ export default function MaszynyPage() {
     load();
   }, []);
 
+  useEffect(() => {
+    fetch("/api/me", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setMe(data?.ok ? data : null))
+      .catch(() => setMe(null));
+  }, []);
+
+  const canManage = me?.role !== "operator";
+
   const reset = () => {
-    setForm({ rodzaj: "", marka: "", model: "", operator: "" });
+    setForm(EMPTY_FORM);
     setEditId(null);
     setIsFormOpen(false);
     setError("");
@@ -54,6 +68,8 @@ export default function MaszynyPage() {
         marka: form.marka.trim(),
         model: form.model.trim(),
         operator: form.operator.trim(),
+        serwis_co_ile_mth: form.serwis_co_ile_mth === "" ? null : Number(form.serwis_co_ile_mth),
+        ostatni_serwis_mth: form.ostatni_serwis_mth === "" ? null : Number(form.ostatni_serwis_mth),
       };
 
       const res = await fetch(url, {
@@ -82,6 +98,8 @@ export default function MaszynyPage() {
       marka: row.marka ?? "",
       model: row.model ?? "",
       operator: row.operator ?? "",
+      serwis_co_ile_mth: row.serwis_co_ile_mth ?? "",
+      ostatni_serwis_mth: row.ostatni_serwis_mth ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -111,13 +129,14 @@ export default function MaszynyPage() {
     <div>
       <h1>Maszyny</h1>
 
-      <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
+      {canManage ? (
+        <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
           <div>
             <h2>{editId ? "Edytuj maszynę" : "Dodaj maszynę"}</h2>
             <p>
               {editId
-                ? "Zaktualizuj dane wybranej maszyny."
+                ? "Zaktualizuj dane wybranej maszyny i ustawienia serwisowe."
                 : "Dodaj nową maszynę do ewidencji."}
             </p>
           </div>
@@ -180,6 +199,34 @@ export default function MaszynyPage() {
                   placeholder="np. Jan Kowalski"
                 />
               </label>
+
+              <label>
+                <span>Serwis co ile mth</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.serwis_co_ile_mth}
+                  onChange={(e) =>
+                    setForm({ ...form, serwis_co_ile_mth: e.target.value })
+                  }
+                  placeholder="np. 250"
+                />
+              </label>
+
+              <label>
+                <span>Ostatni serwis przy mth</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={form.ostatni_serwis_mth}
+                  onChange={(e) =>
+                    setForm({ ...form, ostatni_serwis_mth: e.target.value })
+                  }
+                  placeholder="np. 1200"
+                />
+              </label>
             </div>
 
             <div className="actions">
@@ -194,7 +241,8 @@ export default function MaszynyPage() {
             {error && <p className="error">{error}</p>}
           </form>
         </div>
-      </section>
+        </section>
+      ) : null}
 
       <div className="tableWrap">
         {rows.length === 0 ? (
@@ -208,12 +256,13 @@ export default function MaszynyPage() {
                 <th>Marka</th>
                 <th>Model</th>
                 <th>Operator</th>
+                <th>Serwis</th>
                 <th style={{ width: 360 }}>Akcje</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, index) => {
-                const uiNr = `M-${String(index + 1).padStart(2, "0")}`;
+                const uiNr = row.nr || `M-${String(index + 1).padStart(2, "0")}`;
 
                 return (
                   <tr key={row.id}>
@@ -222,6 +271,11 @@ export default function MaszynyPage() {
                     <td data-label="Marka">{row.marka}</td>
                     <td data-label="Model">{row.model}</td>
                     <td data-label="Operator">{row.operator}</td>
+                    <td data-label="Serwis">
+                      {row.serwis_co_ile_mth
+                        ? `co ${row.serwis_co_ile_mth} mth`
+                        : "brak"}
+                    </td>
                     <td className="actionsCell" data-label="Akcje">
                       <Link
                         href={`/pages/maszyny/${row.id}`}
@@ -230,22 +284,24 @@ export default function MaszynyPage() {
                       >
                         Szczegóły
                       </Link>
-
-                      <button
-                        type="button"
-                        className="secondary"
-                        onClick={() => handleEdit(row)}
-                      >
-                        Edytuj
-                      </button>
-
-                      <button
-                        type="button"
-                        className="danger"
-                        onClick={() => handleDelete(row.id)}
-                      >
-                        Usuń
-                      </button>
+                      {canManage ? (
+                        <>
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() => handleEdit(row)}
+                          >
+                            Edytuj
+                          </button>
+                          <button
+                            type="button"
+                            className="danger"
+                            onClick={() => handleDelete(row.id)}
+                          >
+                            Usuń
+                          </button>
+                        </>
+                      ) : null}
                     </td>
                   </tr>
                 );

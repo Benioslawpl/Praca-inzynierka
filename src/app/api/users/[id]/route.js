@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import pool from "../../../../../db";
 import { getUserFromRequest } from "../../../../lib/auth";
 import { audit } from "../../../../lib/audit";
+import { normalizeRole } from "../../../../lib/roles";
 
 function getIdFrom(req, ctx) {
   const fromParams = ctx?.params?.id;
@@ -20,9 +21,13 @@ function getIdFrom(req, ctx) {
 
 async function getUserRow(id) {
   const { rows } = await pool.query(
-    `SELECT id, username, role, created_at, blocked
-     FROM users
-     WHERE id=$1`,
+    `SELECT u.id, u.username, u.role, u.created_at, u.blocked,
+            um.maszyna_id as assigned_machine_id,
+            m.nr as assigned_machine_nr
+     FROM users u
+     LEFT JOIN user_maszyny um ON um.user_id = u.id
+     LEFT JOIN maszyny m ON m.id = um.maszyna_id
+     WHERE u.id=$1`,
     [id]
   );
 
@@ -103,16 +108,26 @@ export async function PUT(req, ctx) {
       return Response.json(rows[0]);
     }
 
-    if (typeof body?.role === "string") {
+    if (
+      typeof body?.username === "string" ||
+      typeof body?.role === "string" ||
+      Object.prototype.hasOwnProperty.call(body || {}, "assigned_machine_id")
+    ) {
       const before = await getUserRow(parsed.id);
-      const role = body.role === "admin" ? "admin" : "user";
+      const role = normalizeRole(body.role || before?.role);
+      const username = String(body.username || before?.username || "").trim();
+      const assignedMachineId = Number(body?.assigned_machine_id) || null;
+
+      if (!username) {
+        return Response.json({ error: "Wymagany login" }, { status: 400 });
+      }
 
       const { rows } = await pool.query(
         `UPDATE users
-         SET role=$1
-         WHERE id=$2
+         SET username=$1, role=$2
+         WHERE id=$3
          RETURNING id, username, role, created_at, blocked`,
-        [role, parsed.id]
+        [username, role, parsed.id]
       );
 
       if (!rows[0]) {
@@ -122,16 +137,28 @@ export async function PUT(req, ctx) {
         );
       }
 
+      await pool.query(`DELETE FROM user_maszyny WHERE user_id=$1`, [parsed.id]);
+
+      if (assignedMachineId) {
+        await pool.query(
+          `INSERT INTO user_maszyny (user_id, maszyna_id)
+           VALUES ($1,$2)`,
+          [parsed.id, assignedMachineId]
+        );
+      }
+
+      const after = await getUserRow(parsed.id);
+
       await audit({
         action: "update",
         entity: "users",
         entityId: parsed.id,
         before,
-        after: rows[0],
+        after: after || rows[0],
         req,
       });
 
-      return Response.json(rows[0]);
+      return Response.json(after || rows[0]);
     }
 
     return Response.json(
