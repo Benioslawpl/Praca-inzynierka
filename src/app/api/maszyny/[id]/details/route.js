@@ -38,7 +38,7 @@ export async function GET(req, { params }) {
     }
 
     const { rows } = await pool.query(
-      `SELECT id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi
+      `SELECT id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, zrodlo, reporter_username
        FROM maszyny_details
        WHERE maszyna_id = $1
        ORDER BY data_zdarzenia DESC, id DESC`,
@@ -72,6 +72,8 @@ export async function POST(req, { params }) {
     const awaria = body?.awaria?.trim() || null;
     const wykonawca = body?.wykonawca?.trim() || null;
     const uwagi = body?.uwagi?.trim() || null;
+    const zrodlo = body?.zrodlo?.trim() || "serwis";
+    const reporterUsername = body?.reporter_username?.trim() || null;
 
     const maszynaResult = await pool.query(`SELECT nr FROM maszyny WHERE id=$1`, [
       maszynaId,
@@ -79,9 +81,11 @@ export async function POST(req, { params }) {
     const maszynaNr = maszynaResult.rows[0]?.nr || null;
 
     const { rows } = await pool.query(
-      `INSERT INTO maszyny_details (maszyna_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi`,
+      `INSERT INTO maszyny_details (
+         maszyna_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, zrodlo, reporter_username
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, zrodlo, reporter_username`,
       [
         maszynaId,
         data_zdarzenia,
@@ -89,6 +93,8 @@ export async function POST(req, { params }) {
         awaria,
         wykonawca,
         uwagi,
+        zrodlo,
+        reporterUsername,
       ]
     );
 

@@ -78,6 +78,8 @@ const FIELD_LABELS = {
   ostatni_serwis_mth: "Ostatni serwis przy mth",
   assigned_operator_id: "Konto operatora",
   assigned_operator_username: "Konto operatora",
+  zrodlo: "Źródło",
+  reporter_username: "Autor raportu",
 };
 
 function humanizeEntity(entity, entityId) {

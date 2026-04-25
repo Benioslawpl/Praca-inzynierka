@@ -331,6 +331,7 @@ export default function MaszynaDetails() {
             <thead>
               <tr>
                 <th>Data</th>
+                <th>Źródło</th>
                 <th>Przebieg</th>
                 <th>Awaria</th>
                 <th>Wykonawca</th>
@@ -346,6 +347,11 @@ export default function MaszynaDetails() {
                     {item.data_zdarzenia
                       ? String(item.data_zdarzenia).slice(0, 10)
                       : "-"}
+                  </td>
+                  <td data-label="Źródło">
+                    {item.zrodlo === "operator"
+                      ? `operator${item.reporter_username ? `: ${item.reporter_username}` : ""}`
+                      : "serwis"}
                   </td>
                   <td data-label="Przebieg">{item.przebieg ?? "-"}</td>
                   <td data-label="Awaria">{item.awaria || "-"}</td>
