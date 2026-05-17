@@ -12,6 +12,7 @@ export default function MaszynaDetails() {
   const [items, setItems] = useState([]);
   const [reports, setReports] = useState([]);
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -188,6 +189,11 @@ export default function MaszynaDetails() {
     if (sourceFilter === "all") return true;
     return (item?.zrodlo || "serwis") === sourceFilter;
   });
+  const visibleItems = showAllHistory ? filteredItems : filteredItems.slice(0, 5);
+
+  useEffect(() => {
+    setShowAllHistory(false);
+  }, [sourceFilter, id]);
 
   useEffect(() => {
     if (!serviceAlert) {
@@ -939,7 +945,8 @@ export default function MaszynaDetails() {
           {filteredItems.length === 0 ? (
             <p>Brak wpisów</p>
           ) : (
-            <table className="table">
+            <>
+              <table className="table">
               <thead>
                 <tr>
                   <th>Data</th>
@@ -953,7 +960,7 @@ export default function MaszynaDetails() {
               </thead>
 
               <tbody>
-                {filteredItems.map((item) => (
+                {visibleItems.map((item) => (
                   <tr
                     key={item.id}
                     className={isActiveFailureRow(item) ? "historyRowActive" : ""}
@@ -1004,7 +1011,22 @@ export default function MaszynaDetails() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+
+              {filteredItems.length > 5 ? (
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => setShowAllHistory((current) => !current)}
+                  >
+                    {showAllHistory
+                      ? "Pokaż mniej"
+                      : `Pokaż pozostałe ${filteredItems.length - 5} wpisy`}
+                  </button>
+                </div>
+              ) : null}
+            </>
           )}
         </div>
       </section>

@@ -9,6 +9,7 @@ export default function SprzetDetailsPage() {
 
   const [header, setHeader] = useState(null);
   const [items, setItems] = useState([]);
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -33,6 +34,11 @@ export default function SprzetDetailsPage() {
       ),
     [items]
   );
+  const visibleItems = showAllHistory ? items : items.slice(0, 5);
+
+  useEffect(() => {
+    setShowAllHistory(false);
+  }, [id]);
 
   const loadDetails = async (sprzetId) => {
     const res = await fetch(`/api/sprzet/${sprzetId}/details`, {
@@ -465,7 +471,8 @@ export default function SprzetDetailsPage() {
           {items.length === 0 ? (
             <p>Brak wpisów</p>
           ) : (
-            <table className="table">
+            <>
+              <table className="table">
               <thead>
                 <tr>
                   <th>Data</th>
@@ -479,7 +486,7 @@ export default function SprzetDetailsPage() {
               </thead>
 
               <tbody>
-                {items.map((item) => (
+                {visibleItems.map((item) => (
                   <tr
                     key={item.id}
                     className={
@@ -528,7 +535,22 @@ export default function SprzetDetailsPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+
+              {items.length > 5 ? (
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => setShowAllHistory((current) => !current)}
+                  >
+                    {showAllHistory
+                      ? "Pokaż mniej"
+                      : `Pokaż pozostałe ${items.length - 5} wpisy`}
+                  </button>
+                </div>
+              ) : null}
+            </>
           )}
         </div>
       </section>
