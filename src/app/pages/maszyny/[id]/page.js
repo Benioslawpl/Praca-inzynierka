@@ -439,7 +439,183 @@ export default function MaszynaDetails() {
         )}
       </div>
 
-      {serviceAlert ? (
+      {serviceAlert || activeFailures.length > 0 ? (
+        <section className="detailsSection">
+          <div className="detailsSectionHeader">
+            <div className="sectionIntro">
+              <span className="rowEyebrow">Priorytety</span>
+              <h2>Serwis i awarie</h2>
+              <p>Najważniejsze rzeczy wymagające reakcji w jednym, lżejszym układzie.</p>
+            </div>
+          </div>
+
+          <div className="detailsAlertGrid">
+            {serviceAlert ? (
+              <div
+                className={`historyActiveCard serviceActiveCard detailsAlertPanel ${
+                  serviceAlert.overdue ? "serviceActiveCardOverdue" : "serviceActiveCardSoon"
+                }`}
+              >
+                <div className="historyActiveCardTop">
+                  <span
+                    className={`historyBadge ${
+                      serviceAlert.overdue ? "historyBadgeDanger" : "historyBadgeInfo"
+                    }`}
+                  >
+                    {serviceAlert.overdue ? "serwis pilny" : "serwis wkrótce"}
+                  </span>
+                  <span className="mutedText">próg: {serviceAlert.nextServiceAt} mth</span>
+                </div>
+
+                <strong className="historyActiveTitle">
+                  {serviceAlert.overdue
+                    ? `Przegląd przekroczony o ${Math.round(Math.abs(serviceAlert.remaining))} mth`
+                    : `Do przeglądu zostało około ${Math.round(serviceAlert.remaining)} mth`}
+                </strong>
+
+                <div className="historyActiveMeta">
+                  <span>Licznik: {serviceAlert.currentHours} mth</span>
+                  <span>Ostatni serwis: {header?.ostatni_serwis_mth ?? "brak"} mth</span>
+                  <span>Interwał: {header?.serwis_co_ile_mth ?? "brak"} mth</span>
+                </div>
+
+                {canManage ? (
+                  <>
+                    <div className="actions">
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => setServiceFormOpen((current) => !current)}
+                      >
+                        {serviceFormOpen ? "Ukryj formularz" : "Wykonaj serwis"}
+                      </button>
+                    </div>
+
+                    {serviceFormOpen ? (
+                      <form className="card serviceInlineForm" onSubmit={submitService}>
+                        <div className="grid">
+                          <label>
+                            <span>Data serwisu</span>
+                            <input
+                              type="date"
+                              value={serviceForm.data_zdarzenia}
+                              onChange={(e) =>
+                                setServiceForm({
+                                  ...serviceForm,
+                                  data_zdarzenia: e.target.value,
+                                })
+                              }
+                              required
+                            />
+                          </label>
+
+                          <label>
+                            <span>Wykonano przy (mth)</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={serviceForm.wykonany_przy_mth}
+                              onChange={(e) =>
+                                setServiceForm({
+                                  ...serviceForm,
+                                  wykonany_przy_mth: e.target.value,
+                                })
+                              }
+                              required
+                            />
+                          </label>
+
+                          <label>
+                            <span>Wykonawca</span>
+                            <input
+                              value={serviceForm.wykonawca}
+                              onChange={(e) =>
+                                setServiceForm({
+                                  ...serviceForm,
+                                  wykonawca: e.target.value,
+                                })
+                              }
+                              placeholder="np. Serwis XYZ"
+                              required
+                            />
+                          </label>
+
+                          <label style={{ gridColumn: "1 / -1" }}>
+                            <span>Uwagi</span>
+                            <textarea
+                              rows={3}
+                              value={serviceForm.uwagi}
+                              onChange={(e) =>
+                                setServiceForm({
+                                  ...serviceForm,
+                                  uwagi: e.target.value,
+                                })
+                              }
+                              placeholder="Co zostało wykonane podczas serwisu..."
+                            />
+                          </label>
+                        </div>
+
+                        <div className="actions">
+                          <button type="submit" disabled={serviceSaving}>
+                            {serviceSaving ? "Zapisywanie..." : "Zapisz serwis"}
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() => setServiceFormOpen(false)}
+                          >
+                            Anuluj
+                          </button>
+                        </div>
+                      </form>
+                    ) : null}
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+
+            {activeFailures.length > 0 ? (
+              <div className="detailsAlertPanel">
+                <div className="historyActiveList">
+                  {activeFailures.map((report) => (
+                    <article className="historyActiveCard" key={`combined-${report.id}`}>
+                      <div className="historyActiveCardTop">
+                        <span className="historyBadge historyBadgeDanger">aktywna awaria</span>
+                        <span className="mutedText">
+                          {String(report.data_raportu || "").slice(0, 10)}
+                        </span>
+                      </div>
+                      <strong className="historyActiveTitle">
+                        {report.opis || "Zgłoszenie awarii bez opisu"}
+                      </strong>
+                      <div className="historyActiveMeta">
+                        <span>Operator: {report.username || "brak"}</span>
+                        <span>Status: {report.status_awarii || "nowa"}</span>
+                        <span>Motogodziny: {report.motogodziny ?? "brak"}</span>
+                      </div>
+                      {canManage ? (
+                        <div className="actions">
+                          <button
+                            type="button"
+                            className="secondary"
+                            onClick={() => markAsResolved(report)}
+                          >
+                            Oznacz jako naprawioną
+                          </button>
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {false && serviceAlert ? (
         <section className="detailsSection">
           <div className="detailsSectionHeader">
             <div className="sectionIntro">
@@ -682,7 +858,7 @@ export default function MaszynaDetails() {
         </section>
       ) : null}
 
-      {activeFailures.length > 0 ? (
+      {false && activeFailures.length > 0 ? (
         <section className="detailsSection">
           <div className="detailsSectionHeader">
             <div className="sectionIntro">

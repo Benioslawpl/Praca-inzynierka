@@ -497,6 +497,18 @@ button[disabled] {
   gap: 12px;
 }
 
+.detailsAlertGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.detailsAlertPanel {
+  display: grid;
+  gap: 10px;
+}
+
 .detailsSectionHeader {
   display: flex;
   justify-content: space-between;
@@ -1687,6 +1699,10 @@ label {
   }
 
   .splitLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .detailsAlertGrid {
     grid-template-columns: 1fr;
   }
 }
