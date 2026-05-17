@@ -950,6 +950,25 @@ label {
 .dashboardAlertCard {
   align-items: center;
   gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform var(--transition-medium),
+    box-shadow var(--transition-medium),
+    border-color var(--transition-medium);
+}
+
+.dashboardAlertCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.dashboardAlertCard:focus-visible {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.14),
+    0 12px 28px rgba(15, 23, 42, 0.08);
 }
 
 .dashboardAlertCard .compactListMain {

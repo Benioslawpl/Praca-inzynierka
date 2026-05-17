@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const today = new Date().toISOString().slice(0, 10);
@@ -214,25 +215,26 @@ export default function HomeDashboardClient({ user }) {
                 </div>
               </div>
             ) : (
-              alertItems.map((item) => (
-                <div
-                  className={`compactListRow compactMetricRow dashboardAlertCard dashboardAlertCard-${item.kind}`}
-                  key={`${item.kind}-${item.machineId}`}
-                >
-                  <div className="dashboardAlertLead">
-                    <span className="dashboardAlertDot" aria-hidden="true" />
-                  </div>
-                  <div className="compactListMain">
-                    <strong>{item.title}</strong>
+                alertItems.map((item) => (
+                  <Link
+                    href={`/pages/maszyny/${item.machineId}`}
+                    className={`compactListRow compactMetricRow dashboardAlertCard dashboardAlertCard-${item.kind}`}
+                    key={`${item.kind}-${item.machineId}`}
+                  >
+                    <div className="dashboardAlertLead">
+                      <span className="dashboardAlertDot" aria-hidden="true" />
+                    </div>
+                    <div className="compactListMain">
+                      <strong>{item.title}</strong>
                     <span className="dashboardAlertText">{item.description}</span>
                     <span className="mutedText">{item.meta}</span>
                   </div>
-                  <span className={`pill ${item.kind === "awaria" || item.kind === "overdue" ? "bad" : ""}`}>
-                    {severityLabel(item.kind)}
-                  </span>
-                </div>
-              ))
-            )}
+                    <span className={`pill ${item.kind === "awaria" || item.kind === "overdue" ? "bad" : ""}`}>
+                      {severityLabel(item.kind)}
+                    </span>
+                  </Link>
+                ))
+              )}
           </div>
         </article>
 
