@@ -675,7 +675,6 @@ label {
 
 .table tbody tr:hover {
   background-color: transparent;
-  filter: drop-shadow(0 16px 30px rgba(37, 99, 235, 0.1));
   transform: translateY(-1px);
 }
 
@@ -942,6 +941,77 @@ label {
 
 .dashboardLayout {
   align-items: start;
+}
+
+.dashboardAlertList {
+  gap: 12px;
+}
+
+.dashboardAlertCard {
+  align-items: center;
+  gap: 14px;
+}
+
+.dashboardAlertCard .compactListMain {
+  gap: 6px;
+}
+
+.dashboardAlertLead {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 12px;
+  min-height: 52px;
+}
+
+.dashboardAlertDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #94a3b8;
+  box-shadow: 0 0 0 6px rgba(148, 163, 184, 0.12);
+}
+
+.dashboardAlertText {
+  color: #0f172a;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.dashboardAlertCard-awaria {
+  border-color: #fecaca;
+  background: linear-gradient(180deg, #fffefe, #fff7f7);
+}
+
+.dashboardAlertCard-awaria .dashboardAlertDot {
+  background: #dc2626;
+  box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.12);
+}
+
+.dashboardAlertCard-overdue {
+  border-color: #fdba74;
+  background: linear-gradient(180deg, #fffdfa, #fff7ed);
+}
+
+.dashboardAlertCard-overdue .dashboardAlertDot {
+  background: #ea580c;
+  box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.12);
+}
+
+.dashboardAlertCard-soon {
+  border-color: #bfdbfe;
+  background: linear-gradient(180deg, #fbfdff, #f5f9ff);
+}
+
+.dashboardAlertCard-soon .dashboardAlertDot {
+  background: #2563eb;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.12);
+}
+
+.dashboardAlertCardOk {
+  border-color: #cbd5e1;
+  background: #fff;
 }
 
 .operatorMachines {
@@ -1598,6 +1668,11 @@ label {
   .compactListRow {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .dashboardAlertLead {
+    min-height: 0;
+    width: auto;
   }
 
   .compactAction {

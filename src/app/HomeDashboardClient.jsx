@@ -30,6 +30,12 @@ function roleLabel(role) {
   return "użytkownik";
 }
 
+function severityLabel(kind) {
+  if (kind === "awaria") return "awaria";
+  if (kind === "overdue") return "pilne";
+  return "wkrótce";
+}
+
 export default function HomeDashboardClient({ user }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -119,6 +125,30 @@ export default function HomeDashboardClient({ user }) {
     );
   }
 
+  const alertItems = [
+    ...((data?.alerts?.awarie || []).map((item) => ({
+      ...item,
+      kind: "awaria",
+      title: item.nr,
+      description: item.opis || "Aktywne zgłoszenie awarii",
+      meta: `Zgłoszono: ${fmtDate(item.date)}`,
+    }))),
+    ...((data?.alerts?.serwisOverdue || []).map((item) => ({
+      ...item,
+      kind: "overdue",
+      title: item.nr,
+      description: `Serwis przekroczony o ${Math.abs(Math.round(item.remaining))} mth`,
+      meta: `Próg serwisu: ${Math.round(item.nextServiceAt)} mth`,
+    }))),
+    ...((data?.alerts?.serwisSoon || []).map((item) => ({
+      ...item,
+      kind: "soon",
+      title: item.nr,
+      description: `Do serwisu zostało około ${Math.round(item.remaining)} mth`,
+      meta: `Próg serwisu: ${Math.round(item.nextServiceAt)} mth`,
+    }))),
+  ];
+
   return (
     <section className="home dashboardHome">
       <div className="sectionIntro">
@@ -153,55 +183,37 @@ export default function HomeDashboardClient({ user }) {
               <h2>Alerty serwisowe</h2>
               <p className="mutedText">Najważniejsze informacje z ostatnich raportów.</p>
             </div>
+            <span className="metricBadge">{alertItems.length}</span>
           </div>
 
-          <div className="compactList">
-            {(data?.alerts?.awarie || []).map((item) => (
-              <div className="compactListRow compactMetricRow" key={`awaria-${item.machineId}`}>
-                <div className="compactListMain">
-                  <strong>{item.nr}</strong>
-                  <span className="mutedText">
-                    Awaria: {item.opis || "brak opisu"} • {fmtDate(item.date)}
-                  </span>
-                </div>
-                <span className="pill bad">{item.status || "nowa"}</span>
-              </div>
-            ))}
-
-            {(data?.alerts?.serwisOverdue || []).map((item) => (
-              <div className="compactListRow compactMetricRow" key={`overdue-${item.machineId}`}>
-                <div className="compactListMain">
-                  <strong>{item.nr}</strong>
-                  <span className="mutedText">
-                    Serwis przekroczony o {Math.abs(Math.round(item.remaining))} mth
-                  </span>
-                </div>
-                <span className="pill bad">pilne</span>
-              </div>
-            ))}
-
-            {(data?.alerts?.serwisSoon || []).map((item) => (
-              <div className="compactListRow compactMetricRow" key={`soon-${item.machineId}`}>
-                <div className="compactListMain">
-                  <strong>{item.nr}</strong>
-                  <span className="mutedText">
-                    Do serwisu zostało około {Math.round(item.remaining)} mth
-                  </span>
-                </div>
-                <span className="pill">wkrótce</span>
-              </div>
-            ))}
-
-            {!data?.alerts?.awarie?.length &&
-            !data?.alerts?.serwisSoon?.length &&
-            !data?.alerts?.serwisOverdue?.length ? (
-              <div className="compactListRow compactMetricRow">
+          <div className="compactList dashboardAlertList">
+            {alertItems.length === 0 ? (
+              <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
                 <div className="compactListMain">
                   <strong>Brak krytycznych alertów</strong>
                   <span className="mutedText">Na ten moment system nie widzi pilnych zdarzeń.</span>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              alertItems.map((item) => (
+                <div
+                  className={`compactListRow compactMetricRow dashboardAlertCard dashboardAlertCard-${item.kind}`}
+                  key={`${item.kind}-${item.machineId}`}
+                >
+                  <div className="dashboardAlertLead">
+                    <span className="dashboardAlertDot" aria-hidden="true" />
+                  </div>
+                  <div className="compactListMain">
+                    <strong>{item.title}</strong>
+                    <span className="dashboardAlertText">{item.description}</span>
+                    <span className="mutedText">{item.meta}</span>
+                  </div>
+                  <span className={`pill ${item.kind === "awaria" || item.kind === "overdue" ? "bad" : ""}`}>
+                    {severityLabel(item.kind)}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </article>
 
