@@ -50,6 +50,20 @@ export async function GET(req) {
     [visibleMachineIds]
   );
 
+  const { rows: latestActiveFailures } = await pool.query(
+    `SELECT DISTINCT ON (r.maszyna_id)
+            r.id, r.maszyna_id, r.data_raportu, r.motogodziny, r.awaria,
+            r.opis, r.status_awarii, r.created_at,
+            u.username
+     FROM maszyna_raporty r
+     LEFT JOIN users u ON u.id = r.user_id
+     WHERE r.maszyna_id = ANY($1::int[])
+       AND r.awaria = true
+       AND COALESCE(r.status_awarii, 'nowa') <> 'zamknieta'
+     ORDER BY r.maszyna_id, r.created_at DESC, r.id DESC`,
+    [visibleMachineIds]
+  );
+
   const { rows: recentReports } = await pool.query(
     `SELECT r.id, r.maszyna_id, r.data_raportu, r.motogodziny, r.awaria,
             r.opis, r.status_awarii, r.created_at,
@@ -66,6 +80,9 @@ export async function GET(req) {
   const latestByMachineId = new Map(
     latestReports.map((row) => [row.maszyna_id, row])
   );
+  const latestFailureByMachineId = new Map(
+    latestActiveFailures.map((row) => [row.maszyna_id, row])
+  );
 
   const awarie = [];
   const serwisSoon = [];
@@ -73,14 +90,15 @@ export async function GET(req) {
 
   for (const machine of machines) {
     const latest = latestByMachineId.get(machine.id) || null;
+    const latestFailure = latestFailureByMachineId.get(machine.id) || null;
 
-    if (latest?.awaria && latest.status_awarii !== "zamknieta") {
+    if (latestFailure) {
       awarie.push({
         machineId: machine.id,
         nr: machine.nr,
-        opis: latest.opis || "Aktywne zgłoszenie awarii",
-        status: latest.status_awarii || "nowa",
-        date: latest.data_raportu,
+        opis: latestFailure.opis || "Aktywne zgłoszenie awarii",
+        status: latestFailure.status_awarii || "nowa",
+        date: latestFailure.data_raportu,
       });
     }
 
