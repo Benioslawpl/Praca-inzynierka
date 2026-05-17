@@ -61,11 +61,7 @@ export default function MaszynaDetails() {
 
       if (cancelled) return;
 
-      if (headerRes.ok) {
-        setHeader(headerRes.data);
-      } else {
-        setHeader(null);
-      }
+      setHeader(headerRes.ok ? headerRes.data : null);
 
       if (detailsRes.ok) {
         setItems(Array.isArray(detailsRes.data) ? detailsRes.data : []);
@@ -185,231 +181,237 @@ export default function MaszynaDetails() {
   };
 
   return (
-    <div>
+    <div className="detailsPage">
       <button
         type="button"
-        className="secondary"
+        className="secondary detailsBackButton"
         onClick={() => router.push("/pages/maszyny")}
       >
         Wróć do listy
       </button>
 
-      <h1>Szczegóły maszyny</h1>
+      <div className="detailsHero">
+        <div className="sectionIntro">
+          <span className="rowEyebrow">Maszyna</span>
+          <h1>Szczegóły maszyny</h1>
+          <p>Pełny podgląd danych maszyny oraz historia zdarzeń operatorskich i serwisowych.</p>
+        </div>
 
-      {header ? (
-        <div className="card detailsSummary" style={{ marginBottom: 16 }}>
-          <div className="detailsSummaryContent">
-            <div className="detailsSummaryLine">
-              <b>Nr:</b> <span>{header.nr ?? "-"}</span>
-              <b>Rodzaj:</b> <span>{header.rodzaj}</span>
-            </div>
-            <div className="detailsSummaryLine">
-              <b>Marka/Model:</b> <span>{header.marka} {header.model}</span>
-              <b>Operator:</b> <span>{header.operator}</span>
+        {header ? (
+          <div className="card detailsSummary">
+            <div className="detailsSummaryContent detailsSummaryGrid">
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Numer</span>
+                <strong className="detailsStatValue">{header.nr ?? "-"}</strong>
+              </div>
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Rodzaj</span>
+                <strong className="detailsStatValue">{header.rodzaj || "-"}</strong>
+              </div>
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Marka / model</span>
+                <strong className="detailsStatValue">{`${header.marka || "-"} ${header.model || ""}`.trim()}</strong>
+              </div>
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Operator</span>
+                <strong className="detailsStatValue">{header.operator || "-"}</strong>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <p>Ładowanie...</p>
-      )}
+        ) : (
+          <p>Ładowanie...</p>
+        )}
+      </div>
 
       {canManage ? (
         <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
-        <div className="formPanelHeader">
-          <div>
-            <h2>{editId ? "Edytuj zdarzenie" : "Dodaj zdarzenie"}</h2>
-            <p>
-              {editId
-                ? "Zmień dane wybranego wpisu w historii."
-                : "Dodaj nowy wpis do historii zdarzeń tej maszyny."}
-            </p>
+          <div className="formPanelHeader">
+            <div>
+              <h2>{editId ? "Edytuj zdarzenie" : "Dodaj zdarzenie"}</h2>
+              <p>
+                {editId
+                  ? "Zmień dane wybranego wpisu w historii."
+                  : "Dodaj nowy wpis do historii zdarzeń tej maszyny."}
+              </p>
+            </div>
+
+            <button type="button" onClick={toggleForm}>
+              <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
+                <span className="formPanelToggleIcon" aria-hidden="true">
+                  {isFormOpen ? "−" : "+"}
+                </span>
+                <span>
+                  {isFormOpen
+                    ? editId
+                      ? "Tryb edycji"
+                      : "Ukryj formularz"
+                    : "Dodaj zdarzenie"}
+                </span>
+              </span>
+            </button>
           </div>
 
-          <button type="button" onClick={toggleForm}>
-            <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
-              <span className="formPanelToggleIcon" aria-hidden="true">
-                {isFormOpen ? "−" : "+"}
-              </span>
-              <span>
-                {isFormOpen
-                  ? editId
-                    ? "Tryb edycji"
-                    : "Ukryj formularz"
-                  : "Dodaj zdarzenie"}
-              </span>
-            </span>
-          </button>
-        </div>
+          <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
+            <form className="card" onSubmit={submit}>
+              <div className="grid">
+                <label>
+                  <span>Data zdarzenia</span>
+                  <input
+                    type="date"
+                    value={form.data_zdarzenia}
+                    onChange={(e) => setForm({ ...form, data_zdarzenia: e.target.value })}
+                    required
+                  />
+                </label>
 
-        <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
-          <form className="card" onSubmit={submit}>
-            <div className="grid">
-              <label>
-                <span>Data zdarzenia</span>
-                <input
-                  type="date"
-                  value={form.data_zdarzenia}
-                  onChange={(e) =>
-                    setForm({ ...form, data_zdarzenia: e.target.value })
-                  }
-                  required
-                />
-              </label>
+                <label>
+                  <span>Przebieg (mth)</span>
+                  <input
+                    type="number"
+                    value={form.przebieg}
+                    onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
+                    min="0"
+                    placeholder="np. 12500"
+                  />
+                </label>
 
-              <label>
-                <span>Przebieg (mth)</span>
-                <input
-                  type="number"
-                  value={form.przebieg}
-                  onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
-                  min="0"
-                  placeholder="np. 12500"
-                />
-              </label>
+                <label>
+                  <span>Awaria</span>
+                  <input
+                    value={form.awaria}
+                    onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 30) })}
+                    placeholder="np. Uszkodzony wąż"
+                  />
+                </label>
 
-              <label>
-                <span>Awaria</span>
-                <input
-                  value={form.awaria}
-                  onChange={(e) =>
-                    setForm({ ...form, awaria: e.target.value.slice(0, 30) })
-                  }
-                  placeholder="np. Uszkodzony wąż"
-                />
-              </label>
+                <label>
+                  <span>Wykonawca</span>
+                  <input
+                    value={form.wykonawca}
+                    onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
+                    placeholder="np. Serwis XYZ"
+                  />
+                </label>
 
-              <label>
-                <span>Wykonawca</span>
-                <input
-                  value={form.wykonawca}
-                  onChange={(e) =>
-                    setForm({ ...form, wykonawca: e.target.value })
-                  }
-                  placeholder="np. Serwis XYZ"
-                />
-              </label>
+                <label style={{ gridColumn: "1 / -1" }}>
+                  <span>Uwagi</span>
+                  <textarea
+                    value={form.uwagi}
+                    onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
+                    rows={3}
+                    placeholder="Krótki opis zdarzenia..."
+                  />
+                </label>
+              </div>
 
-              <label style={{ gridColumn: "1 / -1" }}>
-                <span>Uwagi</span>
-                <textarea
-                  value={form.uwagi}
-                  onChange={(e) =>
-                    setForm({ ...form, uwagi: e.target.value.slice(0, 200) })
-                  }
-                  rows={3}
-                  placeholder="Krótki opis zdarzenia..."
-                  style={{
-                    width: "100%",
-                    resize: "vertical",
-                    padding: 8,
-                    borderRadius: 6,
-                    border: "1px solid #cfd4dc",
-                    background: "#fff",
-                  }}
-                />
-              </label>
-            </div>
+              <div className="actions">
+                <button type="submit" disabled={saving}>
+                  {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+                </button>
 
-            <div className="actions">
-              <button type="submit" disabled={saving}>
-                {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
-              </button>
+                <button type="button" className="secondary" onClick={reset}>
+                  Anuluj
+                </button>
+              </div>
 
-              <button type="button" className="secondary" onClick={reset}>
-                Anuluj
-              </button>
-            </div>
-
-            {err && <p className="error">{err}</p>}
-          </form>
-        </div>
+              {err && <p className="error">{err}</p>}
+            </form>
+          </div>
         </section>
       ) : null}
 
-      <div className="historyToolbar">
-        <div className="historyFilters">
-          <label className="historyFilterField">
-            <span>Źródło</span>
-            <select
-              value={sourceFilter}
-              onChange={(e) => setSourceFilter(e.target.value)}
-            >
-              <option value="all">Wszystkie</option>
-              <option value="serwis">Serwis</option>
-              <option value="operator">Operator</option>
-            </select>
-          </label>
+      <section className="detailsSection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Historia</span>
+            <h2>Historia zdarzeń</h2>
+            <p>Wpisy serwisowe i operatorskie związane z tą maszyną.</p>
+          </div>
+
+          <div className="historyFilters">
+            <label className="historyFilterField">
+              <span>Źródło</span>
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
+              >
+                <option value="all">Wszystkie</option>
+                <option value="serwis">Serwis</option>
+                <option value="operator">Operator</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="historyCount">
+            <strong>{filteredItems.length}</strong>
+            <span>wpisów</span>
+          </div>
         </div>
 
-        <div className="historyCount">
-          <strong>{filteredItems.length}</strong>
-          <span>wpisów</span>
-        </div>
-      </div>
-
-      <div className="tableWrap">
-        {filteredItems.length === 0 ? (
-          <p>Brak wpisów</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Źródło</th>
-                <th>Przebieg</th>
-                <th>Awaria</th>
-                <th>Wykonawca</th>
-                <th>Uwagi</th>
-                <th>Akcje</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredItems.map((item) => (
-                <tr key={item.id}>
-                  <td data-label="Data">
-                    {item.data_zdarzenia
-                      ? String(item.data_zdarzenia).slice(0, 10)
-                      : "-"}
-                  </td>
-                  <td data-label="Źródło">
-                    {item.zrodlo === "operator"
-                      ? `operator${item.reporter_username ? `: ${item.reporter_username}` : ""}`
-                      : "serwis"}
-                  </td>
-                  <td data-label="Przebieg">{item.przebieg ?? "-"}</td>
-                  <td data-label="Awaria">{item.awaria || "-"}</td>
-                  <td data-label="Wykonawca">{item.wykonawca || "-"}</td>
-                  <td
-                    data-label="Uwagi"
-                    style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
-                  >
-                    {item.uwagi || "-"}
-                  </td>
-                  <td className="actionsCell" data-label="Akcje">
-                    {canManage ? (
-                      <>
-                        <button type="button" onClick={() => edit(item)}>
-                          Edytuj
-                        </button>
-                        <button
-                          type="button"
-                          className="danger"
-                          onClick={() => del(item.id)}
-                        >
-                          Usuń
-                        </button>
-                      </>
-                    ) : (
-                      <span className="mutedText">Tylko podgląd</span>
-                    )}
-                  </td>
+        <div className="tableWrap">
+          {filteredItems.length === 0 ? (
+            <p>Brak wpisów</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Źródło</th>
+                  <th>Przebieg</th>
+                  <th>Awaria</th>
+                  <th>Wykonawca</th>
+                  <th>Uwagi</th>
+                  <th>Akcje</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              </thead>
+
+              <tbody>
+                {filteredItems.map((item) => (
+                  <tr key={item.id}>
+                    <td data-label="Data">
+                      {item.data_zdarzenia
+                        ? String(item.data_zdarzenia).slice(0, 10)
+                        : "-"}
+                    </td>
+                    <td data-label="Źródło">
+                      {item.zrodlo === "operator"
+                        ? `operator${item.reporter_username ? `: ${item.reporter_username}` : ""}`
+                        : "serwis"}
+                    </td>
+                    <td data-label="Przebieg">{item.przebieg ?? "-"}</td>
+                    <td data-label="Awaria">{item.awaria || "-"}</td>
+                    <td data-label="Wykonawca">{item.wykonawca || "-"}</td>
+                    <td
+                      data-label="Uwagi"
+                      style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
+                    >
+                      {item.uwagi || "-"}
+                    </td>
+                    <td className="actionsCell" data-label="Akcje">
+                      {canManage ? (
+                        <>
+                          <button type="button" onClick={() => edit(item)}>
+                            Edytuj
+                          </button>
+                          <button
+                            type="button"
+                            className="danger"
+                            onClick={() => del(item.id)}
+                          >
+                            Usuń
+                          </button>
+                        </>
+                      ) : (
+                        <span className="mutedText">Tylko podgląd</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

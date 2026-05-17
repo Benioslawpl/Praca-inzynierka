@@ -382,10 +382,10 @@ export default function BudowaDetailsPage() {
 
   if (!header) {
     return (
-      <div>
+      <div className="detailsPage">
         <button
           type="button"
-          className="secondary"
+          className="secondary detailsBackButton"
           onClick={() => router.push("/pages/budowy")}
         >
           Wróć do listy
@@ -396,57 +396,78 @@ export default function BudowaDetailsPage() {
   }
 
   return (
-    <div className="stackSection">
+    <div className="detailsPage">
       <button
         type="button"
-        className="secondary"
+        className="secondary detailsBackButton"
         onClick={() => router.push("/pages/budowy")}
       >
         Wróć do listy
       </button>
 
-      <div className="sectionIntro">
-        <span className="rowEyebrow">Budowa</span>
-        <h1>Szczegóły budowy</h1>
-        <p>
-          Przypisuj brygady i maszyny do konkretnej realizacji. Sprzęt pozostaje
-          po stronie brygad, więc tutaj skupiamy się na głównych zasobach.
-        </p>
-      </div>
+      <div className="detailsHero">
+        <div className="sectionIntro">
+          <span className="rowEyebrow">Budowa</span>
+          <h1>Szczegóły budowy</h1>
+          <p>
+            Przypisuj brygady i maszyny do konkretnej realizacji. Sprzęt pozostaje
+            po stronie brygad, więc tutaj skupiamy się na głównych zasobach.
+          </p>
+        </div>
 
-      <div className="card detailsSummary" style={{ marginBottom: 8 }}>
-        <div className="detailsSummaryContent">
-          <div className="detailsSummaryLine">
-            <b>Numer:</b> <span>{header.numer}</span>
-            <b>Nazwa:</b> <span>{header.nazwa}</span>
-          </div>
-          <div className="detailsSummaryLine">
-            <b>Lokalizacja:</b> <span>{header.lokalizacja}</span>
-            <b>Status:</b> <span>{header.status || "-"}</span>
-          </div>
-          <div className="detailsSummaryLine">
-            <b>Inwestor:</b> <span>{header.inwestor || "-"}</span>
-            <b>Kierownik:</b> <span>{header.kierownik || "-"}</span>
-          </div>
-          <div className="detailsSummaryLine">
-            <b>Start:</b> <span>{formatDate(header.data_rozpoczecia)}</span>
-            <b>Koniec:</b> <span>{formatDate(header.data_zakonczenia)}</span>
-          </div>
-          {header.uwagi ? (
-            <div className="detailsSummaryLine">
-              <b>Uwagi:</b> <span>{header.uwagi}</span>
+        <div className="card detailsSummary">
+          <div className="detailsSummaryContent detailsSummaryGrid">
+            <div className="detailsStat">
+              <span className="detailsStatLabel">Numer</span>
+              <strong className="detailsStatValue">{header.numer}</strong>
             </div>
-          ) : null}
+            <div className="detailsStat">
+              <span className="detailsStatLabel">Nazwa</span>
+              <strong className="detailsStatValue">{header.nazwa}</strong>
+            </div>
+            <div className="detailsStat">
+              <span className="detailsStatLabel">Lokalizacja</span>
+              <strong className="detailsStatValue">{header.lokalizacja}</strong>
+            </div>
+            <div className="detailsStat">
+              <span className="detailsStatLabel">Status</span>
+              <strong className="detailsStatValue">{header.status || "-"}</strong>
+            </div>
+            <div className="detailsStat">
+              <span className="detailsStatLabel">Inwestor</span>
+              <strong className="detailsStatValue">{header.inwestor || "-"}</strong>
+            </div>
+            <div className="detailsStat">
+              <span className="detailsStatLabel">Kierownik</span>
+              <strong className="detailsStatValue">{header.kierownik || "-"}</strong>
+            </div>
+            <div className="detailsStat">
+              <span className="detailsStatLabel">Start</span>
+              <strong className="detailsStatValue">{formatDate(header.data_rozpoczecia)}</strong>
+            </div>
+            <div className="detailsStat">
+              <span className="detailsStatLabel">Koniec</span>
+              <strong className="detailsStatValue">{formatDate(header.data_zakonczenia)}</strong>
+            </div>
+            {header.uwagi ? (
+              <div className="detailsStat" style={{ gridColumn: "1 / -1" }}>
+                <span className="detailsStatLabel">Uwagi</span>
+                <strong className="detailsStatValue">{header.uwagi}</strong>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
       {error && <p className="error">{error}</p>}
 
-      <section className="stackSection">
-        <div className="sectionIntro">
-          <span className="rowEyebrow">Obsada</span>
-          <h2>Brygady</h2>
-          <p>Brygady pracujące obecnie lub planowane na tej budowie.</p>
+      <section className="detailsSection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Obsada</span>
+            <h2>Brygady</h2>
+            <p>Brygady pracujące obecnie lub planowane na tej budowie.</p>
+          </div>
         </div>
 
         {renderFormPanel(
@@ -504,11 +525,13 @@ export default function BudowaDetailsPage() {
         </div>
       </section>
 
-      <section className="stackSection">
-        <div className="sectionIntro">
-          <span className="rowEyebrow">Zasoby</span>
-          <h2>Maszyny</h2>
-          <p>Główne maszyny przypisane do realizacji wraz z operatorem i terminem.</p>
+      <section className="detailsSection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Zasoby</span>
+            <h2>Maszyny</h2>
+            <p>Główne maszyny przypisane do realizacji wraz z operatorem i terminem.</p>
+          </div>
         </div>
 
         {renderFormPanel(

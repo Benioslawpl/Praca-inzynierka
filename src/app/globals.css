@@ -426,8 +426,58 @@ button[disabled] {
 
 .detailsSummaryContent {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   padding-left: 6px;
+}
+
+.detailsPage {
+  display: grid;
+  gap: 22px;
+}
+
+.detailsBackButton {
+  justify-self: flex-start;
+}
+
+.detailsHero {
+  display: grid;
+  gap: 14px;
+}
+
+.detailsHero .sectionIntro {
+  gap: 8px;
+}
+
+.detailsSummaryGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.detailsStat {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.05);
+}
+
+.detailsStatLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.detailsStatValue {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #0f172a;
+  word-break: break-word;
 }
 
 .detailsSummaryLine {
@@ -440,6 +490,33 @@ button[disabled] {
 
 .detailsSummaryLine b {
   color: #0f172a;
+}
+
+.detailsSection {
+  display: grid;
+  gap: 14px;
+}
+
+.detailsSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.detailsSectionHeader .sectionIntro {
+  gap: 6px;
+}
+
+.detailsSectionHeader h2,
+.detailsSectionHeader h3 {
+  margin: 0;
+}
+
+.detailsSectionHeader p {
+  color: #64748b;
 }
 
 .formPanel {
@@ -1436,6 +1513,10 @@ label {
     padding-left: 2px;
   }
 
+  .detailsSummaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .detailsSummaryLine {
     gap: 6px;
     font-size: 14px;
@@ -1607,6 +1688,11 @@ label {
     flex-direction: column;
   }
 
+  .detailsSectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .historyChangeLine {
     grid-template-columns: 1fr;
     gap: 4px;
@@ -1702,9 +1788,8 @@ label {
     padding: 14px;
   }
 
-  .detailsSummaryLine {
-    flex-direction: column;
-    gap: 2px;
+  .detailsSummaryGrid {
+    grid-template-columns: 1fr;
   }
 
   .table {

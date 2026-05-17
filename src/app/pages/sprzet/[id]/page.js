@@ -59,11 +59,7 @@ export default function SprzetDetailsPage() {
 
       if (cancelled) return;
 
-      if (headerRes.ok) {
-        setHeader(headerRes.data);
-      } else {
-        setHeader(null);
-      }
+      setHeader(headerRes.ok ? headerRes.data : null);
 
       if (detailsRes.ok) {
         setItems(Array.isArray(detailsRes.data) ? detailsRes.data : []);
@@ -170,33 +166,47 @@ export default function SprzetDetailsPage() {
   };
 
   return (
-    <div>
+    <div className="detailsPage">
       <button
         type="button"
-        className="secondary"
+        className="secondary detailsBackButton"
         onClick={() => router.push("/pages/sprzet")}
       >
         Wróć do listy
       </button>
 
-      <h1>Szczegóły sprzętu</h1>
+      <div className="detailsHero">
+        <div className="sectionIntro">
+          <span className="rowEyebrow">Sprzęt</span>
+          <h1>Szczegóły sprzętu</h1>
+          <p>Najważniejsze dane sprzętu oraz pełna historia zdarzeń i zgłoszeń.</p>
+        </div>
 
-      {header ? (
-        <div className="card detailsSummary" style={{ marginBottom: 16 }}>
-          <div className="detailsSummaryContent">
-            <div className="detailsSummaryLine">
-              <b>Nr:</b> <span>{header.nr ?? "-"}</span>
-              <b>Rodzaj:</b> <span>{header.rodzaj}</span>
-            </div>
-            <div className="detailsSummaryLine">
-              <b>Marka/Model:</b> <span>{header.marka} {header.model}</span>
-              <b>Brygadzista:</b> <span>{header.brygadzista}</span>
+        {header ? (
+          <div className="card detailsSummary">
+            <div className="detailsSummaryContent detailsSummaryGrid">
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Numer</span>
+                <strong className="detailsStatValue">{header.nr ?? "-"}</strong>
+              </div>
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Rodzaj</span>
+                <strong className="detailsStatValue">{header.rodzaj || "-"}</strong>
+              </div>
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Marka / model</span>
+                <strong className="detailsStatValue">{`${header.marka || "-"} ${header.model || ""}`.trim()}</strong>
+              </div>
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Brygadzista</span>
+                <strong className="detailsStatValue">{header.brygadzista || "-"}</strong>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <p>Ładowanie...</p>
-      )}
+        ) : (
+          <p>Ładowanie...</p>
+        )}
+      </div>
 
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
@@ -233,9 +243,7 @@ export default function SprzetDetailsPage() {
                 <input
                   type="date"
                   value={form.data_zdarzenia}
-                  onChange={(e) =>
-                    setForm({ ...form, data_zdarzenia: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, data_zdarzenia: e.target.value })}
                   required
                 />
               </label>
@@ -255,9 +263,7 @@ export default function SprzetDetailsPage() {
                 <span>Awaria</span>
                 <input
                   value={form.awaria}
-                  onChange={(e) =>
-                    setForm({ ...form, awaria: e.target.value.slice(0, 30) })
-                  }
+                  onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 30) })}
                   placeholder="np. Uszkodzony przewód"
                 />
               </label>
@@ -266,9 +272,7 @@ export default function SprzetDetailsPage() {
                 <span>Wykonawca</span>
                 <input
                   value={form.wykonawca}
-                  onChange={(e) =>
-                    setForm({ ...form, wykonawca: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
                   placeholder="np. Serwis wewnętrzny"
                 />
               </label>
@@ -277,19 +281,9 @@ export default function SprzetDetailsPage() {
                 <span>Uwagi</span>
                 <textarea
                   value={form.uwagi}
-                  onChange={(e) =>
-                    setForm({ ...form, uwagi: e.target.value.slice(0, 200) })
-                  }
+                  onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
                   rows={3}
                   placeholder="Krótki opis zdarzenia..."
-                  style={{
-                    width: "100%",
-                    resize: "vertical",
-                    padding: 8,
-                    borderRadius: 6,
-                    border: "1px solid #cfd4dc",
-                    background: "#fff",
-                  }}
                 />
               </label>
             </div>
@@ -309,59 +303,67 @@ export default function SprzetDetailsPage() {
         </div>
       </section>
 
-      <h2>Historia zdarzeń</h2>
+      <section className="detailsSection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Historia</span>
+            <h2>Historia zdarzeń</h2>
+            <p>Wszystkie wpisy dotyczące tego sprzętu w jednym, czytelnym widoku.</p>
+          </div>
+        </div>
 
-      <div className="tableWrap">
-        {items.length === 0 ? (
-          <p>Brak wpisów</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Przebieg</th>
-                <th>Awaria</th>
-                <th>Wykonawca</th>
-                <th>Uwagi</th>
-                <th>Akcje</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td data-label="Data">
-                    {item.data_zdarzenia
-                      ? String(item.data_zdarzenia).slice(0, 10)
-                      : "-"}
-                  </td>
-                  <td data-label="Przebieg">{item.przebieg ?? "-"}</td>
-                  <td data-label="Awaria">{item.awaria || "-"}</td>
-                  <td data-label="Wykonawca">{item.wykonawca || "-"}</td>
-                  <td
-                    data-label="Uwagi"
-                    style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
-                  >
-                    {item.uwagi || "-"}
-                  </td>
-                  <td className="actionsCell" data-label="Akcje">
-                    <button type="button" onClick={() => edit(item)}>
-                      Edytuj
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={() => del(item.id)}
-                    >
-                      Usuń
-                    </button>
-                  </td>
+        <div className="tableWrap">
+          {items.length === 0 ? (
+            <p>Brak wpisów</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Przebieg</th>
+                  <th>Awaria</th>
+                  <th>Wykonawca</th>
+                  <th>Uwagi</th>
+                  <th>Akcje</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              </thead>
+
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.id}>
+                    <td data-label="Data">
+                      {item.data_zdarzenia
+                        ? String(item.data_zdarzenia).slice(0, 10)
+                        : "-"}
+                    </td>
+                    <td data-label="Przebieg">{item.przebieg ?? "-"}</td>
+                    <td data-label="Awaria">{item.awaria || "-"}</td>
+                    <td data-label="Wykonawca">{item.wykonawca || "-"}</td>
+                    <td
+                      data-label="Uwagi"
+                      style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
+                    >
+                      {item.uwagi || "-"}
+                    </td>
+                    <td className="actionsCell" data-label="Akcje">
+                      <button type="button" onClick={() => edit(item)}>
+                        Edytuj
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => del(item.id)}
+                      >
+                        Usuń
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

@@ -170,29 +170,39 @@ export default function BrygadaDetails() {
   };
 
   return (
-    <div>
+    <div className="detailsPage">
       <button
         type="button"
-        className="secondary"
+        className="secondary detailsBackButton"
         onClick={() => router.push("/pages/brygady")}
       >
         Wróć do listy
       </button>
 
-      <h1>Szczegóły brygady</h1>
+      <div className="detailsHero">
+        <div className="sectionIntro">
+          <span className="rowEyebrow">Brygada</span>
+          <h1>Szczegóły brygady</h1>
+          <p>Podgląd danych brygady i lista jej członków w bardziej czytelnym układzie.</p>
+        </div>
 
-      {header ? (
-        <div className="card detailsSummary" style={{ marginBottom: 16 }}>
-          <div className="detailsSummaryContent">
-            <div className="detailsSummaryLine">
-              <b>Numer:</b> <span>{header.numer}</span>
-              <b>Brygadzista:</b> <span>{header.brygadzista}</span>
+        {header ? (
+          <div className="card detailsSummary">
+            <div className="detailsSummaryContent detailsSummaryGrid">
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Numer</span>
+                <strong className="detailsStatValue">{header.numer || "-"}</strong>
+              </div>
+              <div className="detailsStat">
+                <span className="detailsStatLabel">Brygadzista</span>
+                <strong className="detailsStatValue">{header.brygadzista || "-"}</strong>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <p>Ładowanie...</p>
-      )}
+        ) : (
+          <p>Ładowanie...</p>
+        )}
+      </div>
 
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
@@ -206,9 +216,7 @@ export default function BrygadaDetails() {
           </div>
 
           <button type="button" onClick={toggleForm}>
-            <span
-              className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}
-            >
+            <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
               <span className="formPanelToggleIcon" aria-hidden="true">
                 {isFormOpen ? "−" : "+"}
               </span>
@@ -277,57 +285,65 @@ export default function BrygadaDetails() {
         </div>
       </section>
 
-      <h2>Członkowie</h2>
+      <section className="detailsSection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Zespół</span>
+            <h2>Członkowie</h2>
+            <p>Osoby przypisane do tej brygady wraz z rolą i kontaktem.</p>
+          </div>
+        </div>
 
-      <div className="tableWrap">
-        {items.length === 0 ? (
-          <p>Brak członków</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Lp.</th>
-                <th>Imię</th>
-                <th>Nazwisko</th>
-                <th>Rola</th>
-                <th>Telefon</th>
-                <th>Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((member, index) => (
-                <tr key={member.id}>
-                  <td data-label="Lp.">{index + 1}</td>
-                  <td data-label="Imię">{member.imie ?? member.Imie ?? "-"}</td>
-                  <td data-label="Nazwisko">
-                    {member.nazwisko ?? member.Nazwisko ?? "-"}
-                  </td>
-                  <td data-label="Rola">{member.rola ?? member.Rola ?? "-"}</td>
-                  <td data-label="Telefon">
-                    {member.telefon ?? member.Telefon ?? "-"}
-                  </td>
-                  <td className="actionsCell" data-label="Akcje">
-                    <button
-                      type="button"
-                      className="secondary"
-                      onClick={() => handleEdit(member)}
-                    >
-                      Edytuj
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={() => handleDelete(member.id)}
-                    >
-                      Usuń
-                    </button>
-                  </td>
+        <div className="tableWrap">
+          {items.length === 0 ? (
+            <p>Brak członków</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Lp.</th>
+                  <th>Imię</th>
+                  <th>Nazwisko</th>
+                  <th>Rola</th>
+                  <th>Telefon</th>
+                  <th>Akcje</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              </thead>
+              <tbody>
+                {items.map((member, index) => (
+                  <tr key={member.id}>
+                    <td data-label="Lp.">{index + 1}</td>
+                    <td data-label="Imię">{member.imie ?? member.Imie ?? "-"}</td>
+                    <td data-label="Nazwisko">
+                      {member.nazwisko ?? member.Nazwisko ?? "-"}
+                    </td>
+                    <td data-label="Rola">{member.rola ?? member.Rola ?? "-"}</td>
+                    <td data-label="Telefon">
+                      {member.telefon ?? member.Telefon ?? "-"}
+                    </td>
+                    <td className="actionsCell" data-label="Akcje">
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => handleEdit(member)}
+                      >
+                        Edytuj
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => handleDelete(member.id)}
+                      >
+                        Usuń
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
