@@ -35,7 +35,7 @@ export async function PUT(req, { params }) {
     }
 
     const beforeResult = await pool.query(
-      `SELECT id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi
+      `SELECT id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, status_awarii
        FROM sprzet_details
        WHERE id=$1 AND sprzet_id=$2`,
       [detailId, sprzetId]
@@ -53,19 +53,23 @@ export async function PUT(req, { params }) {
     const awaria = body?.awaria?.trim() || null;
     const wykonawca = body?.wykonawca?.trim() || null;
     const uwagi = body?.uwagi?.trim() || null;
+    const statusAwarii = awaria
+      ? String(body?.status_awarii || before.status_awarii || "nowa").trim() || "nowa"
+      : "brak";
     const sprzetNr = await getSprzetNr(sprzetId);
 
     const { rows } = await pool.query(
       `UPDATE sprzet_details
-       SET data_zdarzenia=$1, przebieg=$2, awaria=$3, wykonawca=$4, uwagi=$5
-       WHERE id=$6 AND sprzet_id=$7
-       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi`,
+       SET data_zdarzenia=$1, przebieg=$2, awaria=$3, wykonawca=$4, uwagi=$5, status_awarii=$6
+       WHERE id=$7 AND sprzet_id=$8
+       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, status_awarii`,
       [
         data_zdarzenia,
         Number.isFinite(przebieg) ? przebieg : null,
         awaria,
         wykonawca,
         uwagi,
+        statusAwarii,
         detailId,
         sprzetId,
       ]
@@ -96,7 +100,7 @@ export async function DELETE(req, { params }) {
     const { rows } = await pool.query(
       `DELETE FROM sprzet_details
        WHERE id=$1 AND sprzet_id=$2
-       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi`,
+       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, status_awarii`,
       [detailId, sprzetId]
     );
 

@@ -26,7 +26,7 @@ export async function GET(req, { params }) {
     }
 
     const { rows } = await pool.query(
-      `SELECT id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi
+      `SELECT id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, status_awarii
        FROM sprzet_details
        WHERE sprzet_id = $1
        ORDER BY data_zdarzenia DESC, id DESC`,
@@ -55,6 +55,9 @@ export async function POST(req, { params }) {
     const awaria = body?.awaria?.trim() || null;
     const wykonawca = body?.wykonawca?.trim() || null;
     const uwagi = body?.uwagi?.trim() || null;
+    const statusAwarii = awaria
+      ? String(body?.status_awarii || "nowa").trim() || "nowa"
+      : "brak";
 
     const sprzetResult = await pool.query(`SELECT nr FROM sprzet WHERE id=$1`, [
       sprzetId,
@@ -62,9 +65,11 @@ export async function POST(req, { params }) {
     const sprzetNr = sprzetResult.rows[0]?.nr || null;
 
     const { rows } = await pool.query(
-      `INSERT INTO sprzet_details (sprzet_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi`,
+      `INSERT INTO sprzet_details (
+         sprzet_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, status_awarii
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, status_awarii`,
       [
         sprzetId,
         data_zdarzenia,
@@ -72,6 +77,7 @@ export async function POST(req, { params }) {
         awaria,
         wykonawca,
         uwagi,
+        statusAwarii,
       ]
     );
 

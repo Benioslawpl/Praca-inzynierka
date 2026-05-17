@@ -43,6 +43,20 @@ export default function MaszynaDetails() {
     setItems(Array.isArray(data) ? data : []);
   };
 
+  const loadReports = async (machineId) => {
+    const res = await fetch(`/api/maszyny/${machineId}/raporty`, {
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setReports([]);
+      return;
+    }
+
+    setReports(Array.isArray(data) ? data : []);
+  };
+
   useEffect(() => {
     if (!id) return;
 
@@ -205,6 +219,25 @@ export default function MaszynaDetails() {
 
     setIsFormOpen(true);
     setErr("");
+  };
+
+  const markAsResolved = async (report) => {
+    setErr("");
+
+    try {
+      const res = await fetch(`/api/maszyny/${id}/raporty/${report.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status_awarii: "zamknieta" }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Nie udało się zamknąć awarii");
+
+      await Promise.all([loadReports(id), loadDetails(id)]);
+    } catch (error) {
+      setErr(error.message || "Nie udało się zamknąć awarii");
+    }
   };
 
   const renderSource = (item) => {
@@ -412,6 +445,17 @@ export default function MaszynaDetails() {
                   <span>Status: {report.status_awarii || "nowa"}</span>
                   <span>Motogodziny: {report.motogodziny ?? "brak"}</span>
                 </div>
+                {canManage ? (
+                  <div className="actions">
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => markAsResolved(report)}
+                    >
+                      Oznacz jako naprawioną
+                    </button>
+                  </div>
+                ) : null}
               </article>
             ))}
           </div>

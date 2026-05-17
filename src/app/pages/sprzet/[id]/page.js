@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function SprzetDetailsPage() {
@@ -15,6 +15,7 @@ export default function SprzetDetailsPage() {
   const emptyForm = {
     przebieg: "",
     awaria: "",
+    status_awarii: "brak",
     wykonawca: "",
     uwagi: "",
     data_zdarzenia: today,
@@ -24,7 +25,14 @@ export default function SprzetDetailsPage() {
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
-  const activeFailures = items.filter((item) => item?.awaria);
+
+  const activeFailures = useMemo(
+    () =>
+      items.filter(
+        (item) => item?.awaria && String(item?.status_awarii || "") !== "zamknieta"
+      ),
+    [items]
+  );
 
   const loadDetails = async (sprzetId) => {
     const res = await fetch(`/api/sprzet/${sprzetId}/details`, {
@@ -93,6 +101,7 @@ export default function SprzetDetailsPage() {
       const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
         awaria: form.awaria?.trim() || null,
+        status_awarii: form.awaria?.trim() ? form.status_awarii : "brak",
         wykonawca: form.wykonawca?.trim() || null,
         uwagi: form.uwagi?.trim() || null,
         data_zdarzenia: form.data_zdarzenia || null,
@@ -127,6 +136,7 @@ export default function SprzetDetailsPage() {
     setForm({
       przebieg: item.przebieg ?? "",
       awaria: item.awaria ?? "",
+      status_awarii: item.status_awarii ?? (item.awaria ? "nowa" : "brak"),
       wykonawca: item.wykonawca ?? "",
       uwagi: item.uwagi ?? "",
       data_zdarzenia: item.data_zdarzenia
@@ -151,6 +161,32 @@ export default function SprzetDetailsPage() {
     setErr(data?.error || "Błąd usuwania");
   };
 
+  const markAsResolved = async (item) => {
+    setErr("");
+
+    try {
+      const res = await fetch(`/api/sprzet/${id}/details/${item.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data_zdarzenia: item.data_zdarzenia,
+          przebieg: item.przebieg,
+          awaria: item.awaria,
+          status_awarii: "zamknieta",
+          wykonawca: item.wykonawca,
+          uwagi: item.uwagi,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Nie udało się zamknąć awarii");
+
+      await loadDetails(id);
+    } catch (error) {
+      setErr(error.message || "Nie udało się zamknąć awarii");
+    }
+  };
+
   const toggleForm = () => {
     if (editId) {
       setIsFormOpen(true);
@@ -172,6 +208,22 @@ export default function SprzetDetailsPage() {
     }
 
     return <span className="historyBadge historyBadgeDanger">{value}</span>;
+  };
+
+  const renderFailureStatus = (status) => {
+    if (status === "zamknieta") {
+      return <span className="historyBadge historyBadgeSuccess">naprawiona</span>;
+    }
+
+    if (status === "w trakcie") {
+      return <span className="historyBadge historyBadgeInfo">w trakcie</span>;
+    }
+
+    if (status === "nowa") {
+      return <span className="historyBadge historyBadgeDanger">nowa</span>;
+    }
+
+    return <span className="historyBadge historyBadgeNeutral">brak</span>;
   };
 
   return (
@@ -272,9 +324,36 @@ export default function SprzetDetailsPage() {
                 <span>Awaria</span>
                 <input
                   value={form.awaria}
-                  onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 30) })}
+                  onChange={(e) =>
+                    setForm((current) => {
+                      const awaria = e.target.value.slice(0, 30);
+                      return {
+                        ...current,
+                        awaria,
+                        status_awarii: awaria
+                          ? current.status_awarii === "brak"
+                            ? "nowa"
+                            : current.status_awarii
+                          : "brak",
+                      };
+                    })
+                  }
                   placeholder="np. Uszkodzony przewód"
                 />
+              </label>
+
+              <label>
+                <span>Status awarii</span>
+                <select
+                  value={form.status_awarii}
+                  onChange={(e) => setForm({ ...form, status_awarii: e.target.value })}
+                  disabled={!form.awaria.trim()}
+                >
+                  <option value="brak">brak</option>
+                  <option value="nowa">nowa</option>
+                  <option value="w trakcie">w trakcie</option>
+                  <option value="zamknieta">naprawiona</option>
+                </select>
               </label>
 
               <label>
@@ -342,8 +421,18 @@ export default function SprzetDetailsPage() {
                 <div className="historyActiveMeta">
                   <span>Wykonawca: {item.wykonawca || "brak"}</span>
                   <span>Przebieg / licznik: {item.przebieg ?? "brak"}</span>
+                  <span>Status: {item.status_awarii || "nowa"}</span>
                 </div>
                 {item.uwagi ? <p className="mutedText">{item.uwagi}</p> : null}
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => markAsResolved(item)}
+                  >
+                    Oznacz jako naprawioną
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -369,6 +458,7 @@ export default function SprzetDetailsPage() {
                   <th>Data</th>
                   <th>Przebieg</th>
                   <th>Awaria</th>
+                  <th>Status</th>
                   <th>Wykonawca</th>
                   <th>Uwagi</th>
                   <th>Akcje</th>
@@ -377,7 +467,14 @@ export default function SprzetDetailsPage() {
 
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id} className={item.awaria ? "historyRowActive" : ""}>
+                  <tr
+                    key={item.id}
+                    className={
+                      item.awaria && item.status_awarii !== "zamknieta"
+                        ? "historyRowActive"
+                        : ""
+                    }
+                  >
                     <td data-label="Data">
                       {item.data_zdarzenia
                         ? String(item.data_zdarzenia).slice(0, 10)
@@ -389,20 +486,18 @@ export default function SprzetDetailsPage() {
                     <td data-label="Awaria">
                       <div className="historyFailureCell">
                         {renderFailure(item.awaria)}
-                        {item.awaria ? (
+                        {item.awaria && item.status_awarii !== "zamknieta" ? (
                           <span className="historyBadge historyBadgeOutlineDanger">
                             aktywna
                           </span>
                         ) : null}
                       </div>
                     </td>
+                    <td data-label="Status">{renderFailureStatus(item.status_awarii)}</td>
                     <td data-label="Wykonawca">
                       {item.wykonawca || <span className="historyEmptyValue">brak</span>}
                     </td>
-                    <td
-                      data-label="Uwagi"
-                      className="historyNotesCell"
-                    >
+                    <td data-label="Uwagi" className="historyNotesCell">
                       {item.uwagi || <span className="historyEmptyValue">brak uwag</span>}
                     </td>
                     <td className="actionsCell" data-label="Akcje">

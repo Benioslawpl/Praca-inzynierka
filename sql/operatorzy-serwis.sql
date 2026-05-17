@@ -6,6 +6,18 @@ alter table public.maszyny_details
   add column if not exists zrodlo text not null default 'serwis',
   add column if not exists reporter_username text;
 
+alter table if exists public.sprzet_details
+  add column if not exists status_awarii text not null default 'brak';
+
+update public.sprzet_details
+set status_awarii = case
+  when coalesce(nullif(btrim(awaria), ''), '') <> '' then 'nowa'
+  else 'brak'
+end
+where status_awarii is null
+   or btrim(status_awarii) = ''
+   or status_awarii = 'brak';
+
 create table if not exists public.maszyna_operatorzy (
   id bigserial primary key,
   maszyna_id bigint not null references public.maszyny(id) on delete cascade,
