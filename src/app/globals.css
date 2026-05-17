@@ -1418,6 +1418,56 @@ label {
   border-top: 1px solid #edf2f7;
 }
 
+.historyBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  border: 1px solid transparent;
+}
+
+.historyBadgeNeutral {
+  background: #f8fafc;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.historyBadgeInfo {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.historyBadgeSuccess {
+  background: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.historyBadgeDanger {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.historyEmptyValue {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.historyNotesCell {
+  max-width: 360px;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
 .historyChangeLine {
   display: grid;
   grid-template-columns: minmax(120px, 160px) minmax(0, 1fr) auto minmax(0, 1fr);

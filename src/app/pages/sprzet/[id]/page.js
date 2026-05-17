@@ -165,6 +165,14 @@ export default function SprzetDetailsPage() {
     setErr("");
   };
 
+  const renderFailure = (value) => {
+    if (!value) {
+      return <span className="historyBadge historyBadgeSuccess">brak awarii</span>;
+    }
+
+    return <span className="historyBadge historyBadgeDanger">{value}</span>;
+  };
+
   return (
     <div className="detailsPage">
       <button
@@ -336,14 +344,18 @@ export default function SprzetDetailsPage() {
                         ? String(item.data_zdarzenia).slice(0, 10)
                         : "-"}
                     </td>
-                    <td data-label="Przebieg">{item.przebieg ?? "-"}</td>
-                    <td data-label="Awaria">{item.awaria || "-"}</td>
-                    <td data-label="Wykonawca">{item.wykonawca || "-"}</td>
+                    <td data-label="Przebieg">
+                      {item.przebieg ?? <span className="historyEmptyValue">brak</span>}
+                    </td>
+                    <td data-label="Awaria">{renderFailure(item.awaria)}</td>
+                    <td data-label="Wykonawca">
+                      {item.wykonawca || <span className="historyEmptyValue">brak</span>}
+                    </td>
                     <td
                       data-label="Uwagi"
-                      style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
+                      className="historyNotesCell"
                     >
-                      {item.uwagi || "-"}
+                      {item.uwagi || <span className="historyEmptyValue">brak uwag</span>}
                     </td>
                     <td className="actionsCell" data-label="Akcje">
                       <button type="button" onClick={() => edit(item)}>

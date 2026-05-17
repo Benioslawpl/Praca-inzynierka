@@ -180,6 +180,29 @@ export default function MaszynaDetails() {
     setErr("");
   };
 
+  const renderSource = (item) => {
+    const isOperator = item.zrodlo === "operator";
+    const label = isOperator
+      ? item.reporter_username
+        ? `operator: ${item.reporter_username}`
+        : "operator"
+      : "serwis";
+
+    return (
+      <span className={`historyBadge ${isOperator ? "historyBadgeInfo" : "historyBadgeNeutral"}`}>
+        {label}
+      </span>
+    );
+  };
+
+  const renderFailure = (value) => {
+    if (!value) {
+      return <span className="historyBadge historyBadgeSuccess">brak awarii</span>;
+    }
+
+    return <span className="historyBadge historyBadgeDanger">{value}</span>;
+  };
+
   return (
     <div className="detailsPage">
       <button
@@ -373,19 +396,19 @@ export default function MaszynaDetails() {
                         ? String(item.data_zdarzenia).slice(0, 10)
                         : "-"}
                     </td>
-                    <td data-label="Źródło">
-                      {item.zrodlo === "operator"
-                        ? `operator${item.reporter_username ? `: ${item.reporter_username}` : ""}`
-                        : "serwis"}
+                    <td data-label="Źródło">{renderSource(item)}</td>
+                    <td data-label="Przebieg">
+                      {item.przebieg ?? <span className="historyEmptyValue">brak</span>}
                     </td>
-                    <td data-label="Przebieg">{item.przebieg ?? "-"}</td>
-                    <td data-label="Awaria">{item.awaria || "-"}</td>
-                    <td data-label="Wykonawca">{item.wykonawca || "-"}</td>
+                    <td data-label="Awaria">{renderFailure(item.awaria)}</td>
+                    <td data-label="Wykonawca">
+                      {item.wykonawca || <span className="historyEmptyValue">brak</span>}
+                    </td>
                     <td
                       data-label="Uwagi"
-                      style={{ maxWidth: 360, whiteSpace: "pre-wrap" }}
+                      className="historyNotesCell"
                     >
-                      {item.uwagi || "-"}
+                      {item.uwagi || <span className="historyEmptyValue">brak uwag</span>}
                     </td>
                     <td className="actionsCell" data-label="Akcje">
                       {canManage ? (
