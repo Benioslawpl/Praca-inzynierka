@@ -27,6 +27,28 @@ export default function MaszynaDetails() {
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [serviceFormOpen, setServiceFormOpen] = useState(false);
+  const [serviceSaving, setServiceSaving] = useState(false);
+  const [serviceForm, setServiceForm] = useState({
+    data_zdarzenia: today,
+    wykonany_przy_mth: "",
+    wykonawca: "",
+    uwagi: "",
+  });
+
+  const loadHeader = async (machineId) => {
+    const res = await fetch(`/api/maszyny/${machineId}`, {
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      setHeader(null);
+      return;
+    }
+
+    setHeader(data);
+  };
 
   const loadDetails = async (machineId) => {
     const res = await fetch(`/api/maszyny/${machineId}/details`, {
@@ -114,6 +136,41 @@ export default function MaszynaDetails() {
     [reports]
   );
 
+  const latestHours = useMemo(() => {
+    for (const report of reports) {
+      const value = Number(report?.motogodziny);
+      if (Number.isFinite(value)) return value;
+    }
+
+    return null;
+  }, [reports]);
+
+  const serviceAlert = useMemo(() => {
+    const interval = Number(header?.serwis_co_ile_mth);
+    const lastService = Number(header?.ostatni_serwis_mth);
+
+    if (
+      !Number.isFinite(interval) ||
+      interval <= 0 ||
+      !Number.isFinite(lastService) ||
+      !Number.isFinite(latestHours)
+    ) {
+      return null;
+    }
+
+    const nextServiceAt = lastService + interval;
+    const remaining = nextServiceAt - latestHours;
+
+    if (remaining > 20) return null;
+
+    return {
+      currentHours: latestHours,
+      nextServiceAt,
+      remaining,
+      overdue: remaining < 0,
+    };
+  }, [header, latestHours]);
+
   const activeFailureKeys = useMemo(
     () =>
       new Set(
@@ -131,6 +188,24 @@ export default function MaszynaDetails() {
     if (sourceFilter === "all") return true;
     return (item?.zrodlo || "serwis") === sourceFilter;
   });
+
+  useEffect(() => {
+    if (!serviceAlert) {
+      setServiceForm((current) => ({
+        ...current,
+        wykonany_przy_mth: latestHours ?? "",
+      }));
+      return;
+    }
+
+    setServiceForm((current) => ({
+      ...current,
+      wykonany_przy_mth:
+        current.wykonany_przy_mth === "" || Number(current.wykonany_przy_mth) !== latestHours
+          ? latestHours ?? ""
+          : current.wykonany_przy_mth,
+    }));
+  }, [serviceAlert, latestHours]);
 
   const reset = () => {
     setForm(emptyForm);
@@ -240,6 +315,44 @@ export default function MaszynaDetails() {
     }
   };
 
+  const submitService = async (e) => {
+    e.preventDefault();
+    setServiceSaving(true);
+    setErr("");
+
+    try {
+      const res = await fetch(`/api/maszyny/${id}/serwis`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data_zdarzenia: serviceForm.data_zdarzenia || null,
+          wykonany_przy_mth:
+            serviceForm.wykonany_przy_mth === ""
+              ? latestHours
+              : Number(serviceForm.wykonany_przy_mth),
+          wykonawca: serviceForm.wykonawca.trim(),
+          uwagi: serviceForm.uwagi.trim() || null,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Nie udało się zapisać serwisu");
+
+      setServiceForm({
+        data_zdarzenia: today,
+        wykonany_przy_mth: latestHours ?? "",
+        wykonawca: "",
+        uwagi: "",
+      });
+      setServiceFormOpen(false);
+      await Promise.all([loadHeader(id), loadDetails(id), loadReports(id)]);
+    } catch (error) {
+      setErr(error.message || "Nie udało się zapisać serwisu");
+    } finally {
+      setServiceSaving(false);
+    }
+  };
+
   const renderSource = (item) => {
     const isOperator = item.zrodlo === "operator";
     const label = isOperator
@@ -315,6 +428,151 @@ export default function MaszynaDetails() {
           <p>Ładowanie...</p>
         )}
       </div>
+
+      {serviceAlert ? (
+        <section className="detailsSection">
+          <div className="detailsSectionHeader">
+            <div className="sectionIntro">
+              <span className="rowEyebrow">Serwis</span>
+              <h2>Nadchodzący serwis</h2>
+              <p>
+                {serviceAlert.overdue
+                  ? "Maszyna przekroczyła próg serwisowy i wymaga potwierdzenia wykonania przeglądu."
+                  : "Maszyna zbliża się do progu serwisowego i warto zaplanować przegląd."}
+              </p>
+            </div>
+
+            <div className="historyCount">
+              <strong>{Math.round(Math.abs(serviceAlert.remaining))}</strong>
+              <span>{serviceAlert.overdue ? "mth po terminie" : "mth do serwisu"}</span>
+            </div>
+          </div>
+
+          <div
+            className={`historyActiveCard serviceActiveCard ${
+              serviceAlert.overdue ? "serviceActiveCardOverdue" : "serviceActiveCardSoon"
+            }`}
+          >
+            <div className="historyActiveCardTop">
+              <span
+                className={`historyBadge ${
+                  serviceAlert.overdue ? "historyBadgeDanger" : "historyBadgeInfo"
+                }`}
+              >
+                {serviceAlert.overdue ? "serwis pilny" : "serwis wkrótce"}
+              </span>
+              <span className="mutedText">próg: {serviceAlert.nextServiceAt} mth</span>
+            </div>
+
+            <strong className="historyActiveTitle">
+              {serviceAlert.overdue
+                ? `Przegląd przekroczony o ${Math.round(Math.abs(serviceAlert.remaining))} mth`
+                : `Do przeglądu zostało około ${Math.round(serviceAlert.remaining)} mth`}
+            </strong>
+
+            <div className="historyActiveMeta">
+              <span>Aktualny stan licznika: {serviceAlert.currentHours} mth</span>
+              <span>Ostatni serwis: {header?.ostatni_serwis_mth ?? "brak"} mth</span>
+              <span>Interwał: {header?.serwis_co_ile_mth ?? "brak"} mth</span>
+            </div>
+
+            {canManage ? (
+              <>
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => setServiceFormOpen((current) => !current)}
+                  >
+                    {serviceFormOpen ? "Ukryj formularz serwisu" : "Potwierdź wykonanie serwisu"}
+                  </button>
+                </div>
+
+                {serviceFormOpen ? (
+                  <form className="card serviceInlineForm" onSubmit={submitService}>
+                    <div className="grid">
+                      <label>
+                        <span>Data serwisu</span>
+                        <input
+                          type="date"
+                          value={serviceForm.data_zdarzenia}
+                          onChange={(e) =>
+                            setServiceForm({
+                              ...serviceForm,
+                              data_zdarzenia: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </label>
+
+                      <label>
+                        <span>Wykonano przy (mth)</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={serviceForm.wykonany_przy_mth}
+                          onChange={(e) =>
+                            setServiceForm({
+                              ...serviceForm,
+                              wykonany_przy_mth: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </label>
+
+                      <label>
+                        <span>Wykonawca</span>
+                        <input
+                          value={serviceForm.wykonawca}
+                          onChange={(e) =>
+                            setServiceForm({
+                              ...serviceForm,
+                              wykonawca: e.target.value,
+                            })
+                          }
+                          placeholder="np. Serwis XYZ"
+                          required
+                        />
+                      </label>
+
+                      <label style={{ gridColumn: "1 / -1" }}>
+                        <span>Uwagi</span>
+                        <textarea
+                          rows={3}
+                          value={serviceForm.uwagi}
+                          onChange={(e) =>
+                            setServiceForm({
+                              ...serviceForm,
+                              uwagi: e.target.value,
+                            })
+                          }
+                          placeholder="Co zostało wykonane podczas serwisu..."
+                        />
+                      </label>
+                    </div>
+
+                    <div className="actions">
+                      <button type="submit" disabled={serviceSaving}>
+                        {serviceSaving ? "Zapisywanie..." : "Zapisz wykonany serwis"}
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => setServiceFormOpen(false)}
+                      >
+                        Anuluj
+                      </button>
+                    </div>
+                  </form>
+                ) : null}
+              </>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {canManage ? (
         <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>

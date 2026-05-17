@@ -53,7 +53,6 @@ export default function HomeDashboardClient({ user }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState(null);
-  const [serviceSavingId, setServiceSavingId] = useState(null);
   const [forms, setForms] = useState({});
 
   const refreshDashboard = async () => {
@@ -125,30 +124,6 @@ export default function HomeDashboardClient({ user }) {
       setError(err.message || "Nie udało się zapisać raportu");
     } finally {
       setSavingId(null);
-    }
-  };
-
-  const markServiceDone = async (item) => {
-    setServiceSavingId(item.machineId);
-    setError("");
-
-    try {
-      const res = await fetch(`/api/maszyny/${item.machineId}/serwis`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wykonany_przy_mth: item.currentHours }),
-      });
-
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(payload?.error || "Nie udało się oznaczyć serwisu");
-      }
-
-      await refreshDashboard();
-    } catch (err) {
-      setError(err.message || "Nie udało się oznaczyć serwisu");
-    } finally {
-      setServiceSavingId(null);
     }
   };
 
@@ -279,40 +254,27 @@ export default function HomeDashboardClient({ user }) {
                   </div>
                 ) : (
                   serviceAlerts.map((item) => (
-                    <article
-                      className={`dashboardServiceCard dashboardServiceCard-${item.kind}`}
+                    <Link
+                      href={`/pages/maszyny/${item.machineId}`}
+                      className="dashboardAlertLinkWrap"
                       key={`${item.kind}-${item.machineId}`}
                     >
-                      <Link
-                        href={`/pages/maszyny/${item.machineId}`}
-                        className="dashboardServiceLink"
-                      >
-                        <div className="dashboardAlertLead">
-                          <span className="dashboardAlertDot" aria-hidden="true" />
+                      <div className={`dashboardServiceCard dashboardServiceCard-${item.kind}`}>
+                        <div className="dashboardServiceLink">
+                          <div className="dashboardAlertLead">
+                            <span className="dashboardAlertDot" aria-hidden="true" />
+                          </div>
+                          <div className="compactListMain">
+                            <strong>{item.title}</strong>
+                            <span className="dashboardAlertText">{item.description}</span>
+                            <span className="mutedText">{item.meta}</span>
+                          </div>
+                          <span className={`pill ${item.kind === "overdue" ? "bad" : ""}`}>
+                            {item.kind === "overdue" ? "pilne" : "wkrótce"}
+                          </span>
                         </div>
-                        <div className="compactListMain">
-                          <strong>{item.title}</strong>
-                          <span className="dashboardAlertText">{item.description}</span>
-                          <span className="mutedText">{item.meta}</span>
-                        </div>
-                        <span className={`pill ${item.kind === "overdue" ? "bad" : ""}`}>
-                          {item.kind === "overdue" ? "pilne" : "wkrótce"}
-                        </span>
-                      </Link>
-
-                      <div className="dashboardServiceActions">
-                        <button
-                          type="button"
-                          className="secondary"
-                          disabled={serviceSavingId === item.machineId}
-                          onClick={() => markServiceDone(item)}
-                        >
-                          {serviceSavingId === item.machineId
-                            ? "Zapisywanie..."
-                            : "Serwis wykonany"}
-                        </button>
                       </div>
-                    </article>
+                    </Link>
                   ))
                 )}
               </div>

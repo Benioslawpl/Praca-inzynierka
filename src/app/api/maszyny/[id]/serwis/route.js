@@ -37,9 +37,16 @@ export async function POST(req, { params }) {
 
   const body = await req.json().catch(() => ({}));
   const wykonanyPrzyMth = Number(body?.wykonany_przy_mth);
+  const wykonawca = String(body?.wykonawca || "").trim();
+  const uwagi = String(body?.uwagi || "").trim();
+  const dataZdarzenia = String(body?.data_zdarzenia || "").trim() || null;
 
   if (!Number.isFinite(wykonanyPrzyMth)) {
     return Response.json({ error: "Nieprawidłowy przebieg serwisowy" }, { status: 400 });
+  }
+
+  if (!wykonawca) {
+    return Response.json({ error: "Wymagany wykonawca serwisu" }, { status: 400 });
   }
 
   await pool.query(`UPDATE maszyny SET ostatni_serwis_mth=$1 WHERE id=$2`, [
@@ -59,13 +66,14 @@ export async function POST(req, { params }) {
     `INSERT INTO maszyny_details (
        maszyna_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, zrodlo, reporter_username
      )
-     VALUES ($1, CURRENT_DATE, $2, $3, $4, $5, $6, $7)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [
       machineId,
+      dataZdarzenia || new Date().toISOString().slice(0, 10),
       wykonanyPrzyMth,
       null,
-      user.username || "serwis",
-      `Oznaczono serwis jako wykonany przy ${wykonanyPrzyMth} mth`,
+      wykonawca,
+      uwagi || `Wykonano serwis przy ${wykonanyPrzyMth} mth`,
       "serwis",
       user.username || null,
     ]
