@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 export default function MaszynaDetails() {
@@ -10,6 +10,7 @@ export default function MaszynaDetails() {
   const [me, setMe] = useState(null);
   const [header, setHeader] = useState(null);
   const [items, setItems] = useState([]);
+  const [reports, setReports] = useState([]);
   const [sourceFilter, setSourceFilter] = useState("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -50,11 +51,14 @@ export default function MaszynaDetails() {
     const load = async () => {
       setErr("");
 
-      const [headerRes, detailsRes] = await Promise.all([
+      const [headerRes, detailsRes, reportsRes] = await Promise.all([
         fetch(`/api/maszyny/${id}`, { cache: "no-store" })
           .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
           .catch(() => ({ ok: false, data: null })),
         fetch(`/api/maszyny/${id}/details`, { cache: "no-store" })
+          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
+          .catch(() => ({ ok: false, data: null })),
+        fetch(`/api/maszyny/${id}/raporty`, { cache: "no-store" })
           .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
           .catch(() => ({ ok: false, data: null })),
       ]);
@@ -69,6 +73,8 @@ export default function MaszynaDetails() {
         setItems([]);
         setErr(detailsRes.data?.error || "Błąd pobierania");
       }
+
+      setReports(reportsRes.ok && Array.isArray(reportsRes.data) ? reportsRes.data : []);
     };
 
     load();
@@ -86,6 +92,27 @@ export default function MaszynaDetails() {
   }, []);
 
   const canManage = me?.role !== "operator";
+  const activeFailures = useMemo(
+    () =>
+      reports.filter(
+        (report) => report?.awaria && String(report?.status_awarii || "") !== "zamknieta"
+      ),
+    [reports]
+  );
+
+  const activeFailureKeys = useMemo(
+    () =>
+      new Set(
+        activeFailures.map(
+          (report) =>
+            `${String(report.data_raportu || "").slice(0, 10)}|${report.opis || ""}|${
+              report.username || ""
+            }`
+        )
+      ),
+    [activeFailures]
+  );
+
   const filteredItems = items.filter((item) => {
     if (sourceFilter === "all") return true;
     return (item?.zrodlo || "serwis") === sourceFilter;
@@ -201,6 +228,16 @@ export default function MaszynaDetails() {
     }
 
     return <span className="historyBadge historyBadgeDanger">{value}</span>;
+  };
+
+  const isActiveFailureRow = (item) => {
+    if (item.zrodlo !== "operator" || !item.awaria) return false;
+
+    const key = `${String(item.data_zdarzenia || "").slice(0, 10)}|${item.awaria || ""}|${
+      item.reporter_username || item.wykonawca || ""
+    }`;
+
+    return activeFailureKeys.has(key);
   };
 
   return (
@@ -343,6 +380,44 @@ export default function MaszynaDetails() {
         </section>
       ) : null}
 
+      {activeFailures.length > 0 ? (
+        <section className="detailsSection">
+          <div className="detailsSectionHeader">
+            <div className="sectionIntro">
+              <span className="rowEyebrow">Pilne</span>
+              <h2>Aktywne awarie</h2>
+              <p>Te zgłoszenia są nadal otwarte i wymagają reakcji.</p>
+            </div>
+
+            <div className="historyCount">
+              <strong>{activeFailures.length}</strong>
+              <span>aktywnych</span>
+            </div>
+          </div>
+
+          <div className="historyActiveList">
+            {activeFailures.map((report) => (
+              <article className="historyActiveCard" key={report.id}>
+                <div className="historyActiveCardTop">
+                  <span className="historyBadge historyBadgeDanger">aktywna awaria</span>
+                  <span className="mutedText">
+                    {String(report.data_raportu || "").slice(0, 10)}
+                  </span>
+                </div>
+                <strong className="historyActiveTitle">
+                  {report.opis || "Zgłoszenie awarii bez opisu"}
+                </strong>
+                <div className="historyActiveMeta">
+                  <span>Operator: {report.username || "brak"}</span>
+                  <span>Status: {report.status_awarii || "nowa"}</span>
+                  <span>Motogodziny: {report.motogodziny ?? "brak"}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className="detailsSection">
         <div className="detailsSectionHeader">
           <div className="sectionIntro">
@@ -390,7 +465,10 @@ export default function MaszynaDetails() {
 
               <tbody>
                 {filteredItems.map((item) => (
-                  <tr key={item.id}>
+                  <tr
+                    key={item.id}
+                    className={isActiveFailureRow(item) ? "historyRowActive" : ""}
+                  >
                     <td data-label="Data">
                       {item.data_zdarzenia
                         ? String(item.data_zdarzenia).slice(0, 10)
@@ -400,14 +478,20 @@ export default function MaszynaDetails() {
                     <td data-label="Przebieg">
                       {item.przebieg ?? <span className="historyEmptyValue">brak</span>}
                     </td>
-                    <td data-label="Awaria">{renderFailure(item.awaria)}</td>
+                    <td data-label="Awaria">
+                      <div className="historyFailureCell">
+                        {renderFailure(item.awaria)}
+                        {isActiveFailureRow(item) ? (
+                          <span className="historyBadge historyBadgeOutlineDanger">
+                            aktywna
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
                     <td data-label="Wykonawca">
                       {item.wykonawca || <span className="historyEmptyValue">brak</span>}
                     </td>
-                    <td
-                      data-label="Uwagi"
-                      className="historyNotesCell"
-                    >
+                    <td data-label="Uwagi" className="historyNotesCell">
                       {item.uwagi || <span className="historyEmptyValue">brak uwag</span>}
                     </td>
                     <td className="actionsCell" data-label="Akcje">
