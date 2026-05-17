@@ -54,6 +54,14 @@ export async function PUT(req, { params }) {
 
   const body = await req.json().catch(() => ({}));
   const statusAwarii = String(body?.status_awarii || before.status_awarii || "nowa").trim();
+  const wykonawca = String(body?.wykonawca || "").trim();
+
+  if (statusAwarii === "zamknieta" && !wykonawca) {
+    return Response.json(
+      { error: "Przy zamykaniu awarii wymagany jest wykonawca" },
+      { status: 400 }
+    );
+  }
 
   const { rows } = await pool.query(
     `UPDATE maszyna_raporty
@@ -62,6 +70,27 @@ export async function PUT(req, { params }) {
      RETURNING id, maszyna_id, user_id, data_raportu, motogodziny, awaria, opis, status_awarii`,
     [statusAwarii, reportId, machineId]
   );
+
+  if (statusAwarii === "zamknieta" && before.awaria) {
+    await pool.query(
+      `INSERT INTO maszyny_details (
+         maszyna_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, zrodlo, reporter_username
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        machineId,
+        new Date().toISOString().slice(0, 10),
+        before.motogodziny ?? null,
+        null,
+        wykonawca,
+        before.opis
+          ? `Usunięto awarię: ${before.opis}`
+          : "Oznaczono awarię jako naprawioną",
+        "serwis",
+        user.username || null,
+      ]
+    );
+  }
 
   await audit({
     action: "update",

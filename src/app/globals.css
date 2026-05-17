@@ -1496,16 +1496,16 @@ label {
 
 .historyActiveCard {
   display: grid;
-  gap: 10px;
-  padding: 16px 18px;
+  gap: 8px;
+  padding: 14px 16px;
   background: linear-gradient(180deg, #fff8f8, #fffdfd);
   border: 1px solid #fecaca;
-  border-radius: 18px;
-  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.07);
 }
 
 .serviceActiveCard {
-  gap: 14px;
+  gap: 10px;
 }
 
 .serviceActiveCardSoon {
@@ -1522,7 +1522,9 @@ label {
 
 .serviceInlineForm {
   margin: 0;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.07);
 }
 
 .historyActiveCardTop {
@@ -1534,16 +1536,16 @@ label {
 
 .historyActiveTitle {
   color: #7f1d1d;
-  font-size: 1rem;
+  font-size: 0.97rem;
   line-height: 1.35;
 }
 
 .historyActiveMeta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
+  gap: 6px 12px;
   color: #7c2d12;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .historyBadge {

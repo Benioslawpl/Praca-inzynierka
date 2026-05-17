@@ -98,6 +98,10 @@ export default function SprzetDetailsPage() {
     setErr("");
 
     try {
+      if (form.awaria.trim() && !form.wykonawca.trim()) {
+        throw new Error("Przy awarii wymagany jest wykonawca");
+      }
+
       const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
         awaria: form.awaria?.trim() || null,
@@ -165,6 +169,14 @@ export default function SprzetDetailsPage() {
     setErr("");
 
     try {
+      const wykonawca =
+        (item.wykonawca || "").trim() ||
+        prompt("Kto usunął awarię? Wpisz wykonawcę naprawy.", "")?.trim() ||
+        "";
+      if (!wykonawca) {
+        throw new Error("Przy zamykaniu awarii wymagany jest wykonawca");
+      }
+
       const res = await fetch(`/api/sprzet/${id}/details/${item.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -173,7 +185,7 @@ export default function SprzetDetailsPage() {
           przebieg: item.przebieg,
           awaria: item.awaria,
           status_awarii: "zamknieta",
-          wykonawca: item.wykonawca,
+          wykonawca,
           uwagi: item.uwagi,
         }),
       });
@@ -362,6 +374,7 @@ export default function SprzetDetailsPage() {
                   value={form.wykonawca}
                   onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
                   placeholder="np. Serwis wewnętrzny"
+                  required={Boolean(form.awaria.trim())}
                 />
               </label>
 

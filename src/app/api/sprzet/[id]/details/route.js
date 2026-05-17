@@ -59,6 +59,13 @@ export async function POST(req, { params }) {
       ? String(body?.status_awarii || "nowa").trim() || "nowa"
       : "brak";
 
+    if (awaria && !wykonawca) {
+      return Response.json(
+        { error: "Przy awarii wymagany jest wykonawca" },
+        { status: 400 }
+      );
+    }
+
     const sprzetResult = await pool.query(`SELECT nr FROM sprzet WHERE id=$1`, [
       sprzetId,
     ]);

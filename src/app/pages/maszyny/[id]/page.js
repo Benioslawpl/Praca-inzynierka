@@ -220,6 +220,10 @@ export default function MaszynaDetails() {
     setErr("");
 
     try {
+      if (form.awaria.trim() && !form.wykonawca.trim()) {
+        throw new Error("Przy awarii wymagany jest wykonawca");
+      }
+
       const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
         awaria: form.awaria?.trim() || null,
@@ -300,10 +304,16 @@ export default function MaszynaDetails() {
     setErr("");
 
     try {
+      const wykonawca =
+        prompt("Kto usunął awarię? Wpisz wykonawcę naprawy.", "")?.trim() || "";
+      if (!wykonawca) {
+        throw new Error("Przy zamykaniu awarii wymagany jest wykonawca");
+      }
+
       const res = await fetch(`/api/maszyny/${id}/raporty/${report.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status_awarii: "zamknieta" }),
+        body: JSON.stringify({ status_awarii: "zamknieta", wykonawca }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -641,6 +651,7 @@ export default function MaszynaDetails() {
                     value={form.wykonawca}
                     onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
                     placeholder="np. Serwis XYZ"
+                    required={Boolean(form.awaria.trim())}
                   />
                 </label>
 

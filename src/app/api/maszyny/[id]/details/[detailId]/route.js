@@ -62,6 +62,14 @@ export async function PUT(req, { params }) {
     const zrodlo = body?.zrodlo?.trim() || before.zrodlo || "serwis";
     const reporterUsername =
       body?.reporter_username?.trim() || before.reporter_username || null;
+
+    if (awaria && !wykonawca) {
+      return Response.json(
+        { error: "Przy awarii wymagany jest wykonawca" },
+        { status: 400 }
+      );
+    }
+
     const maszynaNr = await getMaszynaNr(maszynaId);
 
     const { rows } = await pool.query(
