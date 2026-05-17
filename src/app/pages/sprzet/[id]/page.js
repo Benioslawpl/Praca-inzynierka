@@ -24,6 +24,7 @@ export default function SprzetDetailsPage() {
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const activeFailures = items.filter((item) => item?.awaria);
 
   const loadDetails = async (sprzetId) => {
     const res = await fetch(`/api/sprzet/${sprzetId}/details`, {
@@ -311,6 +312,44 @@ export default function SprzetDetailsPage() {
         </div>
       </section>
 
+      {activeFailures.length > 0 ? (
+        <section className="detailsSection">
+          <div className="detailsSectionHeader">
+            <div className="sectionIntro">
+              <span className="rowEyebrow">Pilne</span>
+              <h2>Aktywne awarie</h2>
+              <p>Wpisy awaryjne, które wymagają uwagi przy tym sprzęcie.</p>
+            </div>
+
+            <div className="historyCount">
+              <strong>{activeFailures.length}</strong>
+              <span>aktywnych</span>
+            </div>
+          </div>
+
+          <div className="historyActiveList">
+            {activeFailures.map((item) => (
+              <article className="historyActiveCard" key={item.id}>
+                <div className="historyActiveCardTop">
+                  <span className="historyBadge historyBadgeDanger">aktywna awaria</span>
+                  <span className="mutedText">
+                    {item.data_zdarzenia ? String(item.data_zdarzenia).slice(0, 10) : "-"}
+                  </span>
+                </div>
+                <strong className="historyActiveTitle">
+                  {item.awaria || "Zgłoszenie awarii bez opisu"}
+                </strong>
+                <div className="historyActiveMeta">
+                  <span>Wykonawca: {item.wykonawca || "brak"}</span>
+                  <span>Przebieg / licznik: {item.przebieg ?? "brak"}</span>
+                </div>
+                {item.uwagi ? <p className="mutedText">{item.uwagi}</p> : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className="detailsSection">
         <div className="detailsSectionHeader">
           <div className="sectionIntro">
@@ -338,7 +377,7 @@ export default function SprzetDetailsPage() {
 
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.id}>
+                  <tr key={item.id} className={item.awaria ? "historyRowActive" : ""}>
                     <td data-label="Data">
                       {item.data_zdarzenia
                         ? String(item.data_zdarzenia).slice(0, 10)
@@ -347,7 +386,16 @@ export default function SprzetDetailsPage() {
                     <td data-label="Przebieg">
                       {item.przebieg ?? <span className="historyEmptyValue">brak</span>}
                     </td>
-                    <td data-label="Awaria">{renderFailure(item.awaria)}</td>
+                    <td data-label="Awaria">
+                      <div className="historyFailureCell">
+                        {renderFailure(item.awaria)}
+                        {item.awaria ? (
+                          <span className="historyBadge historyBadgeOutlineDanger">
+                            aktywna
+                          </span>
+                        ) : null}
+                      </div>
+                    </td>
                     <td data-label="Wykonawca">
                       {item.wykonawca || <span className="historyEmptyValue">brak</span>}
                     </td>
