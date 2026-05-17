@@ -10,6 +10,7 @@ export default function MaszynaDetails() {
   const [me, setMe] = useState(null);
   const [header, setHeader] = useState(null);
   const [items, setItems] = useState([]);
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -89,6 +90,10 @@ export default function MaszynaDetails() {
   }, []);
 
   const canManage = me?.role !== "operator";
+  const filteredItems = items.filter((item) => {
+    if (sourceFilter === "all") return true;
+    return (item?.zrodlo || "serwis") === sourceFilter;
+  });
 
   const reset = () => {
     setForm(emptyForm);
@@ -321,10 +326,29 @@ export default function MaszynaDetails() {
         </section>
       ) : null}
 
-      <h2>Historia zdarzeń</h2>
+      <div className="historyToolbar">
+        <div className="historyFilters">
+          <label className="historyFilterField">
+            <span>Źródło</span>
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+            >
+              <option value="all">Wszystkie</option>
+              <option value="serwis">Serwis</option>
+              <option value="operator">Operator</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="historyCount">
+          <strong>{filteredItems.length}</strong>
+          <span>wpisów</span>
+        </div>
+      </div>
 
       <div className="tableWrap">
-        {items.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <p>Brak wpisów</p>
         ) : (
           <table className="table">
@@ -341,7 +365,7 @@ export default function MaszynaDetails() {
             </thead>
 
             <tbody>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <tr key={item.id}>
                   <td data-label="Data">
                     {item.data_zdarzenia
