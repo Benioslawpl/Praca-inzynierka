@@ -432,20 +432,23 @@ button[disabled] {
 
 .detailsPage {
   display: grid;
-  gap: 22px;
+  gap: 20px;
 }
 
 .detailsBackButton {
   justify-self: flex-start;
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 999px;
 }
 
 .detailsHero {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .detailsHero .sectionIntro {
-  gap: 8px;
+  gap: 6px;
 }
 
 .detailsSummaryGrid {
@@ -495,6 +498,11 @@ button[disabled] {
 .detailsSection {
   display: grid;
   gap: 12px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
 }
 
 .detailsAlertGrid {
@@ -534,7 +542,7 @@ button[disabled] {
 .formPanel {
   display: grid;
   gap: 12px;
-  margin: 18px 0 22px;
+  margin: 4px 0 6px;
 }
 
 .formPanelHeader {
@@ -545,8 +553,8 @@ button[disabled] {
   padding: 16px 18px;
   background: rgba(255, 255, 255, 0.84);
   border: 1px solid #dbe3ef;
-  border-radius: 18px;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
 .formPanelHeader > div {
@@ -577,8 +585,8 @@ button[disabled] {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 44px;
-  padding: 10px 16px;
+  min-height: 42px;
+  padding: 9px 15px;
   font-weight: 700;
 }
 
@@ -722,7 +730,7 @@ label {
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .tableWrap {
@@ -731,6 +739,8 @@ label {
   border: none;
   border-radius: 0;
   box-shadow: none;
+  display: grid;
+  gap: 12px;
 }
 
 .table {
@@ -743,12 +753,12 @@ label {
 
 .tableWrap > p {
   margin: 0;
-  padding: 24px;
+  padding: 20px;
   text-align: center;
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  border-radius: 18px;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
   color: #64748b;
 }
 
@@ -828,8 +838,8 @@ label {
 .actionsCell button,
 .actionsCell .info-btn {
   min-width: 0;
-  min-height: 34px;
-  padding: 7px 10px;
+  min-height: 32px;
+  padding: 6px 10px;
   border-radius: 10px;
   box-shadow: none;
   font-size: 12px;
@@ -1269,7 +1279,7 @@ label {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .mutedText {
@@ -1406,6 +1416,10 @@ label {
 
 .historyFilterField {
   min-width: 210px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: rgba(248, 250, 252, 0.8);
 }
 
 .historyFilterField span {
@@ -1421,6 +1435,10 @@ label {
   gap: 2px;
   justify-items: end;
   min-width: 82px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid #e2e8f0;
 }
 
 .historyCount strong {
@@ -1624,6 +1642,18 @@ label {
   white-space: pre-wrap;
   line-height: 1.45;
   font-size: 13px;
+}
+
+.detailsSection .actions > .secondary,
+.tableWrap > .actions > .secondary {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #dbe2ea;
+}
+
+.detailsSection .actions > .secondary:hover,
+.tableWrap > .actions > .secondary:hover {
+  background: #eef2f7;
 }
 
 .historyRowActive td {
