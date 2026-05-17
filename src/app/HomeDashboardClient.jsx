@@ -31,12 +31,6 @@ function roleLabel(role) {
   return "użytkownik";
 }
 
-function severityLabel(kind) {
-  if (kind === "awaria") return "awaria";
-  if (kind === "overdue") return "pilne";
-  return "wkrótce";
-}
-
 function buildRecentReports(rows) {
   const seenOkMachines = new Set();
   const output = [];
@@ -59,7 +53,27 @@ export default function HomeDashboardClient({ user }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState(null);
+  const [serviceSavingId, setServiceSavingId] = useState(null);
   const [forms, setForms] = useState({});
+
+  const refreshDashboard = async () => {
+    const res = await fetch("/api/dashboard", {
+      cache: "no-store",
+      credentials: "include",
+    });
+    const payload = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(payload?.error || "Błąd pobierania dashboardu");
+    }
+
+    setData(payload);
+    setForms(
+      Object.fromEntries(
+        (payload.assignedMachines || []).map((machine) => [machine.id, EMPTY_REPORT])
+      )
+    );
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -67,24 +81,12 @@ export default function HomeDashboardClient({ user }) {
     const load = async () => {
       setError("");
 
-      const res = await fetch("/api/dashboard", {
-        cache: "no-store",
-        credentials: "include",
-      });
-      const payload = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
+      try {
+        await refreshDashboard();
+      } catch (err) {
         setData(null);
-        setError(payload?.error || "Błąd pobierania dashboardu");
-        return;
+        setError(err.message || "Błąd pobierania dashboardu");
       }
-
-      setData(payload);
-      setForms(
-        Object.fromEntries(
-          (payload.assignedMachines || []).map((machine) => [machine.id, EMPTY_REPORT])
-        )
-      );
     };
 
     load();
@@ -114,16 +116,7 @@ export default function HomeDashboardClient({ user }) {
         throw new Error(payload?.error || "Nie udało się zapisać raportu");
       }
 
-      const refreshed = await fetch("/api/dashboard", {
-        cache: "no-store",
-        credentials: "include",
-      });
-      const refreshedPayload = await refreshed.json().catch(() => ({}));
-      if (!refreshed.ok) {
-        throw new Error(refreshedPayload?.error || "Nie udało się odświeżyć widoku");
-      }
-
-      setData(refreshedPayload);
+      await refreshDashboard();
       setForms((current) => ({
         ...current,
         [machineId]: EMPTY_REPORT,
@@ -132,6 +125,30 @@ export default function HomeDashboardClient({ user }) {
       setError(err.message || "Nie udało się zapisać raportu");
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const markServiceDone = async (item) => {
+    setServiceSavingId(item.machineId);
+    setError("");
+
+    try {
+      const res = await fetch(`/api/maszyny/${item.machineId}/serwis`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wykonany_przy_mth: item.currentHours }),
+      });
+
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(payload?.error || "Nie udało się oznaczyć serwisu");
+      }
+
+      await refreshDashboard();
+    } catch (err) {
+      setError(err.message || "Nie udało się oznaczyć serwisu");
+    } finally {
+      setServiceSavingId(null);
     }
   };
 
@@ -144,29 +161,30 @@ export default function HomeDashboardClient({ user }) {
     );
   }
 
-  const alertItems = [
-    ...((data?.alerts?.awarie || []).map((item) => ({
-      ...item,
-      kind: "awaria",
-      title: item.nr,
-      description: item.opis || "Aktywne zgłoszenie awarii",
-      meta: `Zgłoszono: ${fmtDate(item.date)}`,
-    }))),
+  const awariaAlerts = (data?.alerts?.awarie || []).map((item) => ({
+    ...item,
+    title: item.nr,
+    description: item.opis || "Aktywne zgłoszenie awarii",
+    meta: `Zgłoszono: ${fmtDate(item.date)}`,
+  }));
+
+  const serviceAlerts = [
     ...((data?.alerts?.serwisOverdue || []).map((item) => ({
       ...item,
       kind: "overdue",
       title: item.nr,
       description: `Serwis przekroczony o ${Math.abs(Math.round(item.remaining))} mth`,
-      meta: `Próg serwisu: ${Math.round(item.nextServiceAt)} mth`,
+      meta: `Stan licznika: ${Math.round(item.currentHours)} mth • próg: ${Math.round(item.nextServiceAt)} mth`,
     }))),
     ...((data?.alerts?.serwisSoon || []).map((item) => ({
       ...item,
       kind: "soon",
       title: item.nr,
       description: `Do serwisu zostało około ${Math.round(item.remaining)} mth`,
-      meta: `Próg serwisu: ${Math.round(item.nextServiceAt)} mth`,
+      meta: `Stan licznika: ${Math.round(item.currentHours)} mth • próg: ${Math.round(item.nextServiceAt)} mth`,
     }))),
   ];
+
   const recentReports = buildRecentReports(data?.recentReports);
 
   return (
@@ -200,41 +218,105 @@ export default function HomeDashboardClient({ user }) {
         <article className="card sectionCard">
           <div className="sectionCardHeader">
             <div>
-              <h2>Alerty serwisowe</h2>
-              <p className="mutedText">Najważniejsze informacje z ostatnich raportów.</p>
+              <h2>Najważniejsze alerty</h2>
+              <p className="mutedText">Awarie i serwisy, które wymagają reakcji.</p>
             </div>
-            <span className="metricBadge">{alertItems.length}</span>
+            <span className="metricBadge">{awariaAlerts.length + serviceAlerts.length}</span>
           </div>
 
-          <div className="compactList dashboardAlertList">
-            {alertItems.length === 0 ? (
-              <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
-                <div className="compactListMain">
-                  <strong>Brak krytycznych alertów</strong>
-                  <span className="mutedText">Na ten moment system nie widzi pilnych zdarzeń.</span>
-                </div>
+          <div className="dashboardAlertStack">
+            <div className="dashboardAlertGroup">
+              <div className="dashboardAlertGroupHeader">
+                <strong>Aktywne awarie</strong>
+                <span className="mutedText">{awariaAlerts.length}</span>
               </div>
-            ) : (
-                alertItems.map((item) => (
-                  <Link
-                    href={`/pages/maszyny/${item.machineId}`}
-                    className={`compactListRow compactMetricRow dashboardAlertCard dashboardAlertCard-${item.kind}`}
-                    key={`${item.kind}-${item.machineId}`}
-                  >
-                    <div className="dashboardAlertLead">
-                      <span className="dashboardAlertDot" aria-hidden="true" />
-                    </div>
+
+              <div className="compactList dashboardAlertList">
+                {awariaAlerts.length === 0 ? (
+                  <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
                     <div className="compactListMain">
-                      <strong>{item.title}</strong>
-                    <span className="dashboardAlertText">{item.description}</span>
-                    <span className="mutedText">{item.meta}</span>
+                      <strong>Brak aktywnych awarii</strong>
+                      <span className="mutedText">Na ten moment nie ma otwartych zgłoszeń.</span>
+                    </div>
                   </div>
-                    <span className={`pill ${item.kind === "awaria" || item.kind === "overdue" ? "bad" : ""}`}>
-                      {severityLabel(item.kind)}
-                    </span>
-                  </Link>
-                ))
-              )}
+                ) : (
+                  awariaAlerts.map((item) => (
+                    <Link
+                      href={`/pages/maszyny/${item.machineId}`}
+                      className="dashboardAlertLinkWrap"
+                      key={`awaria-${item.machineId}`}
+                    >
+                      <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCard-awaria">
+                        <div className="dashboardAlertLead">
+                          <span className="dashboardAlertDot" aria-hidden="true" />
+                        </div>
+                        <div className="compactListMain">
+                          <strong>{item.title}</strong>
+                          <span className="dashboardAlertText">{item.description}</span>
+                          <span className="mutedText">{item.meta}</span>
+                        </div>
+                        <span className="pill bad">awaria</span>
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="dashboardAlertGroup">
+              <div className="dashboardAlertGroupHeader">
+                <strong>Alerty serwisowe</strong>
+                <span className="mutedText">{serviceAlerts.length}</span>
+              </div>
+
+              <div className="dashboardServiceList">
+                {serviceAlerts.length === 0 ? (
+                  <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
+                    <div className="compactListMain">
+                      <strong>Brak pilnych serwisów</strong>
+                      <span className="mutedText">Nie ma maszyn wymagających teraz przeglądu.</span>
+                    </div>
+                  </div>
+                ) : (
+                  serviceAlerts.map((item) => (
+                    <article
+                      className={`dashboardServiceCard dashboardServiceCard-${item.kind}`}
+                      key={`${item.kind}-${item.machineId}`}
+                    >
+                      <Link
+                        href={`/pages/maszyny/${item.machineId}`}
+                        className="dashboardServiceLink"
+                      >
+                        <div className="dashboardAlertLead">
+                          <span className="dashboardAlertDot" aria-hidden="true" />
+                        </div>
+                        <div className="compactListMain">
+                          <strong>{item.title}</strong>
+                          <span className="dashboardAlertText">{item.description}</span>
+                          <span className="mutedText">{item.meta}</span>
+                        </div>
+                        <span className={`pill ${item.kind === "overdue" ? "bad" : ""}`}>
+                          {item.kind === "overdue" ? "pilne" : "wkrótce"}
+                        </span>
+                      </Link>
+
+                      <div className="dashboardServiceActions">
+                        <button
+                          type="button"
+                          className="secondary"
+                          disabled={serviceSavingId === item.machineId}
+                          onClick={() => markServiceDone(item)}
+                        >
+                          {serviceSavingId === item.machineId
+                            ? "Zapisywanie..."
+                            : "Serwis wykonany"}
+                        </button>
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </article>
 
