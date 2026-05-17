@@ -36,6 +36,24 @@ function severityLabel(kind) {
   return "wkrótce";
 }
 
+function buildRecentReports(rows) {
+  const seenOkMachines = new Set();
+  const output = [];
+
+  for (const report of rows || []) {
+    const machineKey = report?.maszyna_id ?? report?.nr ?? report?.id;
+
+    if (!report?.awaria) {
+      if (seenOkMachines.has(machineKey)) continue;
+      seenOkMachines.add(machineKey);
+    }
+
+    output.push(report);
+  }
+
+  return output;
+}
+
 export default function HomeDashboardClient({ user }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -148,6 +166,7 @@ export default function HomeDashboardClient({ user }) {
       meta: `Próg serwisu: ${Math.round(item.nextServiceAt)} mth`,
     }))),
   ];
+  const recentReports = buildRecentReports(data?.recentReports);
 
   return (
     <section className="home dashboardHome">
@@ -226,7 +245,7 @@ export default function HomeDashboardClient({ user }) {
           </div>
 
           <div className="compactList">
-            {(data?.recentReports || []).length === 0 ? (
+            {recentReports.length === 0 ? (
               <div className="compactListRow">
                 <div className="compactListMain">
                   <strong>Brak raportów</strong>
@@ -234,7 +253,7 @@ export default function HomeDashboardClient({ user }) {
                 </div>
               </div>
             ) : (
-              data.recentReports.map((report) => (
+              recentReports.map((report) => (
                 <div className="compactListRow" key={report.id}>
                   <div className="compactListMain">
                     <strong>{report.nr || `Maszyna #${report.maszyna_id}`}</strong>
