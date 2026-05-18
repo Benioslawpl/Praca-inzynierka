@@ -36,6 +36,13 @@ export default function MaszynaDetails() {
     wykonawca: "",
     uwagi: "",
   });
+  const [repairFormOpenId, setRepairFormOpenId] = useState(null);
+  const [repairSavingId, setRepairSavingId] = useState(null);
+  const [repairForm, setRepairForm] = useState({
+    data_zdarzenia: today,
+    wykonawca: "",
+    uwagi: "",
+  });
 
   const loadHeader = async (machineId) => {
     const res = await fetch(`/api/maszyny/${machineId}`, {
@@ -306,31 +313,6 @@ export default function MaszynaDetails() {
     setErr("");
   };
 
-  const markAsResolved = async (report) => {
-    setErr("");
-
-    try {
-      const wykonawca =
-        prompt("Kto usunął awarię? Wpisz wykonawcę naprawy.", "")?.trim() || "";
-      if (!wykonawca) {
-        throw new Error("Przy zamykaniu awarii wymagany jest wykonawca");
-      }
-
-      const res = await fetch(`/api/maszyny/${id}/raporty/${report.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status_awarii: "zamknieta", wykonawca }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || "Nie udało się zamknąć awarii");
-
-      await Promise.all([loadReports(id), loadDetails(id)]);
-    } catch (error) {
-      setErr(error.message || "Nie udało się zamknąć awarii");
-    }
-  };
-
   const submitService = async (e) => {
     e.preventDefault();
     setServiceSaving(true);
@@ -366,6 +348,43 @@ export default function MaszynaDetails() {
       setErr(error.message || "Nie udało się zapisać serwisu");
     } finally {
       setServiceSaving(false);
+    }
+  };
+
+  const submitRepair = async (report) => {
+    setErr("");
+    setRepairSavingId(report.id);
+
+    try {
+      if (!repairForm.wykonawca.trim()) {
+        throw new Error("Przy zamykaniu awarii wymagany jest wykonawca");
+      }
+
+      const res = await fetch(`/api/maszyny/${id}/raporty/${report.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status_awarii: "zamknieta",
+          data_zdarzenia: repairForm.data_zdarzenia || null,
+          wykonawca: repairForm.wykonawca.trim(),
+          uwagi: repairForm.uwagi.trim() || null,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Nie udało się zamknąć awarii");
+
+      setRepairFormOpenId(null);
+      setRepairForm({
+        data_zdarzenia: today,
+        wykonawca: "",
+        uwagi: "",
+      });
+      await Promise.all([loadReports(id), loadDetails(id)]);
+    } catch (error) {
+      setErr(error.message || "Nie udało się zamknąć awarii");
+    } finally {
+      setRepairSavingId(null);
     }
   };
 
@@ -602,15 +621,103 @@ export default function MaszynaDetails() {
                         <span>Motogodziny: {report.motogodziny ?? "brak"}</span>
                       </div>
                       {canManage ? (
-                        <div className="actions">
-                          <button
-                            type="button"
-                            className="secondary"
-                            onClick={() => markAsResolved(report)}
-                          >
-                            Oznacz jako naprawioną
-                          </button>
-                        </div>
+                        <>
+                          <div className="actions">
+                            <button
+                              type="button"
+                              className="secondary"
+                              onClick={() => {
+                                if (repairFormOpenId === report.id) {
+                                  setRepairFormOpenId(null);
+                                  return;
+                                }
+
+                                setRepairFormOpenId(report.id);
+                                setRepairForm({
+                                  data_zdarzenia: today,
+                                  wykonawca: "",
+                                  uwagi: report.opis || "",
+                                });
+                              }}
+                            >
+                              {repairFormOpenId === report.id
+                                ? "Ukryj formularz"
+                                : "Oznacz jako naprawioną"}
+                            </button>
+                          </div>
+
+                          {repairFormOpenId === report.id ? (
+                            <form
+                              className="card serviceInlineForm"
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                submitRepair(report);
+                              }}
+                            >
+                              <div className="grid">
+                                <label>
+                                  <span>Data naprawy</span>
+                                  <input
+                                    type="date"
+                                    value={repairForm.data_zdarzenia}
+                                    onChange={(e) =>
+                                      setRepairForm({
+                                        ...repairForm,
+                                        data_zdarzenia: e.target.value,
+                                      })
+                                    }
+                                    required
+                                  />
+                                </label>
+
+                                <label>
+                                  <span>Wykonawca</span>
+                                  <input
+                                    value={repairForm.wykonawca}
+                                    onChange={(e) =>
+                                      setRepairForm({
+                                        ...repairForm,
+                                        wykonawca: e.target.value,
+                                      })
+                                    }
+                                    placeholder="np. Serwis wewnętrzny"
+                                    required
+                                  />
+                                </label>
+
+                                <label style={{ gridColumn: "1 / -1" }}>
+                                  <span>Uwagi</span>
+                                  <textarea
+                                    rows={3}
+                                    value={repairForm.uwagi}
+                                    onChange={(e) =>
+                                      setRepairForm({
+                                        ...repairForm,
+                                        uwagi: e.target.value,
+                                      })
+                                    }
+                                    placeholder="Co zostało wykonane podczas naprawy..."
+                                  />
+                                </label>
+                              </div>
+
+                              <div className="actions">
+                                <button type="submit" disabled={repairSavingId === report.id}>
+                                  {repairSavingId === report.id
+                                    ? "Zapisywanie..."
+                                    : "Zapisz naprawę"}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="secondary"
+                                  onClick={() => setRepairFormOpenId(null)}
+                                >
+                                  Anuluj
+                                </button>
+                              </div>
+                            </form>
+                          ) : null}
+                        </>
                       ) : null}
                     </article>
                   ))}
@@ -901,9 +1008,23 @@ export default function MaszynaDetails() {
                     <button
                       type="button"
                       className="secondary"
-                      onClick={() => markAsResolved(report)}
+                      onClick={() => {
+                        if (repairFormOpenId === report.id) {
+                          setRepairFormOpenId(null);
+                          return;
+                        }
+
+                        setRepairFormOpenId(report.id);
+                        setRepairForm({
+                          data_zdarzenia: today,
+                          wykonawca: "",
+                          uwagi: report.opis || "",
+                        });
+                      }}
                     >
-                      Oznacz jako naprawioną
+                      {repairFormOpenId === report.id
+                        ? "Ukryj formularz"
+                        : "Oznacz jako naprawioną"}
                     </button>
                   </div>
                 ) : null}

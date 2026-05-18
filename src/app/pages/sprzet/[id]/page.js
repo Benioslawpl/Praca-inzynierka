@@ -26,6 +26,13 @@ export default function SprzetDetailsPage() {
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [repairFormOpenId, setRepairFormOpenId] = useState(null);
+  const [repairSavingId, setRepairSavingId] = useState(null);
+  const [repairForm, setRepairForm] = useState({
+    data_zdarzenia: today,
+    wykonawca: "",
+    uwagi: "",
+  });
 
   const activeFailures = useMemo(
     () =>
@@ -171,15 +178,12 @@ export default function SprzetDetailsPage() {
     setErr(data?.error || "Błąd usuwania");
   };
 
-  const markAsResolved = async (item) => {
+  const submitRepair = async (item) => {
     setErr("");
+    setRepairSavingId(item.id);
 
     try {
-      const wykonawca =
-        (item.wykonawca || "").trim() ||
-        prompt("Kto usunął awarię? Wpisz wykonawcę naprawy.", "")?.trim() ||
-        "";
-      if (!wykonawca) {
+      if (!repairForm.wykonawca.trim()) {
         throw new Error("Przy zamykaniu awarii wymagany jest wykonawca");
       }
 
@@ -187,21 +191,29 @@ export default function SprzetDetailsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          data_zdarzenia: item.data_zdarzenia,
+          data_zdarzenia: repairForm.data_zdarzenia || null,
           przebieg: item.przebieg,
           awaria: item.awaria,
           status_awarii: "zamknieta",
-          wykonawca,
-          uwagi: item.uwagi,
+          wykonawca: repairForm.wykonawca.trim(),
+          uwagi: repairForm.uwagi.trim() || null,
         }),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Nie udało się zamknąć awarii");
 
+      setRepairFormOpenId(null);
+      setRepairForm({
+        data_zdarzenia: today,
+        wykonawca: "",
+        uwagi: "",
+      });
       await loadDetails(id);
     } catch (error) {
       setErr(error.message || "Nie udało się zamknąć awarii");
+    } finally {
+      setRepairSavingId(null);
     }
   };
 
@@ -447,11 +459,95 @@ export default function SprzetDetailsPage() {
                   <button
                     type="button"
                     className="secondary"
-                    onClick={() => markAsResolved(item)}
+                    onClick={() => {
+                      if (repairFormOpenId === item.id) {
+                        setRepairFormOpenId(null);
+                        return;
+                      }
+
+                      setRepairFormOpenId(item.id);
+                      setRepairForm({
+                        data_zdarzenia: today,
+                        wykonawca: item.wykonawca || "",
+                        uwagi: item.uwagi || item.awaria || "",
+                      });
+                    }}
                   >
-                    Oznacz jako naprawioną
+                    {repairFormOpenId === item.id
+                      ? "Ukryj formularz"
+                      : "Oznacz jako naprawioną"}
                   </button>
                 </div>
+
+                {repairFormOpenId === item.id ? (
+                  <form
+                    className="card serviceInlineForm"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      submitRepair(item);
+                    }}
+                  >
+                    <div className="grid">
+                      <label>
+                        <span>Data naprawy</span>
+                        <input
+                          type="date"
+                          value={repairForm.data_zdarzenia}
+                          onChange={(e) =>
+                            setRepairForm({
+                              ...repairForm,
+                              data_zdarzenia: e.target.value,
+                            })
+                          }
+                          required
+                        />
+                      </label>
+
+                      <label>
+                        <span>Wykonawca</span>
+                        <input
+                          value={repairForm.wykonawca}
+                          onChange={(e) =>
+                            setRepairForm({
+                              ...repairForm,
+                              wykonawca: e.target.value,
+                            })
+                          }
+                          placeholder="np. Serwis wewnętrzny"
+                          required
+                        />
+                      </label>
+
+                      <label style={{ gridColumn: "1 / -1" }}>
+                        <span>Uwagi</span>
+                        <textarea
+                          rows={3}
+                          value={repairForm.uwagi}
+                          onChange={(e) =>
+                            setRepairForm({
+                              ...repairForm,
+                              uwagi: e.target.value,
+                            })
+                          }
+                          placeholder="Co zostało wykonane podczas naprawy..."
+                        />
+                      </label>
+                    </div>
+
+                    <div className="actions">
+                      <button type="submit" disabled={repairSavingId === item.id}>
+                        {repairSavingId === item.id ? "Zapisywanie..." : "Zapisz naprawę"}
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => setRepairFormOpenId(null)}
+                      >
+                        Anuluj
+                      </button>
+                    </div>
+                  </form>
+                ) : null}
               </article>
             ))}
           </div>

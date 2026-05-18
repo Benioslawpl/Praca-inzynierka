@@ -55,6 +55,8 @@ export async function PUT(req, { params }) {
   const body = await req.json().catch(() => ({}));
   const statusAwarii = String(body?.status_awarii || before.status_awarii || "nowa").trim();
   const wykonawca = String(body?.wykonawca || "").trim();
+  const uwagi = String(body?.uwagi || "").trim();
+  const dataZdarzenia = String(body?.data_zdarzenia || "").trim() || null;
 
   if (statusAwarii === "zamknieta" && !wykonawca) {
     return Response.json(
@@ -79,13 +81,14 @@ export async function PUT(req, { params }) {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         machineId,
-        new Date().toISOString().slice(0, 10),
+        dataZdarzenia || new Date().toISOString().slice(0, 10),
         before.motogodziny ?? null,
         null,
         wykonawca,
-        before.opis
-          ? `Usunięto awarię: ${before.opis}`
-          : "Oznaczono awarię jako naprawioną",
+        uwagi ||
+          (before.opis
+            ? `Usunięto awarię: ${before.opis}`
+            : "Oznaczono awarię jako naprawioną"),
         "serwis",
         user.username || null,
       ]
