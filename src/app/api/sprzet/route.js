@@ -4,7 +4,8 @@ import { audit } from "../../../lib/audit";
 export async function GET() {
   try {
     const { rows } = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista, created_at
+      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista,
+              serwis_co_ile_mth, ostatni_serwis_mth, created_at
        FROM sprzet
        ORDER BY id ASC`
     );
@@ -22,6 +23,18 @@ export async function POST(req) {
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
     const brygadzista = body?.brygadzista?.trim();
+    const serwisCoIleMth =
+      body?.serwis_co_ile_mth === "" ||
+      body?.serwis_co_ile_mth === null ||
+      body?.serwis_co_ile_mth === undefined
+        ? null
+        : Number(body.serwis_co_ile_mth);
+    const ostatniSerwisMth =
+      body?.ostatni_serwis_mth === "" ||
+      body?.ostatni_serwis_mth === null ||
+      body?.ostatni_serwis_mth === undefined
+        ? null
+        : Number(body.ostatni_serwis_mth);
 
     if (!rodzaj || !marka || !model || !brygadzista) {
       return Response.json(
@@ -31,10 +44,18 @@ export async function POST(req) {
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO sprzet (rodzaj, marka, model, operator)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista, created_at`,
-      [rodzaj, marka, model, brygadzista]
+      `INSERT INTO sprzet (rodzaj, marka, model, operator, serwis_co_ile_mth, ostatni_serwis_mth)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista,
+                 serwis_co_ile_mth, ostatni_serwis_mth, created_at`,
+      [
+        rodzaj,
+        marka,
+        model,
+        brygadzista,
+        Number.isFinite(serwisCoIleMth) ? serwisCoIleMth : null,
+        Number.isFinite(ostatniSerwisMth) ? ostatniSerwisMth : null,
+      ]
     );
 
     await audit({

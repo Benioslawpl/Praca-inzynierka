@@ -2,6 +2,10 @@ alter table public.maszyny
   add column if not exists serwis_co_ile_mth integer,
   add column if not exists ostatni_serwis_mth numeric;
 
+alter table if exists public.sprzet
+  add column if not exists serwis_co_ile_mth integer,
+  add column if not exists ostatni_serwis_mth numeric;
+
 alter table public.maszyny_details
   add column if not exists zrodlo text not null default 'serwis',
   add column if not exists reporter_username text;

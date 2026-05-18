@@ -12,6 +12,8 @@ export default function SprzetPage() {
     marka: "",
     model: "",
     brygadzista: "",
+    serwis_co_ile_mth: "",
+    ostatni_serwis_mth: "",
   });
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -73,6 +75,8 @@ export default function SprzetPage() {
       marka: "",
       model: "",
       brygadzista: brygadzisci[0]?.brygadzista || "",
+      serwis_co_ile_mth: "",
+      ostatni_serwis_mth: "",
     });
     setEditId(null);
     setIsFormOpen(false);
@@ -92,6 +96,10 @@ export default function SprzetPage() {
         marka: form.marka.trim(),
         model: form.model.trim(),
         brygadzista: form.brygadzista.trim(),
+        serwis_co_ile_mth:
+          form.serwis_co_ile_mth === "" ? null : Number(form.serwis_co_ile_mth),
+        ostatni_serwis_mth:
+          form.ostatni_serwis_mth === "" ? null : Number(form.ostatni_serwis_mth),
       };
 
       const res = await fetch(url, {
@@ -122,6 +130,8 @@ export default function SprzetPage() {
       marka: row.marka ?? "",
       model: row.model ?? "",
       brygadzista: row.brygadzista ?? "",
+      serwis_co_ile_mth: row.serwis_co_ile_mth ?? "",
+      ostatni_serwis_mth: row.ostatni_serwis_mth ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -243,6 +253,30 @@ export default function SprzetPage() {
                   )}
                 </select>
               </label>
+
+              <label>
+                <span>Serwis co ile mth</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.serwis_co_ile_mth}
+                  onChange={(e) => setForm({ ...form, serwis_co_ile_mth: e.target.value })}
+                  placeholder="np. 500"
+                />
+              </label>
+
+              <label>
+                <span>Ostatni serwis przy mth</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={form.ostatni_serwis_mth}
+                  onChange={(e) => setForm({ ...form, ostatni_serwis_mth: e.target.value })}
+                  placeholder="np. 500"
+                />
+              </label>
             </div>
 
             <div className="actions">
@@ -287,6 +321,7 @@ export default function SprzetPage() {
                   <th>Marka</th>
                   <th>Model</th>
                   <th>Brygadzista</th>
+                  <th>Serwis</th>
                   <th style={{ width: 240 }}>Akcje</th>
                 </tr>
               </thead>
@@ -301,6 +336,9 @@ export default function SprzetPage() {
                       <td data-label="Marka">{row.marka}</td>
                       <td data-label="Model">{row.model}</td>
                       <td data-label="Brygadzista">{row.brygadzista}</td>
+                      <td data-label="Serwis">
+                        {row.serwis_co_ile_mth ? `co ${row.serwis_co_ile_mth} mth` : "brak"}
+                      </td>
                       <td className="actionsCell" data-label="Akcje">
                         <Link href={`/pages/sprzet/${row.id}`} className="info-btn" title="Szczegóły">
                           Szczegóły

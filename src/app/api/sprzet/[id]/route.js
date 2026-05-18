@@ -26,7 +26,8 @@ export async function GET(req, ctx) {
     }
 
     const { rows } = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista
+      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista,
+              serwis_co_ile_mth, ostatni_serwis_mth
        FROM sprzet
        WHERE id=$1`,
       [id]
@@ -50,7 +51,8 @@ export async function PUT(req, { params }) {
     }
 
     const beforeResult = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista
+      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista,
+              serwis_co_ile_mth, ostatni_serwis_mth
        FROM sprzet
        WHERE id=$1`,
       [id]
@@ -66,6 +68,18 @@ export async function PUT(req, { params }) {
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
     const brygadzista = body?.brygadzista?.trim();
+    const serwisCoIleMth =
+      body?.serwis_co_ile_mth === "" ||
+      body?.serwis_co_ile_mth === null ||
+      body?.serwis_co_ile_mth === undefined
+        ? null
+        : Number(body.serwis_co_ile_mth);
+    const ostatniSerwisMth =
+      body?.ostatni_serwis_mth === "" ||
+      body?.ostatni_serwis_mth === null ||
+      body?.ostatni_serwis_mth === undefined
+        ? null
+        : Number(body.ostatni_serwis_mth);
 
     if (!rodzaj || !marka || !model || !brygadzista) {
       return Response.json(
@@ -76,10 +90,20 @@ export async function PUT(req, { params }) {
 
     const { rows } = await pool.query(
       `UPDATE sprzet
-       SET rodzaj=$1, marka=$2, model=$3, operator=$4
-       WHERE id=$5
-       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista`,
-      [rodzaj, marka, model, brygadzista, id]
+       SET rodzaj=$1, marka=$2, model=$3, operator=$4,
+           serwis_co_ile_mth=$5, ostatni_serwis_mth=$6
+       WHERE id=$7
+       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista,
+                 serwis_co_ile_mth, ostatni_serwis_mth`,
+      [
+        rodzaj,
+        marka,
+        model,
+        brygadzista,
+        Number.isFinite(serwisCoIleMth) ? serwisCoIleMth : null,
+        Number.isFinite(ostatniSerwisMth) ? ostatniSerwisMth : null,
+        id,
+      ]
     );
 
     await audit({
@@ -107,7 +131,8 @@ export async function DELETE(req, { params }) {
     const { rows } = await pool.query(
       `DELETE FROM sprzet
        WHERE id=$1
-       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista`,
+       RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista,
+                 serwis_co_ile_mth, ostatni_serwis_mth`,
       [id]
     );
 

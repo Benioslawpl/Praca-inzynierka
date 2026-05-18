@@ -26,6 +26,14 @@ export default function SprzetDetailsPage() {
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [serviceFormOpen, setServiceFormOpen] = useState(false);
+  const [serviceSaving, setServiceSaving] = useState(false);
+  const [serviceForm, setServiceForm] = useState({
+    data_zdarzenia: today,
+    wykonany_przy_mth: "",
+    wykonawca: "",
+    uwagi: "",
+  });
   const [repairFormOpenId, setRepairFormOpenId] = useState(null);
   const [repairSavingId, setRepairSavingId] = useState(null);
   const [repairForm, setRepairForm] = useState({
@@ -41,11 +49,62 @@ export default function SprzetDetailsPage() {
       ),
     [items]
   );
+  const latestHours = useMemo(() => {
+    for (const item of items) {
+      const value = Number(item?.przebieg);
+      if (Number.isFinite(value)) return value;
+    }
+
+    return null;
+  }, [items]);
+  const serviceAlert = useMemo(() => {
+    const interval = Number(header?.serwis_co_ile_mth);
+    const lastService = Number(header?.ostatni_serwis_mth);
+
+    if (
+      !Number.isFinite(interval) ||
+      interval <= 0 ||
+      !Number.isFinite(lastService) ||
+      !Number.isFinite(latestHours)
+    ) {
+      return null;
+    }
+
+    const nextServiceAt = lastService + interval;
+    const remaining = nextServiceAt - latestHours;
+
+    if (remaining > 20) return null;
+
+    return {
+      currentHours: latestHours,
+      nextServiceAt,
+      remaining,
+      overdue: remaining < 0,
+    };
+  }, [header, latestHours]);
   const visibleItems = showAllHistory ? items : items.slice(0, 5);
 
   useEffect(() => {
     setShowAllHistory(false);
   }, [id]);
+
+  useEffect(() => {
+    if (!serviceAlert) {
+      setServiceForm((current) => ({
+        ...current,
+        wykonany_przy_mth: latestHours ?? "",
+      }));
+      return;
+    }
+
+    setServiceForm((current) => ({
+      ...current,
+      wykonany_przy_mth:
+        current.wykonany_przy_mth === "" || Number(current.wykonany_przy_mth) !== latestHours
+          ? latestHours ?? ""
+          : current.wykonany_przy_mth,
+    }));
+  }, [serviceAlert, latestHours]);
 
   const loadDetails = async (sprzetId) => {
     const res = await fetch(`/api/sprzet/${sprzetId}/details`, {
@@ -214,6 +273,51 @@ export default function SprzetDetailsPage() {
       setErr(error.message || "Nie udało się zamknąć awarii");
     } finally {
       setRepairSavingId(null);
+    }
+  };
+
+  const submitService = async (e) => {
+    e.preventDefault();
+    setServiceSaving(true);
+    setErr("");
+
+    try {
+      const res = await fetch(`/api/sprzet/${id}/serwis`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data_zdarzenia: serviceForm.data_zdarzenia || null,
+          wykonany_przy_mth:
+            serviceForm.wykonany_przy_mth === ""
+              ? latestHours
+              : Number(serviceForm.wykonany_przy_mth),
+          wykonawca: serviceForm.wykonawca.trim(),
+          uwagi: serviceForm.uwagi.trim() || null,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Nie udało się zapisać serwisu");
+
+      setServiceForm({
+        data_zdarzenia: today,
+        wykonany_przy_mth: latestHours ?? "",
+        wykonawca: "",
+        uwagi: "",
+      });
+      setServiceFormOpen(false);
+      const [headerRes, detailsRes] = await Promise.all([
+        fetch(`/api/sprzet/${id}`, { cache: "no-store" }),
+        fetch(`/api/sprzet/${id}/details`, { cache: "no-store" }),
+      ]);
+      const headerData = await headerRes.json().catch(() => ({}));
+      const detailsData = await detailsRes.json().catch(() => ([]));
+      if (headerRes.ok) setHeader(headerData);
+      if (detailsRes.ok) setItems(Array.isArray(detailsData) ? detailsData : []);
+    } catch (error) {
+      setErr(error.message || "Nie udało się zapisać serwisu");
+    } finally {
+      setServiceSaving(false);
     }
   };
 
@@ -421,6 +525,142 @@ export default function SprzetDetailsPage() {
           </form>
         </div>
       </section>
+
+      {serviceAlert ? (
+        <section className="detailsSection detailsPrioritySection">
+          <div className="detailsSectionHeader">
+            <div className="sectionIntro">
+              <span className="rowEyebrow">Serwis</span>
+              <h2>Nadchodzący serwis</h2>
+              <p>
+                {serviceAlert.overdue
+                  ? "Sprzęt przekroczył próg serwisowy i wymaga potwierdzenia wykonania przeglądu."
+                  : "Sprzęt zbliża się do progu serwisowego i warto zaplanować przegląd."}
+              </p>
+            </div>
+          </div>
+
+          <div
+            className={`historyActiveCard serviceActiveCard ${
+              serviceAlert.overdue ? "serviceActiveCardOverdue" : "serviceActiveCardSoon"
+            }`}
+          >
+            <div className="historyActiveCardTop">
+              <span
+                className={`historyBadge ${
+                  serviceAlert.overdue ? "historyBadgeDanger" : "historyBadgeInfo"
+                }`}
+              >
+                {serviceAlert.overdue ? "serwis pilny" : "serwis wkrótce"}
+              </span>
+              <span className="mutedText">próg: {serviceAlert.nextServiceAt} mth</span>
+            </div>
+
+            <strong className="historyActiveTitle">
+              {serviceAlert.overdue
+                ? `Przegląd przekroczony o ${Math.round(Math.abs(serviceAlert.remaining))} mth`
+                : `Do przeglądu zostało około ${Math.round(serviceAlert.remaining)} mth`}
+            </strong>
+
+            <div className="historyActiveMeta">
+              <span>Licznik: {serviceAlert.currentHours} mth</span>
+              <span>Ostatni serwis: {header?.ostatni_serwis_mth ?? "brak"} mth</span>
+              <span>Interwał: {header?.serwis_co_ile_mth ?? "brak"} mth</span>
+            </div>
+
+            <div className="actions">
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => setServiceFormOpen((current) => !current)}
+              >
+                {serviceFormOpen ? "Ukryj formularz" : "Wykonaj serwis"}
+              </button>
+            </div>
+
+            {serviceFormOpen ? (
+              <form className="card serviceInlineForm" onSubmit={submitService}>
+                <div className="grid">
+                  <label>
+                    <span>Data serwisu</span>
+                    <input
+                      type="date"
+                      value={serviceForm.data_zdarzenia}
+                      onChange={(e) =>
+                        setServiceForm({
+                          ...serviceForm,
+                          data_zdarzenia: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    <span>Wykonano przy (mth)</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={serviceForm.wykonany_przy_mth}
+                      onChange={(e) =>
+                        setServiceForm({
+                          ...serviceForm,
+                          wykonany_przy_mth: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    <span>Wykonawca</span>
+                    <input
+                      value={serviceForm.wykonawca}
+                      onChange={(e) =>
+                        setServiceForm({
+                          ...serviceForm,
+                          wykonawca: e.target.value,
+                        })
+                      }
+                      placeholder="np. Serwis wewnętrzny"
+                      required
+                    />
+                  </label>
+
+                  <label style={{ gridColumn: "1 / -1" }}>
+                    <span>Uwagi</span>
+                    <textarea
+                      rows={3}
+                      value={serviceForm.uwagi}
+                      onChange={(e) =>
+                        setServiceForm({
+                          ...serviceForm,
+                          uwagi: e.target.value,
+                        })
+                      }
+                      placeholder="Co zostało wykonane podczas serwisu..."
+                    />
+                  </label>
+                </div>
+
+                <div className="actions">
+                  <button type="submit" disabled={serviceSaving}>
+                    {serviceSaving ? "Zapisywanie..." : "Zapisz serwis"}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => setServiceFormOpen(false)}
+                  >
+                    Anuluj
+                  </button>
+                </div>
+              </form>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {activeFailures.length > 0 ? (
         <section className="detailsSection detailsPrioritySection">

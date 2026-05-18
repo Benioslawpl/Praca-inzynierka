@@ -2,12 +2,12 @@ import pool from "../../../../../../db";
 import { getUserFromRequest } from "../../../../../lib/auth";
 import { audit } from "../../../../../lib/audit";
 
-function getMachineId(req, params) {
+function getSprzetId(req, params) {
   const value = Number(params?.id);
   if (Number.isInteger(value) && value > 0) return value;
 
   const parts = new URL(req.url).pathname.split("/").filter(Boolean);
-  const idx = parts.indexOf("maszyny");
+  const idx = parts.indexOf("sprzet");
   const fromPath = Number(parts[idx + 1]);
   return Number.isInteger(fromPath) && fromPath > 0 ? fromPath : null;
 }
@@ -18,16 +18,17 @@ export async function POST(req, { params }) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const machineId = getMachineId(req, params);
-  if (!machineId) {
+  const sprzetId = getSprzetId(req, params);
+  if (!sprzetId) {
     return Response.json({ error: "Bad id" }, { status: 400 });
   }
 
   const beforeResult = await pool.query(
-    `SELECT id, nr, rodzaj, marka, model, operator, serwis_co_ile_mth, ostatni_serwis_mth
-     FROM maszyny
+    `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista,
+            serwis_co_ile_mth, ostatni_serwis_mth
+     FROM sprzet
      WHERE id=$1`,
-    [machineId]
+    [sprzetId]
   );
   const before = beforeResult.rows[0];
 
@@ -56,45 +57,45 @@ export async function POST(req, { params }) {
       ? lastScheduledService + interval
       : wykonanyPrzyMth;
 
-  await pool.query(`UPDATE maszyny SET ostatni_serwis_mth=$1 WHERE id=$2`, [
+  await pool.query(`UPDATE sprzet SET ostatni_serwis_mth=$1 WHERE id=$2`, [
     nextScheduledServiceAt,
-    machineId,
+    sprzetId,
   ]);
 
   const afterResult = await pool.query(
-    `SELECT id, nr, rodzaj, marka, model, operator, serwis_co_ile_mth, ostatni_serwis_mth
-     FROM maszyny
+    `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista,
+            serwis_co_ile_mth, ostatni_serwis_mth
+     FROM sprzet
      WHERE id=$1`,
-    [machineId]
+    [sprzetId]
   );
   const after = afterResult.rows[0];
 
   await pool.query(
-    `INSERT INTO maszyny_details (
-       maszyna_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, zrodlo, reporter_username
+    `INSERT INTO sprzet_details (
+       sprzet_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, status_awarii
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     [
-      machineId,
+      sprzetId,
       dataZdarzenia || new Date().toISOString().slice(0, 10),
       wykonanyPrzyMth,
       null,
       wykonawca,
       uwagi ||
         `Wykonano serwis planowy ${nextScheduledServiceAt} mth przy ${wykonanyPrzyMth} mth`,
-      "serwis",
-      user.username || null,
+      "brak",
     ]
   );
 
   await audit({
     action: "update",
-    entity: "maszyny",
-    entityId: machineId,
+    entity: "sprzet",
+    entityId: sprzetId,
     before,
     after,
     req,
   });
 
-  return Response.json({ ok: true, machine: after });
+  return Response.json({ ok: true, sprzet: after });
 }
