@@ -87,7 +87,11 @@ function humanizeEntity(entity) {
 }
 
 function humanizeObject(row) {
-  if (row?.objectLabel) return String(row.objectLabel).replace(/\s+#\d+$/, "");
+  if (row?.objectLabel) {
+    return String(row.objectLabel)
+      .replace(/[\s\u00A0]*#\d+$/, "")
+      .trim();
+  }
   return humanizeEntity(row?.entity);
 }
 
