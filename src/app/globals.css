@@ -563,6 +563,7 @@ button[disabled] {
 .detailsAlertPanel {
   display: grid;
   gap: 10px;
+  min-width: 0;
 }
 
 .detailsPrioritySection {
@@ -1651,6 +1652,18 @@ label {
 
 .detailsPrioritySection .serviceInlineForm {
   background: rgba(255, 255, 255, 0.92);
+  width: 100%;
+  min-width: 0;
+}
+
+.detailsPrioritySection .serviceInlineForm .grid {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.detailsPrioritySection .serviceInlineForm label {
+  min-width: 0;
+  padding: 10px 12px;
 }
 
 .historyActiveCardTop {
