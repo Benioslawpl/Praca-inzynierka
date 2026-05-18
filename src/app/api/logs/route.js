@@ -134,7 +134,7 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
       row.nr ||
       getFieldFromChanges(changes, "nr") ||
       lookups.machineMap.get(entityId) ||
-      `Maszyna #${entityId}`
+      "Maszyna"
     );
   }
 
@@ -148,7 +148,7 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
   }
 
   if (entity === "brygady") {
-    return row.numer || `Brygada #${entityId}`;
+    return row.numer || "Brygada";
   }
 
   if (entity === "budowy") {
@@ -156,7 +156,7 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
       row.numer ||
       getFieldFromChanges(changes, "numer") ||
       lookups.budowaMap.get(entityId) ||
-      `Budowa #${entityId}`
+      "Budowa"
     );
   }
 
@@ -176,7 +176,7 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
       getFieldFromChanges(changes, "maszyna_nr") ||
       getFieldFromChanges(changes, "nr") ||
       lookups.machineMap.get(row.maszyna_id) ||
-      `Maszyna #${row.maszyna_id || entityId}`
+      "Maszyna"
     );
   }
 
@@ -187,7 +187,7 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
       getFieldFromChanges(changes, "maszyna_nr") ||
       getFieldFromChanges(changes, "nr") ||
       lookups.machineMap.get(row.maszyna_id) ||
-      `Maszyna #${row.maszyna_id || entityId}`
+      "Maszyna"
     );
   }
 
@@ -211,7 +211,7 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
       row.budowa_numer ||
       getFieldFromChanges(changes, "budowa_numer") ||
       lookups.budowaMap.get(row.budowa_id) ||
-      `Budowa #${row.budowa_id || entityId}`
+      "Budowa"
     );
   }
 
@@ -219,7 +219,7 @@ function buildObjectLabel(entity, entityId, beforeRow, afterRow, changes, lookup
     return row.username ? `Sesja ${row.username}` : "Sesja użytkownika";
   }
 
-  return entityId ? `${entity} #${entityId}` : entity || "-";
+  return entity || "-";
 }
 
 export async function GET(req) {

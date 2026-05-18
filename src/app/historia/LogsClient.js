@@ -82,14 +82,13 @@ const FIELD_LABELS = {
   reporter_username: "Autor raportu",
 };
 
-function humanizeEntity(entity, entityId) {
-  const base = ENTITY_LABELS[entity] || entity || "-";
-  return entityId ? `${base} #${entityId}` : base;
+function humanizeEntity(entity) {
+  return ENTITY_LABELS[entity] || entity || "-";
 }
 
 function humanizeObject(row) {
-  if (row?.objectLabel) return row.objectLabel;
-  return humanizeEntity(row?.entity, row?.entityId);
+  if (row?.objectLabel) return String(row.objectLabel).replace(/\s+#\d+$/, "");
+  return humanizeEntity(row?.entity);
 }
 
 function humanizeAction(action) {
