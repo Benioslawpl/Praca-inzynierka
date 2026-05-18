@@ -580,8 +580,9 @@ button[disabled] {
 }
 
 .detailsPrioritySection .historyActiveCard {
-  min-height: 100%;
+  min-height: 0;
   border-radius: 16px;
+  align-self: start;
 }
 
 .detailsHistorySection {
