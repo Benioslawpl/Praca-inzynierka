@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { asArray, fetchJsonResult, getErrorMessage, getTodayIso, getUpcomingServiceAlert } from "@/lib/client-utils";
 
 export default function SprzetDetailsPage() {
   const { id } = useParams();
@@ -12,35 +13,37 @@ export default function SprzetDetailsPage() {
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const today = new Date().toISOString().slice(0, 10);
-  const emptyForm = {
+  const today = getTodayIso();
+  const createEmptyForm = () => ({
     przebieg: "",
     awaria: "",
     status_awarii: "brak",
     wykonawca: "",
     uwagi: "",
     data_zdarzenia: today,
-  };
+  });
+  const createServiceForm = (hours = "") => ({
+    data_zdarzenia: today,
+    wykonany_przy_mth: hours ?? "",
+    wykonawca: "",
+    uwagi: "",
+  });
+  const createRepairForm = () => ({
+    data_zdarzenia: today,
+    wykonawca: "",
+    uwagi: "",
+  });
 
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(createEmptyForm);
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const [serviceFormOpen, setServiceFormOpen] = useState(false);
   const [serviceSaving, setServiceSaving] = useState(false);
-  const [serviceForm, setServiceForm] = useState({
-    data_zdarzenia: today,
-    wykonany_przy_mth: "",
-    wykonawca: "",
-    uwagi: "",
-  });
+  const [serviceForm, setServiceForm] = useState(() => createServiceForm(""));
   const [repairFormOpenId, setRepairFormOpenId] = useState(null);
   const [repairSavingId, setRepairSavingId] = useState(null);
-  const [repairForm, setRepairForm] = useState({
-    data_zdarzenia: today,
-    wykonawca: "",
-    uwagi: "",
-  });
+  const [repairForm, setRepairForm] = useState(createRepairForm);
 
   const activeFailures = useMemo(
     () =>
@@ -57,31 +60,15 @@ export default function SprzetDetailsPage() {
 
     return null;
   }, [items]);
-  const serviceAlert = useMemo(() => {
-    const interval = Number(header?.serwis_co_ile_mth);
-    const lastService = Number(header?.ostatni_serwis_mth);
-
-    if (
-      !Number.isFinite(interval) ||
-      interval <= 0 ||
-      !Number.isFinite(lastService) ||
-      !Number.isFinite(latestHours)
-    ) {
-      return null;
-    }
-
-    const nextServiceAt = lastService + interval;
-    const remaining = nextServiceAt - latestHours;
-
-    if (remaining > 20) return null;
-
-    return {
-      currentHours: latestHours,
-      nextServiceAt,
-      remaining,
-      overdue: remaining < 0,
-    };
-  }, [header, latestHours]);
+  const serviceAlert = useMemo(
+    () =>
+      getUpcomingServiceAlert({
+        interval: header?.serwis_co_ile_mth,
+        lastService: header?.ostatni_serwis_mth,
+        currentValue: latestHours,
+      }),
+    [header, latestHours]
+  );
   const visibleItems = showAllHistory ? items : items.slice(0, 5);
 
   useEffect(() => {
@@ -106,19 +93,33 @@ export default function SprzetDetailsPage() {
     }));
   }, [serviceAlert, latestHours]);
 
-  const loadDetails = async (sprzetId) => {
-    const res = await fetch(`/api/sprzet/${sprzetId}/details`, {
-      cache: "no-store",
-    });
-    const data = await res.json().catch(() => ({}));
+  const fetchHeader = (sprzetId) =>
+    fetchJsonResult(`/api/sprzet/${sprzetId}`, { cache: "no-store" });
+  const fetchDetails = (sprzetId) =>
+    fetchJsonResult(`/api/sprzet/${sprzetId}/details`, { cache: "no-store" });
 
-    if (!res.ok) {
-      setErr(data?.error || "Błąd pobierania");
+  const applyHeader = (result) => {
+    setHeader(result.ok ? result.data : null);
+  };
+
+  const applyDetails = (result) => {
+    if (!result.ok) {
       setItems([]);
+      setErr(getErrorMessage(result, "Błąd pobierania"));
       return;
     }
 
-    setItems(Array.isArray(data) ? data : []);
+    setItems(asArray(result.data));
+  };
+
+  const refreshPage = async (sprzetId) => {
+    const [headerResult, detailsResult] = await Promise.all([
+      fetchHeader(sprzetId),
+      fetchDetails(sprzetId),
+    ]);
+
+    applyHeader(headerResult);
+    applyDetails(detailsResult);
   };
 
   useEffect(() => {
@@ -129,25 +130,15 @@ export default function SprzetDetailsPage() {
     const load = async () => {
       setErr("");
 
-      const [headerRes, detailsRes] = await Promise.all([
-        fetch(`/api/sprzet/${id}`, { cache: "no-store" })
-          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-          .catch(() => ({ ok: false, data: null })),
-        fetch(`/api/sprzet/${id}/details`, { cache: "no-store" })
-          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-          .catch(() => ({ ok: false, data: null })),
+      const [headerResult, detailsResult] = await Promise.all([
+        fetchHeader(id),
+        fetchDetails(id),
       ]);
 
       if (cancelled) return;
 
-      setHeader(headerRes.ok ? headerRes.data : null);
-
-      if (detailsRes.ok) {
-        setItems(Array.isArray(detailsRes.data) ? detailsRes.data : []);
-      } else {
-        setItems([]);
-        setErr(detailsRes.data?.error || "Błąd pobierania");
-      }
+      applyHeader(headerResult);
+      applyDetails(detailsResult);
     };
 
     load();
@@ -158,7 +149,7 @@ export default function SprzetDetailsPage() {
   }, [id]);
 
   const reset = () => {
-    setForm(emptyForm);
+    setForm(createEmptyForm());
     setEditId(null);
     setIsFormOpen(false);
     setErr("");
@@ -198,7 +189,7 @@ export default function SprzetDetailsPage() {
       if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
 
       reset();
-      await loadDetails(id);
+      await refreshPage(id);
     } catch (error) {
       setErr(error.message || "Błąd zapisu");
     } finally {
@@ -229,7 +220,7 @@ export default function SprzetDetailsPage() {
     });
 
     if (res.ok) {
-      await loadDetails(id);
+      await refreshPage(id);
       return;
     }
 
@@ -263,12 +254,8 @@ export default function SprzetDetailsPage() {
       if (!res.ok) throw new Error(data?.error || "Nie udało się zamknąć awarii");
 
       setRepairFormOpenId(null);
-      setRepairForm({
-        data_zdarzenia: today,
-        wykonawca: "",
-        uwagi: "",
-      });
-      await loadDetails(id);
+      setRepairForm(createRepairForm());
+      await refreshPage(id);
     } catch (error) {
       setErr(error.message || "Nie udało się zamknąć awarii");
     } finally {
@@ -299,21 +286,9 @@ export default function SprzetDetailsPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Nie udało się zapisać serwisu");
 
-      setServiceForm({
-        data_zdarzenia: today,
-        wykonany_przy_mth: latestHours ?? "",
-        wykonawca: "",
-        uwagi: "",
-      });
+      setServiceForm(createServiceForm(latestHours ?? ""));
       setServiceFormOpen(false);
-      const [headerRes, detailsRes] = await Promise.all([
-        fetch(`/api/sprzet/${id}`, { cache: "no-store" }),
-        fetch(`/api/sprzet/${id}/details`, { cache: "no-store" }),
-      ]);
-      const headerData = await headerRes.json().catch(() => ({}));
-      const detailsData = await detailsRes.json().catch(() => ([]));
-      if (headerRes.ok) setHeader(headerData);
-      if (detailsRes.ok) setItems(Array.isArray(detailsData) ? detailsData : []);
+      await refreshPage(id);
     } catch (error) {
       setErr(error.message || "Nie udało się zapisać serwisu");
     } finally {

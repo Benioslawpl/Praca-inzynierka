@@ -2,6 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import {
+  asArray,
+  fetchJsonResult,
+  getErrorMessage,
+  getTodayIso,
+  getUpcomingServiceAlert,
+} from "@/lib/client-utils";
 
 export default function MaszynaDetails() {
   const { id } = useParams();
@@ -15,76 +22,82 @@ export default function MaszynaDetails() {
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const today = new Date().toISOString().slice(0, 10);
-  const emptyForm = {
+  const today = getTodayIso();
+  const createEmptyForm = () => ({
     przebieg: "",
     awaria: "",
     wykonawca: "",
     uwagi: "",
     data_zdarzenia: today,
-  };
+  });
+  const createServiceForm = (hours = "") => ({
+    data_zdarzenia: today,
+    wykonany_przy_mth: hours ?? "",
+    wykonawca: "",
+    uwagi: "",
+  });
+  const createRepairForm = () => ({
+    data_zdarzenia: today,
+    wykonawca: "",
+    uwagi: "",
+  });
 
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(createEmptyForm);
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
   const [serviceFormOpen, setServiceFormOpen] = useState(false);
   const [serviceSaving, setServiceSaving] = useState(false);
-  const [serviceForm, setServiceForm] = useState({
-    data_zdarzenia: today,
-    wykonany_przy_mth: "",
-    wykonawca: "",
-    uwagi: "",
-  });
+  const [serviceForm, setServiceForm] = useState(() => createServiceForm(""));
   const [repairFormOpenId, setRepairFormOpenId] = useState(null);
   const [repairSavingId, setRepairSavingId] = useState(null);
-  const [repairForm, setRepairForm] = useState({
-    data_zdarzenia: today,
-    wykonawca: "",
-    uwagi: "",
-  });
+  const [repairForm, setRepairForm] = useState(createRepairForm);
 
-  const loadHeader = async (machineId) => {
-    const res = await fetch(`/api/maszyny/${machineId}`, {
-      cache: "no-store",
-    });
-    const data = await res.json().catch(() => ({}));
+  const fetchHeader = (machineId) =>
+    fetchJsonResult(`/api/maszyny/${machineId}`, { cache: "no-store" });
+  const fetchDetails = (machineId) =>
+    fetchJsonResult(`/api/maszyny/${machineId}/details`, { cache: "no-store" });
+  const fetchReports = (machineId) =>
+    fetchJsonResult(`/api/maszyny/${machineId}/raporty`, { cache: "no-store" });
 
-    if (!res.ok) {
-      setHeader(null);
-      return;
-    }
-
-    setHeader(data);
+  const applyHeader = (result) => {
+    setHeader(result.ok ? result.data : null);
   };
 
-  const loadDetails = async (machineId) => {
-    const res = await fetch(`/api/maszyny/${machineId}/details`, {
-      cache: "no-store",
-    });
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      setErr(data?.error || "Błąd pobierania");
+  const applyDetails = (result) => {
+    if (!result.ok) {
       setItems([]);
+      setErr(getErrorMessage(result, "Błąd pobierania"));
       return;
     }
 
-    setItems(Array.isArray(data) ? data : []);
+    setItems(asArray(result.data));
   };
 
-  const loadReports = async (machineId) => {
-    const res = await fetch(`/api/maszyny/${machineId}/raporty`, {
-      cache: "no-store",
-    });
-    const data = await res.json().catch(() => ({}));
+  const applyReports = (result) => {
+    setReports(result.ok ? asArray(result.data) : []);
+  };
 
-    if (!res.ok) {
-      setReports([]);
-      return;
-    }
+  const refreshPage = async (machineId) => {
+    const [headerResult, detailsResult, reportsResult] = await Promise.all([
+      fetchHeader(machineId),
+      fetchDetails(machineId),
+      fetchReports(machineId),
+    ]);
 
-    setReports(Array.isArray(data) ? data : []);
+    applyHeader(headerResult);
+    applyDetails(detailsResult);
+    applyReports(reportsResult);
+  };
+
+  const refreshHistory = async (machineId) => {
+    const [detailsResult, reportsResult] = await Promise.all([
+      fetchDetails(machineId),
+      fetchReports(machineId),
+    ]);
+
+    applyDetails(detailsResult);
+    applyReports(reportsResult);
   };
 
   useEffect(() => {
@@ -95,30 +108,17 @@ export default function MaszynaDetails() {
     const load = async () => {
       setErr("");
 
-      const [headerRes, detailsRes, reportsRes] = await Promise.all([
-        fetch(`/api/maszyny/${id}`, { cache: "no-store" })
-          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-          .catch(() => ({ ok: false, data: null })),
-        fetch(`/api/maszyny/${id}/details`, { cache: "no-store" })
-          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-          .catch(() => ({ ok: false, data: null })),
-        fetch(`/api/maszyny/${id}/raporty`, { cache: "no-store" })
-          .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
-          .catch(() => ({ ok: false, data: null })),
+      const [headerResult, detailsResult, reportsResult] = await Promise.all([
+        fetchHeader(id),
+        fetchDetails(id),
+        fetchReports(id),
       ]);
 
       if (cancelled) return;
 
-      setHeader(headerRes.ok ? headerRes.data : null);
-
-      if (detailsRes.ok) {
-        setItems(Array.isArray(detailsRes.data) ? detailsRes.data : []);
-      } else {
-        setItems([]);
-        setErr(detailsRes.data?.error || "Błąd pobierania");
-      }
-
-      setReports(reportsRes.ok && Array.isArray(reportsRes.data) ? reportsRes.data : []);
+      applyHeader(headerResult);
+      applyDetails(detailsResult);
+      applyReports(reportsResult);
     };
 
     load();
@@ -129,9 +129,8 @@ export default function MaszynaDetails() {
   }, [id]);
 
   useEffect(() => {
-    fetch("/api/me", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data) => setMe(data?.ok ? data : null))
+    fetchJsonResult("/api/me", { cache: "no-store" })
+      .then((result) => setMe(result.ok && result.data?.ok ? result.data : null))
       .catch(() => setMe(null));
   }, []);
 
@@ -153,31 +152,15 @@ export default function MaszynaDetails() {
     return null;
   }, [reports]);
 
-  const serviceAlert = useMemo(() => {
-    const interval = Number(header?.serwis_co_ile_mth);
-    const lastService = Number(header?.ostatni_serwis_mth);
-
-    if (
-      !Number.isFinite(interval) ||
-      interval <= 0 ||
-      !Number.isFinite(lastService) ||
-      !Number.isFinite(latestHours)
-    ) {
-      return null;
-    }
-
-    const nextServiceAt = lastService + interval;
-    const remaining = nextServiceAt - latestHours;
-
-    if (remaining > 20) return null;
-
-    return {
-      currentHours: latestHours,
-      nextServiceAt,
-      remaining,
-      overdue: remaining < 0,
-    };
-  }, [header, latestHours]);
+  const serviceAlert = useMemo(
+    () =>
+      getUpcomingServiceAlert({
+        interval: header?.serwis_co_ile_mth,
+        lastService: header?.ostatni_serwis_mth,
+        currentValue: latestHours,
+      }),
+    [header, latestHours]
+  );
 
   const activeFailureKeys = useMemo(
     () =>
@@ -221,7 +204,7 @@ export default function MaszynaDetails() {
   }, [serviceAlert, latestHours]);
 
   const reset = () => {
-    setForm(emptyForm);
+    setForm(createEmptyForm());
     setEditId(null);
     setIsFormOpen(false);
     setErr("");
@@ -260,7 +243,7 @@ export default function MaszynaDetails() {
       if (!res.ok) throw new Error(data?.error || "Błąd zapisu");
 
       reset();
-      await loadDetails(id);
+      await refreshHistory(id);
     } catch (error) {
       setErr(error.message || "Błąd zapisu");
     } finally {
@@ -290,7 +273,7 @@ export default function MaszynaDetails() {
     });
 
     if (res.ok) {
-      await loadDetails(id);
+      await refreshHistory(id);
       return;
     }
 
@@ -336,14 +319,9 @@ export default function MaszynaDetails() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Nie udało się zapisać serwisu");
 
-      setServiceForm({
-        data_zdarzenia: today,
-        wykonany_przy_mth: latestHours ?? "",
-        wykonawca: "",
-        uwagi: "",
-      });
+      setServiceForm(createServiceForm(latestHours ?? ""));
       setServiceFormOpen(false);
-      await Promise.all([loadHeader(id), loadDetails(id), loadReports(id)]);
+      await refreshPage(id);
     } catch (error) {
       setErr(error.message || "Nie udało się zapisać serwisu");
     } finally {
@@ -375,12 +353,8 @@ export default function MaszynaDetails() {
       if (!res.ok) throw new Error(data?.error || "Nie udało się zamknąć awarii");
 
       setRepairFormOpenId(null);
-      setRepairForm({
-        data_zdarzenia: today,
-        wykonawca: "",
-        uwagi: "",
-      });
-      await Promise.all([loadReports(id), loadDetails(id)]);
+      setRepairForm(createRepairForm());
+      await refreshHistory(id);
     } catch (error) {
       setErr(error.message || "Nie udało się zamknąć awarii");
     } finally {
@@ -728,151 +702,6 @@ export default function MaszynaDetails() {
         </section>
       ) : null}
 
-      {false && serviceAlert ? (
-        <section className="detailsSection">
-          <div className="detailsSectionHeader">
-            <div className="sectionIntro">
-              <span className="rowEyebrow">Serwis</span>
-              <h2>Nadchodzący serwis</h2>
-              <p>
-                {serviceAlert.overdue
-                  ? "Maszyna przekroczyła próg serwisowy i wymaga potwierdzenia wykonania przeglądu."
-                  : "Maszyna zbliża się do progu serwisowego i warto zaplanować przegląd."}
-              </p>
-            </div>
-
-            <div className="historyCount">
-              <strong>{Math.round(Math.abs(serviceAlert.remaining))}</strong>
-              <span>{serviceAlert.overdue ? "mth po terminie" : "mth do serwisu"}</span>
-            </div>
-          </div>
-
-          <div
-            className={`historyActiveCard serviceActiveCard ${
-              serviceAlert.overdue ? "serviceActiveCardOverdue" : "serviceActiveCardSoon"
-            }`}
-          >
-            <div className="historyActiveCardTop">
-              <span
-                className={`historyBadge ${
-                  serviceAlert.overdue ? "historyBadgeDanger" : "historyBadgeInfo"
-                }`}
-              >
-                {serviceAlert.overdue ? "serwis pilny" : "serwis wkrótce"}
-              </span>
-              <span className="mutedText">próg: {serviceAlert.nextServiceAt} mth</span>
-            </div>
-
-            <strong className="historyActiveTitle">
-              {serviceAlert.overdue
-                ? `Przegląd przekroczony o ${Math.round(Math.abs(serviceAlert.remaining))} mth`
-                : `Do przeglądu zostało około ${Math.round(serviceAlert.remaining)} mth`}
-            </strong>
-
-            <div className="historyActiveMeta">
-              <span>Aktualny stan licznika: {serviceAlert.currentHours} mth</span>
-              <span>Ostatni serwis: {header?.ostatni_serwis_mth ?? "brak"} mth</span>
-              <span>Interwał: {header?.serwis_co_ile_mth ?? "brak"} mth</span>
-            </div>
-
-            {canManage ? (
-              <>
-                <div className="actions">
-                  <button
-                    type="button"
-                    className="secondary"
-                    onClick={() => setServiceFormOpen((current) => !current)}
-                  >
-                    {serviceFormOpen ? "Ukryj formularz serwisu" : "Potwierdź wykonanie serwisu"}
-                  </button>
-                </div>
-
-                {serviceFormOpen ? (
-                  <form className="card serviceInlineForm" onSubmit={submitService}>
-                    <div className="grid">
-                      <label>
-                        <span>Data serwisu</span>
-                        <input
-                          type="date"
-                          value={serviceForm.data_zdarzenia}
-                          onChange={(e) =>
-                            setServiceForm({
-                              ...serviceForm,
-                              data_zdarzenia: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </label>
-
-                      <label>
-                        <span>Wykonano przy (mth)</span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.1"
-                          value={serviceForm.wykonany_przy_mth}
-                          onChange={(e) =>
-                            setServiceForm({
-                              ...serviceForm,
-                              wykonany_przy_mth: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </label>
-
-                      <label>
-                        <span>Wykonawca</span>
-                        <input
-                          value={serviceForm.wykonawca}
-                          onChange={(e) =>
-                            setServiceForm({
-                              ...serviceForm,
-                              wykonawca: e.target.value,
-                            })
-                          }
-                          placeholder="np. Serwis XYZ"
-                          required
-                        />
-                      </label>
-
-                      <label style={{ gridColumn: "1 / -1" }}>
-                        <span>Uwagi</span>
-                        <textarea
-                          rows={3}
-                          value={serviceForm.uwagi}
-                          onChange={(e) =>
-                            setServiceForm({
-                              ...serviceForm,
-                              uwagi: e.target.value,
-                            })
-                          }
-                          placeholder="Co zostało wykonane podczas serwisu..."
-                        />
-                      </label>
-                    </div>
-
-                    <div className="actions">
-                      <button type="submit" disabled={serviceSaving}>
-                        {serviceSaving ? "Zapisywanie..." : "Zapisz wykonany serwis"}
-                      </button>
-                      <button
-                        type="button"
-                        className="secondary"
-                        onClick={() => setServiceFormOpen(false)}
-                      >
-                        Anuluj
-                      </button>
-                    </div>
-                  </form>
-                ) : null}
-              </>
-            ) : null}
-          </div>
-        </section>
-      ) : null}
-
       {canManage ? (
         <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
           <div className="formPanelHeader">
@@ -967,69 +796,6 @@ export default function MaszynaDetails() {
 
               {err && <p className="error">{err}</p>}
             </form>
-          </div>
-        </section>
-      ) : null}
-
-      {false && activeFailures.length > 0 ? (
-        <section className="detailsSection">
-          <div className="detailsSectionHeader">
-            <div className="sectionIntro">
-              <span className="rowEyebrow">Pilne</span>
-              <h2>Aktywne awarie</h2>
-              <p>Te zgłoszenia są nadal otwarte i wymagają reakcji.</p>
-            </div>
-
-            <div className="historyCount">
-              <strong>{activeFailures.length}</strong>
-              <span>aktywnych</span>
-            </div>
-          </div>
-
-          <div className="historyActiveList">
-            {activeFailures.map((report) => (
-              <article className="historyActiveCard" key={report.id}>
-                <div className="historyActiveCardTop">
-                  <span className="historyBadge historyBadgeDanger">aktywna awaria</span>
-                  <span className="mutedText">
-                    {String(report.data_raportu || "").slice(0, 10)}
-                  </span>
-                </div>
-                <strong className="historyActiveTitle">
-                  {report.opis || "Zgłoszenie awarii bez opisu"}
-                </strong>
-                <div className="historyActiveMeta">
-                  <span>Operator: {report.username || "brak"}</span>
-                  <span>Status: {report.status_awarii || "nowa"}</span>
-                  <span>Motogodziny: {report.motogodziny ?? "brak"}</span>
-                </div>
-                {canManage ? (
-                  <div className="actions">
-                    <button
-                      type="button"
-                      className="secondary"
-                      onClick={() => {
-                        if (repairFormOpenId === report.id) {
-                          setRepairFormOpenId(null);
-                          return;
-                        }
-
-                        setRepairFormOpenId(report.id);
-                        setRepairForm({
-                          data_zdarzenia: today,
-                          wykonawca: "",
-                          uwagi: report.opis || "",
-                        });
-                      }}
-                    >
-                      {repairFormOpenId === report.id
-                        ? "Ukryj formularz"
-                        : "Oznacz jako naprawioną"}
-                    </button>
-                  </div>
-                ) : null}
-              </article>
-            ))}
           </div>
         </section>
       ) : null}
