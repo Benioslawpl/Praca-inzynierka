@@ -1,5 +1,4 @@
 import pool from "../../../../../../../db";
-import { audit } from "../../../../../../lib/audit";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -92,15 +91,6 @@ export async function PUT(req, { params }) {
 
     const after = await getAssignment(budowaId, assignmentId);
 
-    await audit({
-      action: "update",
-      entity: "budowy_sprzet",
-      entityId: assignmentId,
-      before,
-      after,
-      req,
-    });
-
     return Response.json(after);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
@@ -122,14 +112,6 @@ export async function DELETE(req, { params }) {
        WHERE budowa_id=$1 AND id=$2`,
       [budowaId, assignmentId]
     );
-
-    await audit({
-      action: "delete",
-      entity: "budowy_sprzet",
-      entityId: assignmentId,
-      before,
-      req,
-    });
 
     return Response.json({ ok: true });
   } catch (error) {

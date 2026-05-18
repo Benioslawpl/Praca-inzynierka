@@ -1,5 +1,4 @@
 import pool from "../../../../../db";
-import { audit } from "../../../../lib/audit";
 
 function getId(req, params) {
   const fromParams = Number(params?.id);
@@ -55,15 +54,6 @@ export async function PUT(req, { params }) {
       [numer.trim(), brygadzista.trim(), id]
     );
 
-    await audit({
-      action: "update",
-      entity: "brygady",
-      entityId: id,
-      before,
-      after: rows[0],
-      req,
-    });
-
     return Response.json(rows[0]);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
@@ -99,14 +89,6 @@ export async function DELETE(req, { params }) {
     await client.query(`DELETE FROM brygada_czlonkowie WHERE brygada_id=$1`, [id]);
     await client.query(`DELETE FROM brygady WHERE id=$1`, [id]);
     await client.query("COMMIT");
-
-    await audit({
-      action: "delete",
-      entity: "brygady",
-      entityId: id,
-      before,
-      req,
-    });
 
     return Response.json({ ok: true });
   } catch (error) {

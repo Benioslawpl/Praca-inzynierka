@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 
 import pool from "../../../../../db";
 import { getUserFromRequest } from "../../../../lib/auth";
-import { audit } from "../../../../lib/audit";
 import { normalizeRole } from "../../../../lib/roles";
 
 function getIdFrom(req, ctx) {
@@ -62,14 +61,6 @@ export async function PUT(req, ctx) {
       ]);
 
       if (before) {
-        await audit({
-          action: "update",
-          entity: "users",
-          entityId: parsed.id,
-          before,
-          after: { ...before, password_reset: true },
-          req,
-        });
       }
 
       return Response.json({ ok: true });
@@ -91,15 +82,6 @@ export async function PUT(req, ctx) {
           { status: 404 }
         );
       }
-
-      await audit({
-        action: "update",
-        entity: "users",
-        entityId: parsed.id,
-        before,
-        after: rows[0],
-        req,
-      });
 
       return Response.json(rows[0]);
     }
@@ -132,15 +114,6 @@ export async function PUT(req, ctx) {
       }
 
       const after = await getUserRow(parsed.id);
-
-      await audit({
-        action: "update",
-        entity: "users",
-        entityId: parsed.id,
-        before,
-        after: after || rows[0],
-        req,
-      });
 
       return Response.json(after || rows[0]);
     }
@@ -187,13 +160,6 @@ export async function DELETE(req, ctx) {
     }
 
     if (before) {
-      await audit({
-        action: "delete",
-        entity: "users",
-        entityId: parsed.id,
-        before,
-        req,
-      });
     }
 
     return Response.json({ ok: true });

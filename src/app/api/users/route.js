@@ -1,8 +1,7 @@
-import bcrypt from "bcryptjs";
+﻿import bcrypt from "bcryptjs";
 
 import pool from "../../../../db";
 import { getUserFromRequest } from "../../../lib/auth";
-import { audit } from "../../../lib/audit";
 import { normalizeRole } from "../../../lib/roles";
 
 export const runtime = "nodejs";
@@ -49,13 +48,6 @@ export async function POST(req) {
     [username, hash, role, blocked]
   );
 
-  await audit({
-    action: "create",
-    entity: "users",
-    entityId: rows[0].id,
-    after: rows[0],
-    req,
-  });
-
   return Response.json(rows[0]);
 }
+

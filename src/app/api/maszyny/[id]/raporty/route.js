@@ -1,6 +1,5 @@
 import pool from "../../../../../../db";
 import { getUserFromRequest } from "../../../../../lib/auth";
-import { audit } from "../../../../../lib/audit";
 import { canAccessMachine } from "../../../../../lib/machine-access";
 
 function getMachineId(req, params) {
@@ -113,14 +112,6 @@ export async function POST(req, ctx) {
       ]
     );
   }
-
-  await audit({
-    action: "create",
-    entity: "maszyna_raporty",
-    entityId: rows[0].id,
-    after: rows[0],
-    req,
-  });
 
   return Response.json(rows[0], { status: 201 });
 }

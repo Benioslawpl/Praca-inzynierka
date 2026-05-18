@@ -14,7 +14,6 @@ const BASE_LINKS = [
 
 const ADMIN_LINKS = [
   { href: "/uzytkownicy", label: "Użytkownicy" },
-  { href: "/historia", label: "Historia" },
 ];
 
 const OPERATOR_LINKS = [

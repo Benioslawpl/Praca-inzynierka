@@ -1,7 +1,6 @@
-import pool from "../../../../db";
+﻿import pool from "../../../../db";
 import { getUserFromRequest } from "../../../lib/auth";
 import { getVisibleMachineIdsForUser, setActiveOperatorForMachine } from "../../../lib/machine-access";
-import { audit } from "../../../lib/audit";
 
 // GET list
 export async function GET(req) {
@@ -97,16 +96,9 @@ export async function POST(req) {
        WHERE m.id=$1`,
       [rows[0].id]
     );
-
-    await audit({
-      action: "create",
-      entity: "maszyny",
-      entityId: rows[0].id,
-      after: finalRows[0] || rows[0],
-      req,
-    });
     return Response.json(finalRows[0] || rows[0], { status: 201 });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
 }
+

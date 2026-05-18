@@ -1,6 +1,5 @@
 import pool from "../../../../../../../db";
 import { getUserFromRequest } from "../../../../../../lib/auth";
-import { audit } from "../../../../../../lib/audit";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -91,15 +90,6 @@ export async function PUT(req, { params }) {
       ]
     );
 
-    await audit({
-      action: "update",
-      entity: "maszyny_details",
-      entityId: detailId,
-      before: { maszyna_id: maszynaId, maszyna_nr: maszynaNr, ...before },
-      after: { maszyna_id: maszynaId, maszyna_nr: maszynaNr, ...rows[0] },
-      req,
-    });
-
     return Response.json(rows[0]);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
@@ -128,14 +118,6 @@ export async function DELETE(req, { params }) {
     if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
 
     const maszynaNr = await getMaszynaNr(maszynaId);
-
-    await audit({
-      action: "delete",
-      entity: "maszyny_details",
-      entityId: detailId,
-      before: { maszyna_id: maszynaId, maszyna_nr: maszynaNr, ...rows[0] },
-      req,
-    });
 
     return Response.json({ ok: true });
   } catch (error) {

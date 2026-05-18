@@ -1,5 +1,4 @@
 import pool from "../../../../../db";
-import { audit } from "../../../../lib/audit";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -106,15 +105,6 @@ export async function PUT(req, { params }) {
       ]
     );
 
-    await audit({
-      action: "update",
-      entity: "sprzet",
-      entityId: id,
-      before,
-      after: rows[0],
-      req,
-    });
-
     return Response.json(rows[0]);
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
@@ -139,14 +129,6 @@ export async function DELETE(req, { params }) {
     if (!rows[0]) {
       return Response.json({ error: "Not found" }, { status: 404 });
     }
-
-    await audit({
-      action: "delete",
-      entity: "sprzet",
-      entityId: id,
-      before: rows[0],
-      req,
-    });
 
     return Response.json({ ok: true });
   } catch (e) {

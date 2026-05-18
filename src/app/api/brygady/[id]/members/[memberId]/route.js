@@ -1,5 +1,4 @@
 import pool from "../../../../../../../db";
-import { audit } from "../../../../../../lib/audit";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -58,15 +57,6 @@ export async function PUT(req, { params }) {
       [imie, nazwisko, rola, telefon, memberId, brygadaId]
     );
 
-    await audit({
-      action: "update",
-      entity: "members",
-      entityId: memberId,
-      before: { brygada_id: brygadaId, ...before },
-      after: { brygada_id: brygadaId, ...rows[0] },
-      req,
-    });
-
     return Response.json(rows[0]);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
@@ -88,14 +78,6 @@ export async function DELETE(req, { params }) {
     );
 
     if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
-
-    await audit({
-      action: "delete",
-      entity: "members",
-      entityId: memberId,
-      before: { brygada_id: brygadaId, ...rows[0] },
-      req,
-    });
 
     return Response.json({ ok: true });
   } catch (error) {

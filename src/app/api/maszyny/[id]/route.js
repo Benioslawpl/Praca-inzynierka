@@ -1,7 +1,6 @@
 import pool from "../../../../../db";
 import { getUserFromRequest } from "../../../../lib/auth";
 import { canAccessMachine, setActiveOperatorForMachine } from "../../../../lib/machine-access";
-import { audit } from "../../../../lib/audit";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -130,15 +129,6 @@ export async function PUT(req, { params }) {
     await setActiveOperatorForMachine(req, id, assignedOperatorId);
     const after = await getMachineRow(id);
 
-    await audit({
-      action: "update",
-      entity: "maszyny",
-      entityId: id,
-      before,
-      after,
-      req,
-    });
-
     return Response.json(after);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
@@ -164,14 +154,6 @@ export async function DELETE(req, { params }) {
     if (!before) return Response.json({ error: "Not found" }, { status: 404 });
 
     await pool.query(`DELETE FROM maszyny WHERE id=$1`, [id]);
-
-    await audit({
-      action: "delete",
-      entity: "maszyny",
-      entityId: id,
-      before,
-      req,
-    });
 
     return Response.json({ ok: true });
   } catch (error) {

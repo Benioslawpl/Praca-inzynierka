@@ -1,6 +1,5 @@
 import pool from "../../../../../../../db";
 import { getUserFromRequest } from "../../../../../../lib/auth";
-import { audit } from "../../../../../../lib/audit";
 import { canAccessMachine } from "../../../../../../lib/machine-access";
 
 function getIds(req, params) {
@@ -94,15 +93,6 @@ export async function PUT(req, { params }) {
       ]
     );
   }
-
-  await audit({
-    action: "update",
-    entity: "maszyna_raporty",
-    entityId: reportId,
-    before,
-    after: rows[0],
-    req,
-  });
 
   return Response.json(rows[0]);
 }

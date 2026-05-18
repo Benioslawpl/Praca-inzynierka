@@ -1,5 +1,4 @@
 import pool from "../../../../../../db";
-import { audit } from "../../../../../lib/audit";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -109,14 +108,6 @@ export async function POST(req, { params }) {
       model: metaRows[0]?.model || null,
       operator: metaRows[0]?.operator || null,
     };
-
-    await audit({
-      action: "create",
-      entity: "budowy_maszyny",
-      entityId: rows[0].id,
-      after,
-      req,
-    });
 
     return Response.json(after, { status: 201 });
   } catch (error) {

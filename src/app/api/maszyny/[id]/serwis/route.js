@@ -1,6 +1,5 @@
 import pool from "../../../../../../db";
 import { getUserFromRequest } from "../../../../../lib/auth";
-import { audit } from "../../../../../lib/audit";
 
 function getMachineId(req, params) {
   const value = Number(params?.id);
@@ -86,15 +85,6 @@ export async function POST(req, { params }) {
       user.username || null,
     ]
   );
-
-  await audit({
-    action: "update",
-    entity: "maszyny",
-    entityId: machineId,
-    before,
-    after,
-    req,
-  });
 
   return Response.json({ ok: true, machine: after });
 }

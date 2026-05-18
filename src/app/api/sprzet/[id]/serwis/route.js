@@ -1,6 +1,5 @@
 import pool from "../../../../../../db";
 import { getUserFromRequest } from "../../../../../lib/auth";
-import { audit } from "../../../../../lib/audit";
 
 function getSprzetId(req, params) {
   const value = Number(params?.id);
@@ -87,15 +86,6 @@ export async function POST(req, { params }) {
       "brak",
     ]
   );
-
-  await audit({
-    action: "update",
-    entity: "sprzet",
-    entityId: sprzetId,
-    before,
-    after,
-    req,
-  });
 
   return Response.json({ ok: true, sprzet: after });
 }

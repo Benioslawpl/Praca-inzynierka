@@ -1,7 +1,6 @@
 import pool from "../../../../../../db";
 import { getUserFromRequest } from "../../../../../lib/auth";
 import { canAccessMachine } from "../../../../../lib/machine-access";
-import { audit } from "../../../../../lib/audit";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -104,14 +103,6 @@ export async function POST(req, { params }) {
         reporterUsername,
       ]
     );
-
-    await audit({
-      action: "create",
-      entity: "maszyny_details",
-      entityId: rows[0].id,
-      after: { maszyna_id: maszynaId, maszyna_nr: maszynaNr, ...rows[0] },
-      req,
-    });
 
     return Response.json(rows[0]);
   } catch (error) {

@@ -1,5 +1,4 @@
 import pool from "../../../../../../../db";
-import { audit } from "../../../../../../lib/audit";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -83,15 +82,6 @@ export async function PUT(req, { params }) {
       ]
     );
 
-    await audit({
-      action: "update",
-      entity: "sprzet_details",
-      entityId: detailId,
-      before: { sprzet_id: sprzetId, sprzet_nr: sprzetNr, ...before },
-      after: { sprzet_id: sprzetId, sprzet_nr: sprzetNr, ...rows[0] },
-      req,
-    });
-
     return Response.json(rows[0]);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
@@ -115,14 +105,6 @@ export async function DELETE(req, { params }) {
     if (!rows[0]) return Response.json({ error: "Not found" }, { status: 404 });
 
     const sprzetNr = await getSprzetNr(sprzetId);
-
-    await audit({
-      action: "delete",
-      entity: "sprzet_details",
-      entityId: detailId,
-      before: { sprzet_id: sprzetId, sprzet_nr: sprzetNr, ...rows[0] },
-      req,
-    });
 
     return Response.json({ ok: true });
   } catch (error) {

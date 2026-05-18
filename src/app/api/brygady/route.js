@@ -1,5 +1,4 @@
-import pool from "../../../../db";
-import { audit } from "../../../lib/audit";
+﻿import pool from "../../../../db";
 
 export async function GET() {
   try {
@@ -35,16 +34,9 @@ export async function POST(req) {
       [numer.trim(), brygadzista.trim()]
     );
 
-    await audit({
-      action: "create",
-      entity: "brygady",
-      entityId: rows[0].id,
-      after: rows[0],
-      req,
-    });
-
     return Response.json(rows[0]);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
+
