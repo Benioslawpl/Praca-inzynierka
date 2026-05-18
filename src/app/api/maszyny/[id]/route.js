@@ -85,6 +85,7 @@ export async function PUT(req, { params }) {
     if (!before) return Response.json({ error: "Not found" }, { status: 404 });
 
     const body = await req.json().catch(() => ({}));
+    const nr = body?.nr?.trim();
     const rodzaj = body?.rodzaj?.trim();
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
@@ -99,30 +100,31 @@ export async function PUT(req, { params }) {
       body?.ostatni_serwis_mth === "" ||
       body?.ostatni_serwis_mth === null ||
       body?.ostatni_serwis_mth === undefined
-        ? null
+        ? before.ostatni_serwis_mth
         : Number(body.ostatni_serwis_mth);
     const assignedOperatorId =
       Object.prototype.hasOwnProperty.call(body || {}, "assigned_operator_id")
         ? Number(body.assigned_operator_id) || null
         : before.assigned_operator_id || null;
 
-    if (!rodzaj || !marka || !model || !operator) {
+    if (!nr || !rodzaj || !marka || !model || !operator) {
       return Response.json(
-        { error: "Wymagane: rodzaj, marka, model, operator" },
+        { error: "Wymagane: numer, rodzaj, marka, model, operator" },
         { status: 400 }
       );
     }
 
     await pool.query(
       `UPDATE maszyny
-       SET rodzaj=$1,
-           marka=$2,
-           model=$3,
-           operator=$4,
-           serwis_co_ile_mth=$5,
-           ostatni_serwis_mth=$6
-       WHERE id=$7`,
-      [rodzaj, marka, model, operator, serviceEvery, lastServiceHours, id]
+       SET nr=$1,
+           rodzaj=$2,
+           marka=$3,
+           model=$4,
+           operator=$5,
+           serwis_co_ile_mth=$6,
+           ostatni_serwis_mth=$7
+       WHERE id=$8`,
+      [nr, rodzaj, marka, model, operator, serviceEvery, lastServiceHours, id]
     );
 
     await setActiveOperatorForMachine(req, id, assignedOperatorId);

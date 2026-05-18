@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 const EMPTY_FORM = {
+  nr: "",
   rodzaj: "",
   marka: "",
   model: "",
   operator: "",
   assigned_operator_id: "",
   serwis_co_ile_mth: "",
-  ostatni_serwis_mth: "",
 };
 
 export default function MaszynyPage() {
@@ -79,6 +79,7 @@ export default function MaszynyPage() {
       const url = editId ? `/api/maszyny/${editId}` : "/api/maszyny";
       const method = editId ? "PUT" : "POST";
       const payload = {
+        nr: form.nr.trim(),
         rodzaj: form.rodzaj.trim(),
         marka: form.marka.trim(),
         model: form.model.trim(),
@@ -88,8 +89,6 @@ export default function MaszynyPage() {
           : null,
         serwis_co_ile_mth:
           form.serwis_co_ile_mth === "" ? null : Number(form.serwis_co_ile_mth),
-        ostatni_serwis_mth:
-          form.ostatni_serwis_mth === "" ? null : Number(form.ostatni_serwis_mth),
       };
 
       const res = await fetch(url, {
@@ -114,13 +113,13 @@ export default function MaszynyPage() {
     setIsFormOpen(true);
     setEditId(row.id);
     setForm({
+      nr: row.nr ?? "",
       rodzaj: row.rodzaj ?? "",
       marka: row.marka ?? "",
       model: row.model ?? "",
       operator: row.operator ?? "",
       assigned_operator_id: row.assigned_operator_id ? String(row.assigned_operator_id) : "",
       serwis_co_ile_mth: row.serwis_co_ile_mth ?? "",
-      ostatni_serwis_mth: row.ostatni_serwis_mth ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -185,6 +184,16 @@ export default function MaszynyPage() {
           <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
             <form className="card" onSubmit={submit}>
               <div className="grid">
+                <label>
+                  <span>Numer*</span>
+                  <input
+                    value={form.nr}
+                    onChange={(e) => setForm({ ...form, nr: e.target.value })}
+                    required
+                    placeholder="np. M-01"
+                  />
+                </label>
+
                 <label>
                   <span>Rodzaj*</span>
                   <input
@@ -256,19 +265,6 @@ export default function MaszynyPage() {
                   />
                 </label>
 
-                <label>
-                  <span>Ostatni serwis przy mth</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    value={form.ostatni_serwis_mth}
-                    onChange={(e) =>
-                      setForm({ ...form, ostatni_serwis_mth: e.target.value })
-                    }
-                    placeholder="np. 1200"
-                  />
-                </label>
               </div>
 
               <div className="actions">
@@ -313,12 +309,10 @@ export default function MaszynyPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, index) => {
-                const uiNr = row.nr || `M-${String(index + 1).padStart(2, "0")}`;
-
+              {rows.map((row) => {
                 return (
                   <tr key={row.id}>
-                    <td data-label="Numer">{uiNr}</td>
+                    <td data-label="Numer">{row.nr || "-"}</td>
                     <td data-label="Rodzaj">{row.rodzaj}</td>
                     <td data-label="Marka">{row.marka}</td>
                     <td data-label="Model">{row.model}</td>

@@ -78,7 +78,7 @@ export async function PUT(req, { params }) {
       body?.ostatni_serwis_mth === "" ||
       body?.ostatni_serwis_mth === null ||
       body?.ostatni_serwis_mth === undefined
-        ? null
+        ? before.ostatni_serwis_mth
         : Number(body.ostatni_serwis_mth);
 
     if (!rodzaj || !marka || !model || !brygadzista) {

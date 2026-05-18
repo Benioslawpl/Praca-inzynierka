@@ -13,7 +13,6 @@ export default function SprzetPage() {
     model: "",
     brygadzista: "",
     serwis_co_ile_mth: "",
-    ostatni_serwis_mth: "",
   });
   const [editId, setEditId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -76,7 +75,6 @@ export default function SprzetPage() {
       model: "",
       brygadzista: brygadzisci[0]?.brygadzista || "",
       serwis_co_ile_mth: "",
-      ostatni_serwis_mth: "",
     });
     setEditId(null);
     setIsFormOpen(false);
@@ -98,8 +96,6 @@ export default function SprzetPage() {
         brygadzista: form.brygadzista.trim(),
         serwis_co_ile_mth:
           form.serwis_co_ile_mth === "" ? null : Number(form.serwis_co_ile_mth),
-        ostatni_serwis_mth:
-          form.ostatni_serwis_mth === "" ? null : Number(form.ostatni_serwis_mth),
       };
 
       const res = await fetch(url, {
@@ -131,7 +127,6 @@ export default function SprzetPage() {
       model: row.model ?? "",
       brygadzista: row.brygadzista ?? "",
       serwis_co_ile_mth: row.serwis_co_ile_mth ?? "",
-      ostatni_serwis_mth: row.ostatni_serwis_mth ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -266,17 +261,6 @@ export default function SprzetPage() {
                 />
               </label>
 
-              <label>
-                <span>Ostatni serwis przy mth</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={form.ostatni_serwis_mth}
-                  onChange={(e) => setForm({ ...form, ostatni_serwis_mth: e.target.value })}
-                  placeholder="np. 500"
-                />
-              </label>
             </div>
 
             <div className="actions">

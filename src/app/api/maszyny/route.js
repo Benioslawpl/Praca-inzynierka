@@ -27,7 +27,7 @@ export async function GET(req) {
        LEFT JOIN users u
          ON u.id = mo.user_id
        WHERE m.id = ANY($1::int[])
-       ORDER BY m.id ASC`,
+       ORDER BY m.nr ASC, m.id ASC`,
       [visibleIds]
     );
     return Response.json(rows);
@@ -36,7 +36,7 @@ export async function GET(req) {
   }
 }
 
-// POST create (nr nadaje trigger w DB)
+// POST create
 export async function POST(req) {
   try {
     const user = await getUserFromRequest(req);
@@ -45,6 +45,7 @@ export async function POST(req) {
     }
 
     const {
+      nr,
       rodzaj,
       marka,
       model,
@@ -53,10 +54,11 @@ export async function POST(req) {
       ostatni_serwis_mth,
       assigned_operator_id,
     } = await req.json();
+    const machineNr = String(nr || "").trim();
 
-    if (!rodzaj || !marka || !model || !operator) {
+    if (!machineNr || !rodzaj || !marka || !model || !operator) {
       return Response.json(
-        { error: "Wymagane: rodzaj, marka, model, operator" },
+        { error: "Wymagane: numer, rodzaj, marka, model, operator" },
         { status: 400 }
       );
     }
@@ -72,10 +74,10 @@ export async function POST(req) {
     const assignedOperatorId = Number(assigned_operator_id) || null;
 
     const { rows } = await pool.query(
-      `INSERT INTO maszyny (rodzaj, marka, model, operator, serwis_co_ile_mth, ostatni_serwis_mth)
-       VALUES ($1,$2,$3,$4,$5,$6)
+      `INSERT INTO maszyny (nr, rodzaj, marka, model, operator, serwis_co_ile_mth, ostatni_serwis_mth)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
        RETURNING *`,
-      [rodzaj, marka, model, operator, serviceEvery, lastServiceHours]
+      [machineNr, rodzaj, marka, model, operator, serviceEvery, lastServiceHours]
     );
 
     if (assignedOperatorId) {
