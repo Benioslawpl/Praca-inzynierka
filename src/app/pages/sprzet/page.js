@@ -157,8 +157,12 @@ export default function SprzetPage() {
   };
 
   return (
-    <div>
-      <h1>Sprzęt</h1>
+    <div className="listPage">
+      <div className="sectionIntro listPageIntro">
+        <span className="rowEyebrow">Ewidencja</span>
+        <h1>Sprzęt</h1>
+        <p>Lista sprzętu przypisanego do brygadzistów wraz z szybkim wejściem w historię zdarzeń.</p>
+      </div>
 
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
@@ -174,7 +178,7 @@ export default function SprzetPage() {
           <button type="button" onClick={toggleForm}>
             <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
               <span className="formPanelToggleIcon" aria-hidden="true">
-                {isFormOpen ? "−" : "+"}
+                {isFormOpen ? "-" : "+"}
               </span>
               <span>
                 {isFormOpen
@@ -251,77 +255,81 @@ export default function SprzetPage() {
               </button>
             </div>
 
-            {brygadzisci.length === 0 && !error && (
+            {brygadzisci.length === 0 && !error ? (
               <p className="error">
-                Najpierw dodaj przynajmniej jedną brygadę z przypisanym
-                brygadzistą.
+                Najpierw dodaj przynajmniej jedną brygadę z przypisanym brygadzistą.
               </p>
-            )}
+            ) : null}
 
             {error && <p className="error">{error}</p>}
           </form>
         </div>
       </section>
 
-      <div className="tableWrap">
-        {rows.length === 0 ? (
-          <p>Brak sprzętu</p>
-        ) : (
-          <table className="table tableCenter">
-            <thead>
-              <tr>
-                <th style={{ width: 90 }}>Numer</th>
-                <th>Rodzaj</th>
-                <th>Marka</th>
-                <th>Model</th>
-                <th>Brygadzista</th>
-                <th style={{ width: 240 }}>Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => {
-                const uiNr = row.nr || `S-${String(index + 1).padStart(2, "0")}`;
+      <section className="detailsSection detailsHistorySection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Lista</span>
+            <h2>Sprzęt w ewidencji</h2>
+            <p>Wszystkie pozycje z czytelnymi akcjami i przejściem do szczegółów.</p>
+          </div>
+        </div>
 
-                return (
-                  <tr key={row.id}>
-                    <td data-label="Numer">{uiNr}</td>
-                    <td data-label="Rodzaj">{row.rodzaj}</td>
-                    <td data-label="Marka">{row.marka}</td>
-                    <td data-label="Model">{row.model}</td>
-                    <td data-label="Brygadzista">{row.brygadzista}</td>
+        <div className="tableWrap">
+          {rows.length === 0 ? (
+            <p>Brak sprzętu</p>
+          ) : (
+            <table className="table tableCenter">
+              <thead>
+                <tr>
+                  <th style={{ width: 90 }}>Numer</th>
+                  <th>Rodzaj</th>
+                  <th>Marka</th>
+                  <th>Model</th>
+                  <th>Brygadzista</th>
+                  <th style={{ width: 240 }}>Akcje</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, index) => {
+                  const uiNr = row.nr || `S-${String(index + 1).padStart(2, "0")}`;
 
-                    <td className="actionsCell" data-label="Akcje">
-                      <Link
-                        href={`/pages/sprzet/${row.id}`}
-                        className="info-btn"
-                        title="Szczegóły"
-                      >
-                        Szczegóły
-                      </Link>
+                  return (
+                    <tr key={row.id}>
+                      <td data-label="Numer">{uiNr}</td>
+                      <td data-label="Rodzaj">{row.rodzaj}</td>
+                      <td data-label="Marka">{row.marka}</td>
+                      <td data-label="Model">{row.model}</td>
+                      <td data-label="Brygadzista">{row.brygadzista}</td>
+                      <td className="actionsCell" data-label="Akcje">
+                        <Link href={`/pages/sprzet/${row.id}`} className="info-btn" title="Szczegóły">
+                          Szczegóły
+                        </Link>
 
-                      <button
-                        type="button"
-                        className="secondary"
-                        onClick={() => handleEdit(row)}
-                      >
-                        Edytuj
-                      </button>
+                        <button
+                          type="button"
+                          className="secondary"
+                          onClick={() => handleEdit(row)}
+                        >
+                          Edytuj
+                        </button>
 
-                      <button
-                        type="button"
-                        className="danger"
-                        onClick={() => handleDelete(row.id)}
-                      >
-                        Usuń
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() => handleDelete(row.id)}
+                        >
+                          Usuń
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

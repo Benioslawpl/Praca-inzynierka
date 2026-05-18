@@ -170,7 +170,7 @@ export default function BrygadaDetails() {
   };
 
   return (
-    <div className="detailsPage">
+    <div className="detailsPage machineDetailsPage">
       <button
         type="button"
         className="secondary detailsBackButton"
@@ -187,7 +187,7 @@ export default function BrygadaDetails() {
         </div>
 
         {header ? (
-          <div className="card detailsSummary">
+          <div className="card detailsSummary machineDetailsSummary">
             <div className="detailsSummaryContent detailsSummaryGrid">
               <div className="detailsStat">
                 <span className="detailsStatLabel">Numer</span>
@@ -285,7 +285,7 @@ export default function BrygadaDetails() {
         </div>
       </section>
 
-      <section className="detailsSection">
+      <section className="detailsSection detailsHistorySection">
         <div className="detailsSectionHeader">
           <div className="sectionIntro">
             <span className="rowEyebrow">Zespół</span>

@@ -245,7 +245,7 @@ export default function SprzetDetailsPage() {
   };
 
   return (
-    <div className="detailsPage">
+    <div className="detailsPage machineDetailsPage">
       <button
         type="button"
         className="secondary detailsBackButton"
@@ -262,7 +262,7 @@ export default function SprzetDetailsPage() {
         </div>
 
         {header ? (
-          <div className="card detailsSummary">
+          <div className="card detailsSummary machineDetailsSummary">
             <div className="detailsSummaryContent detailsSummaryGrid">
               <div className="detailsStat">
                 <span className="detailsStatLabel">Numer</span>
@@ -411,7 +411,7 @@ export default function SprzetDetailsPage() {
       </section>
 
       {activeFailures.length > 0 ? (
-        <section className="detailsSection">
+        <section className="detailsSection detailsPrioritySection">
           <div className="detailsSectionHeader">
             <div className="sectionIntro">
               <span className="rowEyebrow">Pilne</span>
@@ -458,7 +458,7 @@ export default function SprzetDetailsPage() {
         </section>
       ) : null}
 
-      <section className="detailsSection">
+      <section className="detailsSection detailsHistorySection">
         <div className="detailsSectionHeader">
           <div className="sectionIntro">
             <span className="rowEyebrow">Historia</span>

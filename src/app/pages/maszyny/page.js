@@ -147,8 +147,12 @@ export default function MaszynyPage() {
   };
 
   return (
-    <div>
-      <h1>Maszyny</h1>
+    <div className="listPage">
+      <div className="sectionIntro listPageIntro">
+        <span className="rowEyebrow">Ewidencja</span>
+        <h1>Maszyny</h1>
+        <p>Przegląd maszyn, operatorów i ustawień serwisowych w jednym spójnym widoku.</p>
+      </div>
 
       {canManage ? (
         <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
@@ -282,6 +286,15 @@ export default function MaszynyPage() {
         </section>
       ) : null}
 
+      <section className="detailsSection detailsHistorySection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Lista</span>
+            <h2>Maszyny w ewidencji</h2>
+            <p>Wszystkie dostępne rekordy z szybkim przejściem do szczegółów.</p>
+          </div>
+        </div>
+
       <div className="tableWrap">
         {rows.length === 0 ? (
           <p>Brak danych</p>
@@ -350,6 +363,7 @@ export default function MaszynyPage() {
           </table>
         )}
       </div>
+      </section>
     </div>
   );
 }

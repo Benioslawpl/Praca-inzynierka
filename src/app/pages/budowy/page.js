@@ -139,8 +139,12 @@ export default function BudowyPage() {
   };
 
   return (
-    <div>
-      <h1>Budowy</h1>
+    <div className="listPage">
+      <div className="sectionIntro listPageIntro">
+        <span className="rowEyebrow">Realizacje</span>
+        <h1>Budowy</h1>
+        <p>Lista budów z prostym dostępem do przypisań brygad, maszyn i danych organizacyjnych.</p>
+      </div>
 
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
@@ -156,7 +160,7 @@ export default function BudowyPage() {
           <button type="button" onClick={toggleForm}>
             <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
               <span className="formPanelToggleIcon" aria-hidden="true">
-                {isFormOpen ? "−" : "+"}
+                {isFormOpen ? "-" : "+"}
               </span>
               <span>
                 {isFormOpen
@@ -238,9 +242,7 @@ export default function BudowyPage() {
                 <input
                   type="date"
                   value={form.data_rozpoczecia}
-                  onChange={(e) =>
-                    setForm({ ...form, data_rozpoczecia: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, data_rozpoczecia: e.target.value })}
                 />
               </label>
 
@@ -249,9 +251,7 @@ export default function BudowyPage() {
                 <input
                   type="date"
                   value={form.data_zakonczenia}
-                  onChange={(e) =>
-                    setForm({ ...form, data_zakonczenia: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, data_zakonczenia: e.target.value })}
                 />
               </label>
 
@@ -280,58 +280,64 @@ export default function BudowyPage() {
         </div>
       </section>
 
-      <div className="tableWrap">
-        {rows.length === 0 ? (
-          <p>Brak budów</p>
-        ) : (
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Numer</th>
-                <th>Nazwa</th>
-                <th>Lokalizacja</th>
-                <th>Status</th>
-                <th>Kierownik</th>
-                <th>Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td data-label="Numer">{row.numer}</td>
-                  <td data-label="Nazwa">{row.nazwa}</td>
-                  <td data-label="Lokalizacja">{row.lokalizacja}</td>
-                  <td data-label="Status">{row.status || "-"}</td>
-                  <td data-label="Kierownik">{row.kierownik || "-"}</td>
-                  <td className="actionsCell" data-label="Akcje">
-                    <Link
-                      href={`/pages/budowy/${row.id}`}
-                      className="info-btn"
-                      title="Szczegóły"
-                    >
-                      Szczegóły
-                    </Link>
-                    <button
-                      type="button"
-                      className="secondary"
-                      onClick={() => handleEdit(row)}
-                    >
-                      Edytuj
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={() => handleDelete(row.id)}
-                    >
-                      Usuń
-                    </button>
-                  </td>
+      <section className="detailsSection detailsHistorySection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Lista</span>
+            <h2>Budowy w ewidencji</h2>
+            <p>Wszystkie budowy z najważniejszymi informacjami i wejściem do szczegółów.</p>
+          </div>
+        </div>
+
+        <div className="tableWrap">
+          {rows.length === 0 ? (
+            <p>Brak budów</p>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Numer</th>
+                  <th>Nazwa</th>
+                  <th>Lokalizacja</th>
+                  <th>Status</th>
+                  <th>Kierownik</th>
+                  <th>Akcje</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id}>
+                    <td data-label="Numer">{row.numer}</td>
+                    <td data-label="Nazwa">{row.nazwa}</td>
+                    <td data-label="Lokalizacja">{row.lokalizacja}</td>
+                    <td data-label="Status">{row.status || "-"}</td>
+                    <td data-label="Kierownik">{row.kierownik || "-"}</td>
+                    <td className="actionsCell" data-label="Akcje">
+                      <Link href={`/pages/budowy/${row.id}`} className="info-btn" title="Szczegóły">
+                        Szczegóły
+                      </Link>
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => handleEdit(row)}
+                      >
+                        Edytuj
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => handleDelete(row.id)}
+                      >
+                        Usuń
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

@@ -303,6 +303,20 @@ header {
   margin: 20px auto;
 }
 
+.listPage {
+  display: grid;
+  gap: 18px;
+}
+
+.listPageIntro {
+  padding: 6px 2px 2px;
+}
+
+.listPageIntro p {
+  max-width: 68ch;
+  color: #5b6778;
+}
+
 p {
   color: var(--color-text);
   line-height: 1.6;
@@ -526,6 +540,19 @@ button[disabled] {
   padding: 16px;
 }
 
+.machineDetailsPage .detailsSectionHeader .sectionIntro p {
+  max-width: 64ch;
+}
+
+.machineDetailsPage .formPanelHeader p,
+.machineDetailsPage .detailsSectionHeader p {
+  color: #5b6778;
+}
+
+.machineDetailsPage .tableWrap > p {
+  background: rgba(250, 252, 255, 0.9);
+}
+
 .detailsAlertGrid {
   display: grid;
   gap: 12px;
@@ -558,6 +585,10 @@ button[disabled] {
 
 .detailsHistorySection {
   background: rgba(255, 255, 255, 0.86);
+}
+
+.detailsHistorySection .detailsSectionHeader {
+  align-items: center;
 }
 
 .detailsSectionHeader {
@@ -1709,6 +1740,20 @@ label {
 
 .detailsHistorySection .historyNotesCell {
   max-width: 360px;
+}
+
+.machineDetailsPage .detailsStatValue {
+  letter-spacing: -0.01em;
+}
+
+.machineDetailsPage .detailsBackButton {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #dbe2ea;
+}
+
+.machineDetailsPage .detailsBackButton:hover {
+  background: #eef2f7;
 }
 
 .detailsSection .actions > .secondary,

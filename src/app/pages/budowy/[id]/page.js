@@ -382,7 +382,7 @@ export default function BudowaDetailsPage() {
 
   if (!header) {
     return (
-      <div className="detailsPage">
+      <div className="detailsPage machineDetailsPage">
         <button
           type="button"
           className="secondary detailsBackButton"
@@ -396,7 +396,7 @@ export default function BudowaDetailsPage() {
   }
 
   return (
-    <div className="detailsPage">
+    <div className="detailsPage machineDetailsPage">
       <button
         type="button"
         className="secondary detailsBackButton"
@@ -415,7 +415,7 @@ export default function BudowaDetailsPage() {
           </p>
         </div>
 
-        <div className="card detailsSummary">
+        <div className="card detailsSummary machineDetailsSummary">
           <div className="detailsSummaryContent detailsSummaryGrid">
             <div className="detailsStat">
               <span className="detailsStatLabel">Numer</span>
@@ -461,7 +461,7 @@ export default function BudowaDetailsPage() {
 
       {error && <p className="error">{error}</p>}
 
-      <section className="detailsSection">
+      <section className="detailsSection detailsHistorySection">
         <div className="detailsSectionHeader">
           <div className="sectionIntro">
             <span className="rowEyebrow">Obsada</span>
@@ -525,7 +525,7 @@ export default function BudowaDetailsPage() {
         </div>
       </section>
 
-      <section className="detailsSection">
+      <section className="detailsSection detailsHistorySection">
         <div className="detailsSectionHeader">
           <div className="sectionIntro">
             <span className="rowEyebrow">Zasoby</span>

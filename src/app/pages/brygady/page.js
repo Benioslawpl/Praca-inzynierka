@@ -119,8 +119,12 @@ export default function BrygadyPage() {
   };
 
   return (
-    <div>
-      <h1>Brygady</h1>
+    <div className="listPage">
+      <div className="sectionIntro listPageIntro">
+        <span className="rowEyebrow">Ewidencja</span>
+        <h1>Brygady</h1>
+        <p>Podgląd brygad i brygadzistów z szybkim przejściem do składu zespołu.</p>
+      </div>
 
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
@@ -136,7 +140,7 @@ export default function BrygadyPage() {
           <button type="button" onClick={toggleForm}>
             <span className={`formPanelToggle ${isFormOpen ? "formPanelToggleOpen" : ""}`}>
               <span className="formPanelToggleIcon" aria-hidden="true">
-                {isFormOpen ? "−" : "+"}
+                {isFormOpen ? "-" : "+"}
               </span>
               <span>
                 {isFormOpen
@@ -151,10 +155,7 @@ export default function BrygadyPage() {
 
         <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
           <form className="card" onSubmit={handleSubmit}>
-            <div
-              className="grid"
-              style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}
-            >
+            <div className="grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
               <label>
                 <span>Numer*</span>
                 <input
@@ -170,15 +171,13 @@ export default function BrygadyPage() {
                 <input
                   placeholder="Imię i nazwisko"
                   value={form.brygadzista}
-                  onChange={(e) =>
-                    setForm({ ...form, brygadzista: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, brygadzista: e.target.value })}
                   required
                 />
               </label>
             </div>
 
-            <div className="actions" style={{ marginTop: 12 }}>
+            <div className="actions">
               <button type="submit">{editId !== null ? "Zapisz" : "Dodaj"}</button>
               <button type="button" className="secondary" onClick={resetForm}>
                 Anuluj
@@ -190,56 +189,62 @@ export default function BrygadyPage() {
         </div>
       </section>
 
-      <div className="tableWrap" style={{ marginTop: 16 }}>
-        {loading ? (
-          <p>Ładowanie...</p>
-        ) : list.length === 0 ? (
-          <p>Brak brygad</p>
-        ) : (
-          <table className="table tableCenter">
-            <thead>
-              <tr>
-                <th style={{ width: 160 }}>Numer brygady</th>
-                <th>Brygadzista</th>
-                <th style={{ width: 360 }}>Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map((item) => (
-                <tr key={item.id}>
-                  <td data-label="Numer brygady" style={{ fontWeight: 700 }}>
-                    {item.numer}
-                  </td>
-                  <td data-label="Brygadzista">{item.brygadzista}</td>
-                  <td className="actionsCell" data-label="Akcje">
-                    <button
-                      type="button"
-                      className="info-btn"
-                      onClick={() => goDetails(item.id)}
-                    >
-                      Szczegóły
-                    </button>
-                    <button
-                      type="button"
-                      className="secondary"
-                      onClick={() => startEdit(item)}
-                    >
-                      Edytuj
-                    </button>
-                    <button
-                      type="button"
-                      className="danger"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Usuń
-                    </button>
-                  </td>
+      <section className="detailsSection detailsHistorySection">
+        <div className="detailsSectionHeader">
+          <div className="sectionIntro">
+            <span className="rowEyebrow">Lista</span>
+            <h2>Brygady w ewidencji</h2>
+            <p>Wszystkie brygady wraz z brygadzistami i prostymi akcjami zarządzania.</p>
+          </div>
+        </div>
+
+        <div className="tableWrap">
+          {loading ? (
+            <p>Ładowanie...</p>
+          ) : list.length === 0 ? (
+            <p>Brak brygad</p>
+          ) : (
+            <table className="table tableCenter">
+              <thead>
+                <tr>
+                  <th style={{ width: 160 }}>Numer brygady</th>
+                  <th>Brygadzista</th>
+                  <th style={{ width: 360 }}>Akcje</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+              </thead>
+              <tbody>
+                {list.map((item) => (
+                  <tr key={item.id}>
+                    <td data-label="Numer brygady" style={{ fontWeight: 700 }}>
+                      {item.numer}
+                    </td>
+                    <td data-label="Brygadzista">{item.brygadzista}</td>
+                    <td className="actionsCell" data-label="Akcje">
+                      <button type="button" className="info-btn" onClick={() => goDetails(item.id)}>
+                        Szczegóły
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => startEdit(item)}
+                      >
+                        Edytuj
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        Usuń
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
