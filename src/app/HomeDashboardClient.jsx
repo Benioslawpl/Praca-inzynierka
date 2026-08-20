@@ -44,7 +44,7 @@ function getDashboardIntro(type) {
   }
 
   if (type === "brygadzista") {
-    return "brygady, powiazane budowy oraz awarie i serwisy maszyn pracujacych dla Twoich zespolow.";
+    return "budowy, ludzi i sprzet przypisany do Twoich brygad oraz biezace alerty maszyn.";
   }
 
   if (type === "biuro") {
@@ -207,65 +207,132 @@ function DashboardScopePanel({ dashboardType, data }) {
   }
 
   if (dashboardType === "brygadzista") {
-    const brygady = data?.managedBrygady || [];
     const budowy = data?.managedBudowy || [];
+    const teamMembers = data?.teamMembers || [];
+    const assignedSprzet = data?.assignedSprzet || [];
 
     return (
       <article className="card sectionCard">
         <div className="sectionCardHeader">
           <div>
-            <h2>Moje brygady i budowy</h2>
-            <p className="mutedText">Szybki podglad przypisanych zespolow i realizacji.</p>
+            <h2>Budowy, ludzie i sprzet</h2>
+            <p className="mutedText">Najwazniejsze zasoby przypisane do Twoich brygad.</p>
           </div>
-          <span className="metricBadge">{brygady.length + budowy.length}</span>
+          <span className="metricBadge">
+            {budowy.length + teamMembers.length + assignedSprzet.length}
+          </span>
         </div>
 
-        <div className="compactList">
-          {brygady.map((brygada) => (
-            <Link
-              key={`brygada-${brygada.id}`}
-              href={`/pages/brygady/${brygada.id}`}
-              className="dashboardAlertLinkWrap"
-            >
-              <div className="compactListRow compactMetricRow">
-                <div className="compactListMain">
-                  <strong>{brygada.numer}</strong>
-                  <span className="mutedText">Brygada przypisana do Twojego konta</span>
-                </div>
-                <span className="pill">brygada</span>
-              </div>
-            </Link>
-          ))}
-
-          {budowy.map((budowa) => (
-            <Link
-              key={`budowa-${budowa.id}`}
-              href={`/pages/budowy/${budowa.id}`}
-              className="dashboardAlertLinkWrap"
-            >
-              <div className="compactListRow compactMetricRow">
-                <div className="compactListMain">
-                  <strong>{budowa.numer}</strong>
-                  <span>{budowa.nazwa}</span>
-                  <span className="mutedText">
-                    {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
-                  </span>
-                </div>
-                <span className="pill">{statusLabel(budowa.status)}</span>
-              </div>
-            </Link>
-          ))}
-
-          {brygady.length === 0 && budowy.length === 0 ? (
-            <div className="compactListRow">
-              <div className="compactListMain">
-                <strong>Brak przypisan</strong>
-                <span className="mutedText">
-                  To konto nie ma jeszcze przypisanej brygady ani budowy.
-                </span>
-              </div>
+        <div className="dashboardScopeStack">
+          <div className="dashboardScopeGroup">
+            <div className="dashboardAlertGroupHeader">
+              <strong>Budowy</strong>
+              <span className="mutedText">{budowy.length}</span>
             </div>
-          ) : null}
+
+            <div className="compactList">
+              {budowy.length === 0 ? (
+                <div className="compactListRow">
+                  <div className="compactListMain">
+                    <strong>Brak budow</strong>
+                    <span className="mutedText">
+                      Nie ma jeszcze budow przypisanych do Twojej brygady.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                budowy.map((budowa) => (
+                  <Link
+                    key={`budowa-${budowa.id}`}
+                    href={`/pages/budowy/${budowa.id}`}
+                    className="dashboardAlertLinkWrap"
+                  >
+                    <div className="compactListRow compactMetricRow">
+                      <div className="compactListMain">
+                        <strong>{budowa.numer}</strong>
+                        <span>{budowa.nazwa}</span>
+                        <span className="mutedText">
+                          {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
+                        </span>
+                      </div>
+                      <span className="pill">{statusLabel(budowa.status)}</span>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="dashboardScopeGroup">
+            <div className="dashboardAlertGroupHeader">
+              <strong>Ludzie</strong>
+              <span className="mutedText">{teamMembers.length}</span>
+            </div>
+
+            <div className="compactList">
+              {teamMembers.length === 0 ? (
+                <div className="compactListRow">
+                  <div className="compactListMain">
+                    <strong>Brak ludzi w brygadzie</strong>
+                    <span className="mutedText">
+                      Nie dodano jeszcze czlonkow do Twojej brygady.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                teamMembers.map((member) => (
+                  <div className="compactListRow compactMetricRow" key={`member-${member.id}`}>
+                    <div className="compactListMain">
+                      <strong>{member.imie} {member.nazwisko}</strong>
+                      <span>{member.rola || "czlonek brygady"}</span>
+                      <span className="mutedText">
+                        {member.brygada_numer || "-"}
+                        {member.telefon ? ` • tel. ${member.telefon}` : ""}
+                      </span>
+                    </div>
+                    <span className="pill">osoba</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="dashboardScopeGroup">
+            <div className="dashboardAlertGroupHeader">
+              <strong>Sprzet</strong>
+              <span className="mutedText">{assignedSprzet.length}</span>
+            </div>
+
+            <div className="compactList">
+              {assignedSprzet.length === 0 ? (
+                <div className="compactListRow">
+                  <div className="compactListMain">
+                    <strong>Brak sprzetu</strong>
+                    <span className="mutedText">
+                      Nie ma jeszcze sprzetu przypisanego do Twojej brygady.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                assignedSprzet.map((item) => (
+                  <Link
+                    key={`sprzet-${item.id}`}
+                    href={`/pages/sprzet/${item.id}`}
+                    className="dashboardAlertLinkWrap"
+                  >
+                    <div className="compactListRow compactMetricRow">
+                      <div className="compactListMain">
+                        <strong>{item.nr || `Sprzet #${item.id}`}</strong>
+                        <span>{item.marka || "-"} {item.model || ""}</span>
+                        <span className="mutedText">{item.rodzaj || "-"}</span>
+                      </div>
+                      <span className="pill">sprzet</span>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </article>
     );
@@ -347,9 +414,7 @@ function DashboardScopePanel({ dashboardType, data }) {
               <div className="compactListRow compactMetricRow">
                 <div className="compactListMain">
                   <strong>{machine.nr || `Maszyna #${machine.id}`}</strong>
-                  <span>
-                    {machine.marka || "-"} {machine.model || ""}
-                  </span>
+                  <span>{machine.marka || "-"} {machine.model || ""}</span>
                   <span className="mutedText">{machine.rodzaj || "-"}</span>
                 </div>
                 <span className="pill">maszyna</span>
@@ -360,7 +425,6 @@ function DashboardScopePanel({ dashboardType, data }) {
       </div>
     </article>
   );
-
 }
 
 export default function HomeDashboardClient({ user }) {
@@ -498,7 +562,7 @@ export default function HomeDashboardClient({ user }) {
             {dashboardType === "kierownik"
               ? "Aktywne budowy"
               : dashboardType === "brygadzista"
-                ? "Moje brygady"
+                ? "Moje budowy"
                 : dashboardType === "biuro"
                   ? "Wszystkie budowy"
                   : "Awarie aktywne"}
@@ -507,7 +571,7 @@ export default function HomeDashboardClient({ user }) {
             {dashboardType === "kierownik"
               ? data?.summary?.activeBudowy ?? 0
               : dashboardType === "brygadzista"
-                ? data?.summary?.brygady ?? 0
+                ? data?.summary?.budowy ?? 0
                 : dashboardType === "biuro"
                   ? data?.summary?.totalBudowy ?? 0
                   : data?.alerts?.awarie?.length ?? 0}
@@ -519,7 +583,7 @@ export default function HomeDashboardClient({ user }) {
             {dashboardType === "kierownik"
               ? "Brygady na budowach"
               : dashboardType === "brygadzista"
-                ? "Moje budowy"
+                ? "Ludzie"
                 : dashboardType === "biuro"
                   ? "Aktywne budowy"
                   : "Serwis wkrotce"}
@@ -528,7 +592,7 @@ export default function HomeDashboardClient({ user }) {
             {dashboardType === "kierownik"
               ? data?.summary?.brygady ?? 0
               : dashboardType === "brygadzista"
-                ? data?.summary?.budowy ?? 0
+                ? data?.summary?.ludzie ?? 0
                 : dashboardType === "biuro"
                   ? data?.summary?.activeBudowy ?? 0
                   : data?.alerts?.serwisSoon?.length ?? 0}
@@ -537,32 +601,30 @@ export default function HomeDashboardClient({ user }) {
 
         <article className="statCard">
           <span className="statLabel">
-            {isRoleDashboard ? "Maszyny" : "Serwis po terminie"}
+            {dashboardType === "brygadzista"
+              ? "Sprzet"
+              : isRoleDashboard
+                ? "Maszyny"
+                : "Serwis po terminie"}
           </span>
           <strong className="statValue">
-            {isRoleDashboard
-              ? data?.summary?.maszyny ?? 0
-              : data?.alerts?.serwisOverdue?.length ?? 0}
+            {dashboardType === "brygadzista"
+              ? data?.summary?.sprzet ?? 0
+              : isRoleDashboard
+                ? data?.summary?.maszyny ?? 0
+                : data?.alerts?.serwisOverdue?.length ?? 0}
           </strong>
         </article>
-
       </div>
 
-      {isRoleDashboard ? (
-        <div className="splitLayout dashboardLayout">
-          <DashboardScopePanel dashboardType={dashboardType} data={data} />
-          <DashboardAlerts
-            awariaAlerts={awariaAlerts}
-            serviceAlerts={serviceAlerts}
-            managerMode
-          />
-        </div>
-      ) : (
-        <div className="splitLayout dashboardLayout">
-          <DashboardScopePanel dashboardType={dashboardType} data={data} />
-          <DashboardAlerts awariaAlerts={awariaAlerts} serviceAlerts={serviceAlerts} />
-        </div>
-      )}
+      <div className="splitLayout dashboardLayout">
+        <DashboardScopePanel dashboardType={dashboardType} data={data} />
+        <DashboardAlerts
+          awariaAlerts={awariaAlerts}
+          serviceAlerts={serviceAlerts}
+          managerMode={isRoleDashboard}
+        />
+      </div>
 
       {user.role === "operator" ? (
         <div className="stackSection">

@@ -268,6 +268,32 @@ export async function GET(req) {
         )
       : { rows: [] };
 
+    const { rows: teamMembers } = brygadaIds.length
+      ? await pool.query(
+          `SELECT
+             m.id,
+             m.brygada_id,
+             m.imie,
+             m.nazwisko,
+             m.rola,
+             m.telefon,
+             b.numer AS brygada_numer
+           FROM brygada_czlonkowie m
+           JOIN brygady b ON b.id = m.brygada_id
+           WHERE m.brygada_id = ANY($1::int[])
+           ORDER BY b.numer ASC, m.nazwisko ASC, m.imie ASC, m.id ASC`,
+          [brygadaIds]
+        )
+      : { rows: [] };
+
+    const { rows: assignedSprzet } = await pool.query(
+      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista
+       FROM sprzet
+       WHERE operator = $1
+       ORDER BY nr ASC, id ASC`,
+      [user.username]
+    );
+
     const budowaIds = managedBudowy.map((row) => row.id);
     const { rows: machineRows } = budowaIds.length
       ? await pool.query(
@@ -287,13 +313,14 @@ export async function GET(req) {
     return Response.json({
       ...machineDashboard,
       summary: {
-        brygady: managedBrygady.length,
         budowy: managedBudowy.length,
-        maszyny: visibleMachineIds.length,
-        awarie: machineDashboard.alerts.awarie.length,
+        ludzie: teamMembers.length,
+        sprzet: assignedSprzet.length,
       },
       managedBrygady,
       managedBudowy,
+      teamMembers,
+      assignedSprzet,
       roleDashboard: "brygadzista",
     });
   }
