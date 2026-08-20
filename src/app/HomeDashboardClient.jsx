@@ -546,16 +546,6 @@ export default function HomeDashboardClient({ user }) {
           </strong>
         </article>
 
-        <article className="statCard">
-          <span className="statLabel">
-            {dashboardType === "biuro" ? "Brygady" : "Otwarte awarie"}
-          </span>
-          <strong className="statValue">
-            {dashboardType === "biuro"
-              ? data?.summary?.brygady ?? 0
-              : data?.summary?.awarie ?? data?.alerts?.awarie?.length ?? 0}
-          </strong>
-        </article>
       </div>
 
       {isRoleDashboard ? (
