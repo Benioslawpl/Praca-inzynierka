@@ -7,6 +7,7 @@ export default function BrygadyPage() {
   const router = useRouter();
 
   const [list, setList] = useState([]);
+  const [brygadzisci, setBrygadzisci] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [form, setForm] = useState({ numer: "", brygadzista: "" });
@@ -31,9 +32,37 @@ export default function BrygadyPage() {
     }
   };
 
+  const fetchBrygadzisci = async () => {
+    try {
+      const res = await fetch("/api/users", { cache: "no-store" });
+      const data = await res.json().catch(() => []);
+
+      if (!res.ok) {
+        setBrygadzisci([]);
+        return;
+      }
+
+      const options = (Array.isArray(data) ? data : []).filter(
+        (user) => user?.role === "brygadzista"
+      );
+      setBrygadzisci(options);
+    } catch {
+      setBrygadzisci([]);
+    }
+  };
+
   useEffect(() => {
     fetchBrygady();
+    fetchBrygadzisci();
   }, []);
+
+  const brygadzistaOptions = (() => {
+    if (!form.brygadzista) return brygadzisci;
+    const exists = brygadzisci.some((user) => user.username === form.brygadzista);
+    return exists
+      ? brygadzisci
+      : [{ id: `custom-${form.brygadzista}`, username: form.brygadzista }, ...brygadzisci];
+  })();
 
   const resetForm = () => {
     setForm({ numer: "", brygadzista: "" });
@@ -168,12 +197,18 @@ export default function BrygadyPage() {
 
               <label>
                 <span>Brygadzista*</span>
-                <input
-                  placeholder="Imię i nazwisko"
+                <select
                   value={form.brygadzista}
                   onChange={(e) => setForm({ ...form, brygadzista: e.target.value })}
                   required
-                />
+                >
+                  <option value="">Wybierz brygadzistę</option>
+                  {brygadzistaOptions.map((user) => (
+                    <option key={user.id} value={user.username}>
+                      {user.username}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
 
