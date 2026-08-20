@@ -321,6 +321,10 @@ export async function GET(req) {
       managedBudowy,
       teamMembers,
       assignedSprzet,
+      debug: {
+        username: user.username,
+        brygadyCount: managedBrygady.length,
+      },
       roleDashboard: "brygadzista",
     });
   }

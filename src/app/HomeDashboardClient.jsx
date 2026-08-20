@@ -207,6 +207,7 @@ function DashboardScopePanel({ dashboardType, data }) {
   }
 
   if (dashboardType === "brygadzista") {
+    const brygady = data?.managedBrygady || [];
     const budowy = data?.managedBudowy || [];
     const teamMembers = data?.teamMembers || [];
     const assignedSprzet = data?.assignedSprzet || [];
@@ -224,6 +225,42 @@ function DashboardScopePanel({ dashboardType, data }) {
         </div>
 
         <div className="dashboardScopeStack">
+          <div className="dashboardScopeGroup">
+            <div className="dashboardAlertGroupHeader">
+              <strong>Brygady konta</strong>
+              <span className="mutedText">{brygady.length}</span>
+            </div>
+
+            <div className="compactList">
+              {brygady.length === 0 ? (
+                <div className="compactListRow">
+                  <div className="compactListMain">
+                    <strong>Brak przypisanej brygady</strong>
+                    <span className="mutedText">
+                      To konto brygadzisty nie jest jeszcze powiazane z zadna brygada.
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                brygady.map((brygada) => (
+                  <Link
+                    key={`brygada-${brygada.id}`}
+                    href={`/pages/brygady/${brygada.id}`}
+                    className="dashboardAlertLinkWrap"
+                  >
+                    <div className="compactListRow compactMetricRow">
+                      <div className="compactListMain">
+                        <strong>{brygada.numer}</strong>
+                        <span className="mutedText">Brygada przypisana do tego konta</span>
+                      </div>
+                      <span className="pill">brygada</span>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+
           <div className="dashboardScopeGroup">
             <div className="dashboardAlertGroupHeader">
               <strong>Budowy</strong>
