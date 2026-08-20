@@ -34,7 +34,7 @@ export default function BrygadyPage() {
 
   const fetchBrygadzisci = async () => {
     try {
-      const res = await fetch("/api/users", { cache: "no-store" });
+      const res = await fetch("/api/users/brygadzisci", { cache: "no-store" });
       const data = await res.json().catch(() => []);
 
       if (!res.ok) {
@@ -42,10 +42,7 @@ export default function BrygadyPage() {
         return;
       }
 
-      const options = (Array.isArray(data) ? data : []).filter(
-        (user) => user?.role === "brygadzista"
-      );
-      setBrygadzisci(options);
+      setBrygadzisci(Array.isArray(data) ? data : []);
     } catch {
       setBrygadzisci([]);
     }
