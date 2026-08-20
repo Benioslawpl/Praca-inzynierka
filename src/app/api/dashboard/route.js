@@ -12,7 +12,6 @@ async function buildMachineDashboard(machineIds, user) {
         serwisSoon: [],
         serwisOverdue: [],
       },
-      recentReports: [],
     };
   }
 
@@ -54,19 +53,6 @@ async function buildMachineDashboard(machineIds, user) {
        AND r.awaria = true
        AND COALESCE(r.status_awarii, 'nowa') <> 'zamknieta'
      ORDER BY r.maszyna_id, r.created_at DESC, r.id DESC`,
-    [machineIds]
-  );
-
-  const { rows: recentReports } = await pool.query(
-    `SELECT r.id, r.maszyna_id, r.data_raportu, r.motogodziny, r.awaria,
-            r.opis, r.status_awarii, r.created_at,
-            u.username, m.nr
-     FROM maszyna_raporty r
-     LEFT JOIN users u ON u.id = r.user_id
-     LEFT JOIN maszyny m ON m.id = r.maszyna_id
-     WHERE r.maszyna_id = ANY($1::int[])
-     ORDER BY r.created_at DESC, r.id DESC
-     LIMIT 8`,
     [machineIds]
   );
 
@@ -132,7 +118,6 @@ async function buildMachineDashboard(machineIds, user) {
       serwisSoon,
       serwisOverdue,
     },
-    recentReports,
   };
 }
 

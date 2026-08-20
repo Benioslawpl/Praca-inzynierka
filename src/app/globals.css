@@ -1121,7 +1121,12 @@ label {
 }
 
 .dashboardHome {
+  display: grid;
   gap: 22px;
+}
+
+.dashboardHome > * {
+  min-width: 0;
 }
 
 .dashboardStats {
@@ -1129,7 +1134,8 @@ label {
 }
 
 .dashboardLayout {
-  align-items: start;
+  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .dashboardAlertList {
@@ -1360,6 +1366,7 @@ label {
 
 .sectionCard {
   margin: 0;
+  height: 100%;
 }
 
 .sectionCardHeader {

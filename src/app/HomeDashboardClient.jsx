@@ -38,24 +38,6 @@ function statusLabel(status) {
   return "planowana";
 }
 
-function buildRecentReports(rows) {
-  const seenOkMachines = new Set();
-  const output = [];
-
-  for (const report of rows || []) {
-    const machineKey = report?.maszyna_id ?? report?.nr ?? report?.id;
-
-    if (!report?.awaria) {
-      if (seenOkMachines.has(machineKey)) continue;
-      seenOkMachines.add(machineKey);
-    }
-
-    output.push(report);
-  }
-
-  return output;
-}
-
 function getDashboardIntro(type) {
   if (type === "kierownik") {
     return "podsumowanie budow, przypisanych zasobow oraz biezacych awarii i serwisow.";
@@ -69,7 +51,7 @@ function getDashboardIntro(type) {
     return "ogolny stan budow, brygad, maszyn oraz najwazniejsze alerty operacyjne.";
   }
 
-  return "biezace awarie, nadchodzace serwisy i ostatnie raporty z maszyn.";
+  return "biezace awarie, nadchodzace serwisy i szybkie zgloszenia z maszyn.";
 }
 
 function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
@@ -167,45 +149,6 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
             )}
           </div>
         </div>
-      </div>
-    </article>
-  );
-}
-
-function DashboardRecentReports({ reports }) {
-  return (
-    <article className="card sectionCard">
-      <div className="sectionCardHeader">
-        <div>
-          <h2>Ostatnie raporty</h2>
-          <p className="mutedText">Najnowsze wpisy operatorskie i awarie.</p>
-        </div>
-      </div>
-
-      <div className="compactList">
-        {reports.length === 0 ? (
-          <div className="compactListRow">
-            <div className="compactListMain">
-              <strong>Brak raportow</strong>
-              <span className="mutedText">Nie ma jeszcze zadnych wpisow operatorskich.</span>
-            </div>
-          </div>
-        ) : (
-          reports.map((report) => (
-            <div className="compactListRow" key={report.id}>
-              <div className="compactListMain">
-                <strong>{report.nr || `Maszyna #${report.maszyna_id}`}</strong>
-                <span className="mutedText">
-                  {report.username || "anon"} • {fmtDate(report.data_raportu)} •{" "}
-                  {report.motogodziny ?? "-"} mth
-                </span>
-              </div>
-              <span className={`pill ${report.awaria ? "bad" : "ok"}`}>
-                {report.awaria ? "awaria" : "ok"}
-              </span>
-            </div>
-          ))
-        )}
       </div>
     </article>
   );
@@ -372,7 +315,52 @@ function DashboardScopePanel({ dashboardType, data }) {
     );
   }
 
-  return null;
+  const assignedMachines = data?.assignedMachines || [];
+
+  return (
+    <article className="card sectionCard">
+      <div className="sectionCardHeader">
+        <div>
+          <h2>Twoj zakres</h2>
+          <p className="mutedText">Szybki podglad maszyn przypisanych do tego konta.</p>
+        </div>
+        <span className="metricBadge">{assignedMachines.length}</span>
+      </div>
+
+      <div className="compactList">
+        {assignedMachines.length === 0 ? (
+          <div className="compactListRow">
+            <div className="compactListMain">
+              <strong>Brak przypisanych maszyn</strong>
+              <span className="mutedText">
+                To konto nie ma jeszcze aktywnego przypisania do maszyny.
+              </span>
+            </div>
+          </div>
+        ) : (
+          assignedMachines.map((machine) => (
+            <Link
+              key={machine.id}
+              href={`/pages/maszyny/${machine.id}`}
+              className="dashboardAlertLinkWrap"
+            >
+              <div className="compactListRow compactMetricRow">
+                <div className="compactListMain">
+                  <strong>{machine.nr || `Maszyna #${machine.id}`}</strong>
+                  <span>
+                    {machine.marka || "-"} {machine.model || ""}
+                  </span>
+                  <span className="mutedText">{machine.rodzaj || "-"}</span>
+                </div>
+                <span className="pill">maszyna</span>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+    </article>
+  );
+
 }
 
 export default function HomeDashboardClient({ user }) {
@@ -492,8 +480,6 @@ export default function HomeDashboardClient({ user }) {
     })) || []),
   ];
 
-  const recentReports = buildRecentReports(data?.recentReports);
-
   return (
     <section className="home dashboardHome">
       <div className="sectionIntro">
@@ -583,8 +569,8 @@ export default function HomeDashboardClient({ user }) {
         </div>
       ) : (
         <div className="splitLayout dashboardLayout">
+          <DashboardScopePanel dashboardType={dashboardType} data={data} />
           <DashboardAlerts awariaAlerts={awariaAlerts} serviceAlerts={serviceAlerts} />
-          <DashboardRecentReports reports={recentReports} />
         </div>
       )}
 
