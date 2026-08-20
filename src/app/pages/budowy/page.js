@@ -17,6 +17,7 @@ const EMPTY_FORM = {
 
 export default function BudowyPage() {
   const [rows, setRows] = useState([]);
+  const [kierownicy, setKierownicy] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -38,9 +39,34 @@ export default function BudowyPage() {
     setRows(Array.isArray(data) ? data : []);
   };
 
+  const loadKierownicy = async () => {
+    try {
+      const res = await fetch("/api/users/kierownicy", { cache: "no-store" });
+      const data = await res.json().catch(() => []);
+
+      if (!res.ok) {
+        setKierownicy([]);
+        return;
+      }
+
+      setKierownicy(Array.isArray(data) ? data : []);
+    } catch {
+      setKierownicy([]);
+    }
+  };
+
   useEffect(() => {
     load();
+    loadKierownicy();
   }, []);
+
+  const kierownikOptions = (() => {
+    if (!form.kierownik) return kierownicy;
+    const exists = kierownicy.some((user) => user.username === form.kierownik);
+    return exists
+      ? kierownicy
+      : [{ id: `custom-${form.kierownik}`, username: form.kierownik }, ...kierownicy];
+  })();
 
   const reset = () => {
     setForm(EMPTY_FORM);
@@ -217,11 +243,17 @@ export default function BudowyPage() {
 
               <label>
                 <span>Kierownik</span>
-                <input
+                <select
                   value={form.kierownik}
                   onChange={(e) => setForm({ ...form, kierownik: e.target.value })}
-                  placeholder="np. Jan Nowak"
-                />
+                >
+                  <option value="">Wybierz kierownika</option>
+                  {kierownikOptions.map((user) => (
+                    <option key={user.id} value={user.username}>
+                      {user.username}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label>
