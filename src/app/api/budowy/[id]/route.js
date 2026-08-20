@@ -39,6 +39,34 @@ async function getBudowa(id) {
   return rows[0] || null;
 }
 
+async function closeAssignmentsForFinishedBudowa(budowaId, endDate) {
+  const finalDate = endDate || new Date().toISOString().slice(0, 10);
+
+  await pool.query(
+    `UPDATE budowy_brygady
+     SET data_do = COALESCE(data_do, $2::date)
+     WHERE budowa_id = $1
+       AND (data_do IS NULL OR data_do > $2::date)`,
+    [budowaId, finalDate]
+  );
+
+  await pool.query(
+    `UPDATE budowy_maszyny
+     SET data_do = COALESCE(data_do, $2::date)
+     WHERE budowa_id = $1
+       AND (data_do IS NULL OR data_do > $2::date)`,
+    [budowaId, finalDate]
+  );
+
+  await pool.query(
+    `UPDATE budowy_sprzet
+     SET data_do = COALESCE(data_do, $2::date)
+     WHERE budowa_id = $1
+       AND (data_do IS NULL OR data_do > $2::date)`,
+    [budowaId, finalDate]
+  );
+}
+
 export async function GET(req, ctx) {
   try {
     const id = getId(req, ctx?.params);
@@ -116,6 +144,10 @@ export async function PUT(req, { params }) {
         id,
       ]
     );
+
+    if (status === "zakonczona") {
+      await closeAssignmentsForFinishedBudowa(id, dataZakonczenia);
+    }
 
     return Response.json(rows[0]);
   } catch (error) {

@@ -359,7 +359,7 @@ function DashboardScopePanel({ dashboardType, data }) {
   if (dashboardType === "kierownik") {
     return (
       <ManagerPanel
-        title="Panel kierownika"
+        title="Moje budowy"
         text="Tutaj widzisz budowy przypisane do Twojego konta."
         budowy={data?.managedBudowy || []}
       />
