@@ -2,6 +2,27 @@ import pool from "../../../../db";
 import { getUserFromRequest } from "../../../lib/auth";
 import { getVisibleMachineIdsForUser } from "../../../lib/machine-access";
 
+function toPositiveIds(values) {
+  return [...new Set(values.map((value) => Number(value)).filter((value) => Number.isInteger(value) && value > 0))];
+}
+
+function countActiveBudowy(rows) {
+  return rows.filter((row) => row.status === "w_toku").length;
+}
+
+async function getMachineIdsForBudowy(budowaIds) {
+  if (!budowaIds.length) return [];
+
+  const { rows } = await pool.query(
+    `SELECT DISTINCT bm.maszyna_id
+     FROM budowy_maszyny bm
+     WHERE bm.budowa_id = ANY($1::int[])`,
+    [budowaIds]
+  );
+
+  return toPositiveIds(rows.map((row) => row.maszyna_id));
+}
+
 async function buildMachineDashboard(machineIds, user) {
   if (!machineIds.length) {
     return {
@@ -145,14 +166,14 @@ export async function GET(req) {
       ),
     ]);
 
-    const visibleMachineIds = machineRows.map((row) => Number(row.id)).filter(Boolean);
+    const visibleMachineIds = toPositiveIds(machineRows.map((row) => row.id));
     const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
 
     return Response.json({
       ...machineDashboard,
       summary: {
         totalBudowy: budowyRows.length,
-        activeBudowy: budowyRows.filter((row) => row.status === "w_toku").length,
+        activeBudowy: countActiveBudowy(budowyRows),
         brygady: brygadyRows.length,
         maszyny: visibleMachineIds.length,
         awarie: machineDashboard.alerts.awarie.length,
@@ -197,25 +218,12 @@ export async function GET(req) {
     );
 
     const budowaIds = managedBudowy.map((row) => row.id);
-    const { rows: machineRows } = budowaIds.length
-      ? await pool.query(
-          `
-          SELECT DISTINCT bm.maszyna_id
-          FROM budowy_maszyny bm
-          WHERE bm.budowa_id = ANY($1::int[])
-          `,
-          [budowaIds]
-        )
-      : { rows: [] };
-
-    const visibleMachineIds = machineRows
-      .map((row) => Number(row.maszyna_id))
-      .filter((value) => Number.isInteger(value) && value > 0);
+    const visibleMachineIds = await getMachineIdsForBudowy(budowaIds);
 
     const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
 
     const summary = {
-      activeBudowy: managedBudowy.filter((row) => row.status === "w_toku").length,
+      activeBudowy: countActiveBudowy(managedBudowy),
       brygady: managedBudowy.reduce(
         (sum, row) => sum + Number(row.brygady_count || 0),
         0
@@ -233,16 +241,16 @@ export async function GET(req) {
   }
 
   if (user.role === "brygadzista") {
-    const { rows: managedBrygady } = await pool.query(
-      `SELECT id, numer, brygadzista, created_at
+    const { rows: brygadyRows } = await pool.query(
+      `SELECT id, numer
        FROM brygady
        WHERE brygadzista = $1
        ORDER BY numer ASC, id ASC`,
       [user.username]
     );
 
-    const brygadaIds = managedBrygady.map((row) => row.id);
-    const { rows: managedBudowy } = brygadaIds.length
+    const brygadaIds = brygadyRows.map((row) => row.id);
+    const { rows: budowyRows } = brygadaIds.length
       ? await pool.query(
           `SELECT DISTINCT
              b.id,
@@ -268,25 +276,22 @@ export async function GET(req) {
         )
       : { rows: [] };
 
-    const { rows: teamMembers } = brygadaIds.length
+    const { rows: ludzieRows } = brygadaIds.length
       ? await pool.query(
           `SELECT
              m.id,
-             m.brygada_id,
              m.imie,
              m.nazwisko,
              m.rola,
-             m.telefon,
-             b.numer AS brygada_numer
+             m.telefon
            FROM brygada_czlonkowie m
-           JOIN brygady b ON b.id = m.brygada_id
            WHERE m.brygada_id = ANY($1::int[])
-           ORDER BY b.numer ASC, m.nazwisko ASC, m.imie ASC, m.id ASC`,
+           ORDER BY m.nazwisko ASC, m.imie ASC, m.id ASC`,
           [brygadaIds]
         )
       : { rows: [] };
 
-    const { rows: assignedSprzet } = await pool.query(
+    const { rows: sprzetRows } = await pool.query(
       `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista
        FROM sprzet
        WHERE operator = $1
@@ -294,37 +299,21 @@ export async function GET(req) {
       [user.username]
     );
 
-    const budowaIds = managedBudowy.map((row) => row.id);
-    const { rows: machineRows } = budowaIds.length
-      ? await pool.query(
-          `SELECT DISTINCT bm.maszyna_id
-           FROM budowy_maszyny bm
-           WHERE bm.budowa_id = ANY($1::int[])`,
-          [budowaIds]
-        )
-      : { rows: [] };
-
-    const visibleMachineIds = machineRows
-      .map((row) => Number(row.maszyna_id))
-      .filter((value) => Number.isInteger(value) && value > 0);
+    const budowaIds = budowyRows.map((row) => row.id);
+    const visibleMachineIds = await getMachineIdsForBudowy(budowaIds);
 
     const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
 
     return Response.json({
       ...machineDashboard,
       summary: {
-        budowy: managedBudowy.length,
-        ludzie: teamMembers.length,
-        sprzet: assignedSprzet.length,
+        budowy: budowyRows.length,
+        ludzie: ludzieRows.length,
+        sprzet: sprzetRows.length,
       },
-      managedBrygady,
-      managedBudowy,
-      teamMembers,
-      assignedSprzet,
-      debug: {
-        username: user.username,
-        brygadyCount: managedBrygady.length,
-      },
+      budowy: budowyRows,
+      ludzie: ludzieRows,
+      sprzet: sprzetRows,
       roleDashboard: "brygadzista",
     });
   }
