@@ -8,7 +8,6 @@ const EMPTY_FORM = {
   rodzaj: "",
   marka: "",
   model: "",
-  operator: "",
   assigned_operator_id: "",
   serwis_co_ile_mth: "",
 };
@@ -29,7 +28,7 @@ export default function MaszynyPage() {
     const [machinesRes, meRes, usersRes] = await Promise.all([
       fetch("/api/maszyny", { cache: "no-store" }),
       fetch("/api/me", { cache: "no-store" }),
-      fetch("/api/users", { cache: "no-store" }),
+      fetch("/api/users/operatorzy", { cache: "no-store" }),
     ]);
 
     const [machinesData, meData, usersData] = await Promise.all([
@@ -47,12 +46,7 @@ export default function MaszynyPage() {
 
     setMe(meData?.ok ? meData : null);
 
-    if (usersRes.ok) {
-      const list = Array.isArray(usersData) ? usersData : [];
-      setOperators(list.filter((item) => item.role === "operator"));
-    } else {
-      setOperators([]);
-    }
+    setOperators(usersRes.ok && Array.isArray(usersData) ? usersData : []);
   };
 
   useEffect(() => {
@@ -83,7 +77,6 @@ export default function MaszynyPage() {
         rodzaj: form.rodzaj.trim(),
         marka: form.marka.trim(),
         model: form.model.trim(),
-        operator: form.operator.trim(),
         assigned_operator_id: form.assigned_operator_id
           ? Number(form.assigned_operator_id)
           : null,
@@ -117,7 +110,6 @@ export default function MaszynyPage() {
       rodzaj: row.rodzaj ?? "",
       marka: row.marka ?? "",
       model: row.model ?? "",
-      operator: row.operator ?? "",
       assigned_operator_id: row.assigned_operator_id ? String(row.assigned_operator_id) : "",
       serwis_co_ile_mth: row.serwis_co_ile_mth ?? "",
     });
@@ -225,24 +217,15 @@ export default function MaszynyPage() {
                 </label>
 
                 <label>
-                  <span>Operator opisowy*</span>
-                  <input
-                    value={form.operator}
-                    onChange={(e) => setForm({ ...form, operator: e.target.value })}
-                    required
-                    placeholder="np. Jan Kowalski"
-                  />
-                </label>
-
-                <label>
-                  <span>Konto operatora</span>
+                  <span>Operator*</span>
                   <select
                     value={form.assigned_operator_id}
                     onChange={(e) =>
                       setForm({ ...form, assigned_operator_id: e.target.value })
                     }
+                    required
                   >
-                    <option value="">brak przypisanego konta</option>
+                    <option value="">Wybierz operatora</option>
                     {operatorOptions.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.username}

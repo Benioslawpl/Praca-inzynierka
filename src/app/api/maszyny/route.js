@@ -2,6 +2,23 @@
 import { getUserFromRequest } from "../../../lib/auth";
 import { getVisibleMachineIdsForUser, setActiveOperatorForMachine } from "../../../lib/machine-access";
 
+async function getOperatorAccount(operatorId) {
+  if (!operatorId) return null;
+
+  const { rows } = await pool.query(
+    `
+    SELECT u.id, u.username
+    FROM users u
+    WHERE u.id = $1
+      AND u.role = 'operator'
+      AND COALESCE(u.blocked, false) = false
+    `,
+    [operatorId]
+  );
+
+  return rows[0] || null;
+}
+
 // GET list
 export async function GET(req) {
   try {
@@ -48,14 +65,15 @@ export async function POST(req) {
       rodzaj,
       marka,
       model,
-      operator,
       serwis_co_ile_mth,
       ostatni_serwis_mth,
       assigned_operator_id,
     } = await req.json();
     const machineNr = String(nr || "").trim();
+    const assignedOperatorId = Number(assigned_operator_id) || null;
+    const operatorAccount = await getOperatorAccount(assignedOperatorId);
 
-    if (!machineNr || !rodzaj || !marka || !model || !operator) {
+    if (!machineNr || !rodzaj || !marka || !model || !operatorAccount) {
       return Response.json(
         { error: "Wymagane: numer, rodzaj, marka, model, operator" },
         { status: 400 }
@@ -70,13 +88,19 @@ export async function POST(req) {
       ostatni_serwis_mth === "" || ostatni_serwis_mth === null || ostatni_serwis_mth === undefined
         ? null
         : Number(ostatni_serwis_mth);
-    const assignedOperatorId = Number(assigned_operator_id) || null;
-
     const { rows } = await pool.query(
       `INSERT INTO maszyny (nr, rodzaj, marka, model, operator, serwis_co_ile_mth, ostatni_serwis_mth)
        VALUES ($1,$2,$3,$4,$5,$6,$7)
        RETURNING *`,
-      [machineNr, rodzaj, marka, model, operator, serviceEvery, lastServiceHours]
+      [
+        machineNr,
+        rodzaj,
+        marka,
+        model,
+        operatorAccount.username,
+        serviceEvery,
+        lastServiceHours,
+      ]
     );
 
     if (assignedOperatorId) {

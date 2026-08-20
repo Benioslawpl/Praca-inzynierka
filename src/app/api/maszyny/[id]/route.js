@@ -37,6 +37,23 @@ async function getMachineRow(id) {
   return rows[0] || null;
 }
 
+async function getOperatorAccount(operatorId) {
+  if (!operatorId) return null;
+
+  const { rows } = await pool.query(
+    `
+    SELECT u.id, u.username
+    FROM users u
+    WHERE u.id = $1
+      AND u.role = 'operator'
+      AND COALESCE(u.blocked, false) = false
+    `,
+    [operatorId]
+  );
+
+  return rows[0] || null;
+}
+
 export async function GET(req, ctx) {
   try {
     const user = await getUserFromRequest(req);
@@ -88,7 +105,6 @@ export async function PUT(req, { params }) {
     const rodzaj = body?.rodzaj?.trim();
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
-    const operator = body?.operator?.trim();
     const serviceEvery =
       body?.serwis_co_ile_mth === "" ||
       body?.serwis_co_ile_mth === null ||
@@ -105,8 +121,9 @@ export async function PUT(req, { params }) {
       Object.prototype.hasOwnProperty.call(body || {}, "assigned_operator_id")
         ? Number(body.assigned_operator_id) || null
         : before.assigned_operator_id || null;
+    const operatorAccount = await getOperatorAccount(assignedOperatorId);
 
-    if (!nr || !rodzaj || !marka || !model || !operator) {
+    if (!nr || !rodzaj || !marka || !model || !operatorAccount) {
       return Response.json(
         { error: "Wymagane: numer, rodzaj, marka, model, operator" },
         { status: 400 }
@@ -123,7 +140,16 @@ export async function PUT(req, { params }) {
            serwis_co_ile_mth=$6,
            ostatni_serwis_mth=$7
        WHERE id=$8`,
-      [nr, rodzaj, marka, model, operator, serviceEvery, lastServiceHours, id]
+      [
+        nr,
+        rodzaj,
+        marka,
+        model,
+        operatorAccount.username,
+        serviceEvery,
+        lastServiceHours,
+        id,
+      ]
     );
 
     await setActiveOperatorForMachine(req, id, assignedOperatorId);
