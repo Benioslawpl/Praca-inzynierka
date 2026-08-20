@@ -215,12 +215,6 @@ function ManagerPanel({ title, text, budowy, summary }) {
             ))
           )}
         </ScopeSection>
-
-        <ScopeSection title="Podsumowanie">
-          {summary.map((item) => (
-            <SummaryRow key={item.label} label={item.label} value={item.value} />
-          ))}
-        </ScopeSection>
       </div>
     </article>
   );
@@ -368,11 +362,6 @@ function DashboardScopePanel({ dashboardType, data }) {
         title="Panel kierownika"
         text="Tutaj widzisz budowy przypisane do Twojego konta."
         budowy={data?.managedBudowy || []}
-        summary={[
-          { label: "Aktywne budowy", value: data?.summary?.activeBudowy ?? 0 },
-          { label: "Brygady na budowach", value: data?.summary?.brygady ?? 0 },
-          { label: "Maszyny na budowach", value: data?.summary?.maszyny ?? 0 },
-        ]}
       />
     );
   }
@@ -571,7 +560,7 @@ export default function HomeDashboardClient({ user }) {
         ))}
       </div>
 
-      {dashboardType === "brygadzista" ? (
+      {dashboardType === "brygadzista" || dashboardType === "kierownik" ? (
         <div className="stackSection">
           <DashboardScopePanel dashboardType={dashboardType} data={data} />
         </div>
