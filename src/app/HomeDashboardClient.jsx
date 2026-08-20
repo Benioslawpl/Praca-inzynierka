@@ -38,6 +38,20 @@ function statusLabel(status) {
   return "planowana";
 }
 
+function buildBudowaMeta(budowa) {
+  const location = budowa.lokalizacja || "-";
+
+  if (budowa.status === "zakonczona") {
+    return `${location} • koniec: ${fmtDate(budowa.data_zakonczenia)}`;
+  }
+
+  if (budowa.data_zakonczenia) {
+    return `${location} • koniec: ${fmtDate(budowa.data_zakonczenia)}`;
+  }
+
+  return `${location} • start: ${fmtDate(budowa.data_rozpoczecia)}`;
+}
+
 function getDashboardIntro(type) {
   if (type === "kierownik") {
     return "podsumowanie budow, przypisanych zasobow oraz biezacych awarii i serwisow.";
@@ -60,17 +74,6 @@ function EmptyListRow({ title, text }) {
       <div className="compactListMain">
         <strong>{title}</strong>
         <span className="mutedText">{text}</span>
-      </div>
-    </div>
-  );
-}
-
-function SummaryRow({ label, value }) {
-  return (
-    <div className="compactListRow compactMetricRow">
-      <div className="compactListMain">
-        <strong>{label}</strong>
-        <span className="mutedText">{value}</span>
       </div>
     </div>
   );
@@ -173,7 +176,7 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
   );
 }
 
-function ManagerPanel({ title, text, budowy, summary }) {
+function ManagerPanel({ title, text, budowy }) {
   return (
     <article className="card sectionCard">
       <div className="sectionCardHeader">
@@ -198,13 +201,13 @@ function ManagerPanel({ title, text, budowy, summary }) {
                   <div className="compactListMain">
                     <strong>{budowa.numer}</strong>
                     <span>{budowa.nazwa}</span>
-                    <span className="mutedText">
-                      {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
-                    </span>
+                    <span className="mutedText">{buildBudowaMeta(budowa)}</span>
                   </div>
                   <div className="compactListMeta compactListMetaStack">
                     <span className="pill">{statusLabel(budowa.status)}</span>
-                    {budowa.brygady_count !== undefined || budowa.maszyny_count !== undefined ? (
+                    {budowa.status === "zakonczona" ? (
+                      <span className="mutedText">brygady i maszyny zostaly zwolnione</span>
+                    ) : budowa.brygady_count !== undefined || budowa.maszyny_count !== undefined ? (
                       <span className="mutedText">
                         brygady: {budowa.brygady_count || 0} • maszyny: {budowa.maszyny_count || 0}
                       </span>
@@ -252,9 +255,7 @@ function ForemanPanel({ data }) {
                   <div className="compactListMain">
                     <strong>{budowa.numer}</strong>
                     <span>{budowa.nazwa}</span>
-                    <span className="mutedText">
-                      {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
-                    </span>
+                    <span className="mutedText">{buildBudowaMeta(budowa)}</span>
                   </div>
                   <span className="pill">{statusLabel(budowa.status)}</span>
                 </div>
@@ -376,11 +377,6 @@ function DashboardScopePanel({ dashboardType, data }) {
         title="Panel biura"
         text="Tutaj widzisz ogolny stan budow i firmy."
         budowy={data?.recentBudowy || []}
-        summary={[
-          { label: "Wszystkie budowy", value: data?.summary?.totalBudowy ?? 0 },
-          { label: "Aktywne budowy", value: data?.summary?.activeBudowy ?? 0 },
-          { label: "Brygady", value: data?.summary?.brygady ?? 0 },
-        ]}
       />
     );
   }
