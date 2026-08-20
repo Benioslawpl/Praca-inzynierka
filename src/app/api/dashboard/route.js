@@ -226,10 +226,13 @@ export async function GET(req) {
     const visibleMachineIds = await getMachineIdsForBudowy(budowaIds);
 
     const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
+    const activeManagedBudowy = managedBudowy.filter(
+      (row) => row.status !== "zakonczona"
+    );
 
     const summary = {
       activeBudowy: countActiveBudowy(managedBudowy),
-      brygady: managedBudowy.reduce(
+      brygady: activeManagedBudowy.reduce(
         (sum, row) => sum + Number(row.brygady_count || 0),
         0
       ),
