@@ -28,13 +28,13 @@ function roleLabel(role) {
   if (role === "brygadzista") return "brygadzista";
   if (role === "kierownik") return "kierownik";
   if (role === "biuro") return "biuro";
-  return "użytkownik";
+  return "uzytkownik";
 }
 
 function statusLabel(status) {
   if (status === "w_toku") return "w toku";
   if (status === "wstrzymana") return "wstrzymana";
-  if (status === "zakonczona") return "zakończona";
+  if (status === "zakonczona") return "zakonczona";
   return "planowana";
 }
 
@@ -56,16 +56,32 @@ function buildRecentReports(rows) {
   return output;
 }
 
+function getDashboardIntro(type) {
+  if (type === "kierownik") {
+    return "podsumowanie budow, przypisanych zasobow oraz biezacych awarii i serwisow.";
+  }
+
+  if (type === "brygadzista") {
+    return "brygady, powiazane budowy oraz awarie i serwisy maszyn pracujacych dla Twoich zespolow.";
+  }
+
+  if (type === "biuro") {
+    return "ogolny stan budow, brygad, maszyn oraz najwazniejsze alerty operacyjne.";
+  }
+
+  return "biezace awarie, nadchodzace serwisy i ostatnie raporty z maszyn.";
+}
+
 function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
   return (
     <article className="card sectionCard">
       <div className="sectionCardHeader">
         <div>
-          <h2>Najważniejsze alerty</h2>
+          <h2>Najwazniejsze alerty</h2>
           <p className="mutedText">
             {managerMode
-              ? "Awarie i serwisy dla maszyn przypisanych do Twoich budów."
-              : "Awarie i serwisy, które wymagają reakcji."}
+              ? "Awarie i serwisy dla maszyn widocznych w Twoim zakresie."
+              : "Awarie i serwisy, ktore wymagaja reakcji."}
           </p>
         </div>
         <span className="metricBadge">{awariaAlerts.length + serviceAlerts.length}</span>
@@ -83,11 +99,7 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
               <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
                 <div className="compactListMain">
                   <strong>Brak aktywnych awarii</strong>
-                  <span className="mutedText">
-                    {managerMode
-                      ? "Nie ma otwartych zgłoszeń na Twoich budowach."
-                      : "Na ten moment nie ma otwartych zgłoszeń."}
-                  </span>
+                  <span className="mutedText">Na ten moment nie ma otwartych zgloszen.</span>
                 </div>
               </div>
             ) : (
@@ -116,7 +128,7 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
 
         <div className="dashboardAlertGroup">
           <div className="dashboardAlertGroupHeader">
-            <strong>{managerMode ? "Nadchodzące serwisy" : "Alerty serwisowe"}</strong>
+            <strong>{managerMode ? "Alerty serwisowe" : "Nadchodzace serwisy"}</strong>
             <span className="mutedText">{serviceAlerts.length}</span>
           </div>
 
@@ -124,12 +136,8 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
             {serviceAlerts.length === 0 ? (
               <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
                 <div className="compactListMain">
-                  <strong>Brak pilnych serwisów</strong>
-                  <span className="mutedText">
-                    {managerMode
-                      ? "Żadna maszyna na Twoich budowach nie wymaga teraz reakcji serwisowej."
-                      : "Nie ma maszyn wymagających teraz przeglądu."}
-                  </span>
+                  <strong>Brak pilnych serwisow</strong>
+                  <span className="mutedText">Nie ma maszyn wymagajacych teraz przegladu.</span>
                 </div>
               </div>
             ) : (
@@ -150,7 +158,7 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
                         <span className="mutedText">{item.meta}</span>
                       </div>
                       <span className={`pill ${item.kind === "overdue" ? "bad" : ""}`}>
-                        {item.kind === "overdue" ? "pilne" : "wkrótce"}
+                        {item.kind === "overdue" ? "pilne" : "wkrotce"}
                       </span>
                     </div>
                   </div>
@@ -178,8 +186,8 @@ function DashboardRecentReports({ reports }) {
         {reports.length === 0 ? (
           <div className="compactListRow">
             <div className="compactListMain">
-              <strong>Brak raportów</strong>
-              <span className="mutedText">Nie ma jeszcze żadnych wpisów operatorskich.</span>
+              <strong>Brak raportow</strong>
+              <span className="mutedText">Nie ma jeszcze zadnych wpisow operatorskich.</span>
             </div>
           </div>
         ) : (
@@ -203,6 +211,170 @@ function DashboardRecentReports({ reports }) {
   );
 }
 
+function DashboardScopePanel({ dashboardType, data }) {
+  if (dashboardType === "kierownik") {
+    return (
+      <article className="card sectionCard">
+        <div className="sectionCardHeader">
+          <div>
+            <h2>Moje budowy</h2>
+            <p className="mutedText">Budowy przypisane do zalogowanego kierownika.</p>
+          </div>
+          <span className="metricBadge">{data?.managedBudowy?.length ?? 0}</span>
+        </div>
+
+        <div className="compactList">
+          {(data?.managedBudowy || []).length === 0 ? (
+            <div className="compactListRow">
+              <div className="compactListMain">
+                <strong>Brak przypisanych budow</strong>
+                <span className="mutedText">
+                  To konto nie ma jeszcze zadnej budowy z przypisanym kierownikiem.
+                </span>
+              </div>
+            </div>
+          ) : (
+            data.managedBudowy.map((budowa) => (
+              <Link
+                key={budowa.id}
+                href={`/pages/budowy/${budowa.id}`}
+                className="dashboardAlertLinkWrap"
+              >
+                <div className="compactListRow compactMetricRow">
+                  <div className="compactListMain">
+                    <strong>{budowa.numer}</strong>
+                    <span>{budowa.nazwa}</span>
+                    <span className="mutedText">
+                      {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
+                    </span>
+                  </div>
+                  <div className="compactListMeta compactListMetaStack">
+                    <span className="pill">{statusLabel(budowa.status)}</span>
+                    <span className="mutedText">
+                      brygady: {budowa.brygady_count} • maszyny: {budowa.maszyny_count}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+      </article>
+    );
+  }
+
+  if (dashboardType === "brygadzista") {
+    const brygady = data?.managedBrygady || [];
+    const budowy = data?.managedBudowy || [];
+
+    return (
+      <article className="card sectionCard">
+        <div className="sectionCardHeader">
+          <div>
+            <h2>Moje brygady i budowy</h2>
+            <p className="mutedText">Szybki podglad przypisanych zespolow i realizacji.</p>
+          </div>
+          <span className="metricBadge">{brygady.length + budowy.length}</span>
+        </div>
+
+        <div className="compactList">
+          {brygady.map((brygada) => (
+            <Link
+              key={`brygada-${brygada.id}`}
+              href={`/pages/brygady/${brygada.id}`}
+              className="dashboardAlertLinkWrap"
+            >
+              <div className="compactListRow compactMetricRow">
+                <div className="compactListMain">
+                  <strong>{brygada.numer}</strong>
+                  <span className="mutedText">Brygada przypisana do Twojego konta</span>
+                </div>
+                <span className="pill">brygada</span>
+              </div>
+            </Link>
+          ))}
+
+          {budowy.map((budowa) => (
+            <Link
+              key={`budowa-${budowa.id}`}
+              href={`/pages/budowy/${budowa.id}`}
+              className="dashboardAlertLinkWrap"
+            >
+              <div className="compactListRow compactMetricRow">
+                <div className="compactListMain">
+                  <strong>{budowa.numer}</strong>
+                  <span>{budowa.nazwa}</span>
+                  <span className="mutedText">
+                    {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
+                  </span>
+                </div>
+                <span className="pill">{statusLabel(budowa.status)}</span>
+              </div>
+            </Link>
+          ))}
+
+          {brygady.length === 0 && budowy.length === 0 ? (
+            <div className="compactListRow">
+              <div className="compactListMain">
+                <strong>Brak przypisan</strong>
+                <span className="mutedText">
+                  To konto nie ma jeszcze przypisanej brygady ani budowy.
+                </span>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </article>
+    );
+  }
+
+  if (dashboardType === "biuro") {
+    return (
+      <article className="card sectionCard">
+        <div className="sectionCardHeader">
+          <div>
+            <h2>Ostatnie budowy</h2>
+            <p className="mutedText">Krotki przekroj aktualnych i ostatnio dodanych realizacji.</p>
+          </div>
+          <span className="metricBadge">{data?.recentBudowy?.length ?? 0}</span>
+        </div>
+
+        <div className="compactList">
+          {(data?.recentBudowy || []).length === 0 ? (
+            <div className="compactListRow">
+              <div className="compactListMain">
+                <strong>Brak budow</strong>
+                <span className="mutedText">Nie ma jeszcze zadnych budow w ewidencji.</span>
+              </div>
+            </div>
+          ) : (
+            data.recentBudowy.map((budowa) => (
+              <Link
+                key={budowa.id}
+                href={`/pages/budowy/${budowa.id}`}
+                className="dashboardAlertLinkWrap"
+              >
+                <div className="compactListRow compactMetricRow">
+                  <div className="compactListMain">
+                    <strong>{budowa.numer}</strong>
+                    <span>{budowa.nazwa}</span>
+                    <span className="mutedText">
+                      {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
+                    </span>
+                  </div>
+                  <span className="pill">{statusLabel(budowa.status)}</span>
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
+      </article>
+    );
+  }
+
+  return null;
+}
+
 export default function HomeDashboardClient({ user }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -217,7 +389,7 @@ export default function HomeDashboardClient({ user }) {
     const payload = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      throw new Error(payload?.error || "Błąd pobierania dashboardu");
+      throw new Error(payload?.error || "Blad pobierania dashboardu");
     }
 
     setData(payload);
@@ -238,7 +410,7 @@ export default function HomeDashboardClient({ user }) {
         await refreshDashboard();
       } catch (err) {
         setData(null);
-        setError(err.message || "Błąd pobierania dashboardu");
+        setError(err.message || "Blad pobierania dashboardu");
       }
     };
 
@@ -266,7 +438,7 @@ export default function HomeDashboardClient({ user }) {
 
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(payload?.error || "Nie udało się zapisać raportu");
+        throw new Error(payload?.error || "Nie udalo sie zapisac raportu");
       }
 
       await refreshDashboard();
@@ -275,7 +447,7 @@ export default function HomeDashboardClient({ user }) {
         [machineId]: EMPTY_REPORT,
       }));
     } catch (err) {
-      setError(err.message || "Nie udało się zapisać raportu");
+      setError(err.message || "Nie udalo sie zapisac raportu");
     } finally {
       setSavingId(null);
     }
@@ -284,17 +456,23 @@ export default function HomeDashboardClient({ user }) {
   if (!user) {
     return (
       <section className="home">
-        <h1>Witamy w aplikacji do zarządzania zapleczem</h1>
-        <p>Zaloguj się, aby zobaczyć przypisane maszyny, alerty serwisowe i bieżące zgłoszenia.</p>
+        <h1>Witamy w aplikacji do zarzadzania zapleczem</h1>
+        <p>Zaloguj sie, aby zobaczyc przypisane maszyny, alerty serwisowe i zgloszenia.</p>
       </section>
     );
   }
 
+  const dashboardType = data?.roleDashboard || "";
+  const isRoleDashboard =
+    dashboardType === "kierownik" ||
+    dashboardType === "brygadzista" ||
+    dashboardType === "biuro";
+
   const awariaAlerts = (data?.alerts?.awarie || []).map((item) => ({
     ...item,
     title: item.nr,
-    description: item.opis || "Aktywne zgłoszenie awarii",
-    meta: `Zgłoszono: ${fmtDate(item.date)}`,
+    description: item.opis || "Aktywne zgloszenie awarii",
+    meta: `Zgloszono: ${fmtDate(item.date)}`,
   }));
 
   const serviceAlerts = [
@@ -303,29 +481,26 @@ export default function HomeDashboardClient({ user }) {
       kind: "overdue",
       title: item.nr,
       description: `Serwis przekroczony o ${Math.abs(Math.round(item.remaining))} mth`,
-      meta: `Stan licznika: ${Math.round(item.currentHours)} mth • próg: ${Math.round(item.nextServiceAt)} mth`,
-    }))),
+      meta: `Stan licznika: ${Math.round(item.currentHours)} mth • prog: ${Math.round(item.nextServiceAt)} mth`,
+    })) || []),
     ...((data?.alerts?.serwisSoon || []).map((item) => ({
       ...item,
       kind: "soon",
       title: item.nr,
-      description: `Do serwisu zostało około ${Math.round(item.remaining)} mth`,
-      meta: `Stan licznika: ${Math.round(item.currentHours)} mth • próg: ${Math.round(item.nextServiceAt)} mth`,
-    }))),
+      description: `Do serwisu zostalo okolo ${Math.round(item.remaining)} mth`,
+      meta: `Stan licznika: ${Math.round(item.currentHours)} mth • prog: ${Math.round(item.nextServiceAt)} mth`,
+    })) || []),
   ];
 
   const recentReports = buildRecentReports(data?.recentReports);
-  const isManagerDashboard = data?.roleDashboard === "kierownik";
 
   return (
     <section className="home dashboardHome">
       <div className="sectionIntro">
-        <h1>Panel główny</h1>
+        <h1>Panel glowny</h1>
         <p>
-          Zalogowano jako <b>{user.username}</b> ({roleLabel(user.role)}). Tutaj widać
-          {isManagerDashboard
-            ? " podsumowanie budów, przypisanych zasobów oraz bieżących awarii i serwisów."
-            : " bieżące awarie, nadchodzące serwisy i ostatnie raporty z maszyn."}
+          Zalogowano jako <b>{user.username}</b> ({roleLabel(user.role)}). Tutaj widac{" "}
+          {getDashboardIntro(dashboardType)}
         </p>
       </div>
 
@@ -334,91 +509,72 @@ export default function HomeDashboardClient({ user }) {
       <div className="statsGrid dashboardStats">
         <article className="statCard">
           <span className="statLabel">
-            {isManagerDashboard ? "Aktywne budowy" : "Awarie aktywne"}
+            {dashboardType === "kierownik"
+              ? "Aktywne budowy"
+              : dashboardType === "brygadzista"
+                ? "Moje brygady"
+                : dashboardType === "biuro"
+                  ? "Wszystkie budowy"
+                  : "Awarie aktywne"}
           </span>
           <strong className="statValue">
-            {isManagerDashboard
+            {dashboardType === "kierownik"
               ? data?.summary?.activeBudowy ?? 0
-              : data?.alerts?.awarie?.length ?? 0}
+              : dashboardType === "brygadzista"
+                ? data?.summary?.brygady ?? 0
+                : dashboardType === "biuro"
+                  ? data?.summary?.totalBudowy ?? 0
+                  : data?.alerts?.awarie?.length ?? 0}
           </strong>
         </article>
+
         <article className="statCard">
           <span className="statLabel">
-            {isManagerDashboard ? "Brygady na budowach" : "Serwis wkrótce"}
+            {dashboardType === "kierownik"
+              ? "Brygady na budowach"
+              : dashboardType === "brygadzista"
+                ? "Moje budowy"
+                : dashboardType === "biuro"
+                  ? "Aktywne budowy"
+                  : "Serwis wkrotce"}
           </span>
           <strong className="statValue">
-            {isManagerDashboard
+            {dashboardType === "kierownik"
               ? data?.summary?.brygady ?? 0
-              : data?.alerts?.serwisSoon?.length ?? 0}
+              : dashboardType === "brygadzista"
+                ? data?.summary?.budowy ?? 0
+                : dashboardType === "biuro"
+                  ? data?.summary?.activeBudowy ?? 0
+                  : data?.alerts?.serwisSoon?.length ?? 0}
           </strong>
         </article>
+
         <article className="statCard">
           <span className="statLabel">
-            {isManagerDashboard ? "Maszyny na budowach" : "Serwis po terminie"}
+            {isRoleDashboard ? "Maszyny" : "Serwis po terminie"}
           </span>
           <strong className="statValue">
-            {isManagerDashboard
+            {isRoleDashboard
               ? data?.summary?.maszyny ?? 0
               : data?.alerts?.serwisOverdue?.length ?? 0}
           </strong>
         </article>
-        {isManagerDashboard ? (
-          <article className="statCard">
-            <span className="statLabel">Otwarte awarie</span>
-            <strong className="statValue">{data?.summary?.awarie ?? 0}</strong>
-          </article>
-        ) : null}
+
+        <article className="statCard">
+          <span className="statLabel">
+            {dashboardType === "biuro" ? "Brygady" : "Otwarte awarie"}
+          </span>
+          <strong className="statValue">
+            {dashboardType === "biuro"
+              ? data?.summary?.brygady ?? 0
+              : data?.summary?.awarie ?? data?.alerts?.awarie?.length ?? 0}
+          </strong>
+        </article>
       </div>
 
-      {isManagerDashboard ? (
+      {isRoleDashboard ? (
         <div className="splitLayout dashboardLayout">
-          <article className="card sectionCard">
-            <div className="sectionCardHeader">
-              <div>
-                <h2>Moje budowy</h2>
-                <p className="mutedText">Budowy przypisane do zalogowanego kierownika.</p>
-              </div>
-              <span className="metricBadge">{data?.managedBudowy?.length ?? 0}</span>
-            </div>
-
-            <div className="compactList">
-              {(data?.managedBudowy || []).length === 0 ? (
-                <div className="compactListRow">
-                  <div className="compactListMain">
-                    <strong>Brak przypisanych budów</strong>
-                    <span className="mutedText">
-                      Na ten moment to konto nie ma żadnej budowy z przypisanym kierownikiem.
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                data.managedBudowy.map((budowa) => (
-                  <Link
-                    key={budowa.id}
-                    href={`/pages/budowy/${budowa.id}`}
-                    className="dashboardAlertLinkWrap"
-                  >
-                    <div className="compactListRow compactMetricRow">
-                      <div className="compactListMain">
-                        <strong>{budowa.numer}</strong>
-                        <span>{budowa.nazwa}</span>
-                        <span className="mutedText">
-                          {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
-                        </span>
-                      </div>
-                      <div className="compactListMeta compactListMetaStack">
-                        <span className="pill">{statusLabel(budowa.status)}</span>
-                        <span className="mutedText">
-                          brygady: {budowa.brygady_count} • maszyny: {budowa.maszyny_count}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </article>
-
+          <DashboardScopePanel dashboardType={dashboardType} data={data} />
           <DashboardAlerts
             awariaAlerts={awariaAlerts}
             serviceAlerts={serviceAlerts}
@@ -436,7 +592,7 @@ export default function HomeDashboardClient({ user }) {
         <div className="stackSection">
           <div className="sectionIntro">
             <h2>Moje maszyny</h2>
-            <p>Wpisuj motogodziny i zgłaszaj awarie bezpośrednio ze swojego panelu.</p>
+            <p>Wpisuj motogodziny i zglaszaj awarie bezposrednio ze swojego panelu.</p>
           </div>
 
           {(data?.assignedMachines || []).length === 0 ? (
@@ -498,7 +654,7 @@ export default function HomeDashboardClient({ user }) {
                           }
                         >
                           <option value="nie">brak awarii</option>
-                          <option value="tak">zgłoś awarię</option>
+                          <option value="tak">zglos awarie</option>
                         </select>
                       </label>
 
@@ -510,7 +666,7 @@ export default function HomeDashboardClient({ user }) {
                           onChange={(e) =>
                             setFormFor(machine.id, { ...form, opis: e.target.value })
                           }
-                          placeholder="Krótki opis pracy, przestoju albo awarii..."
+                          placeholder="Krotki opis pracy, przestoju albo awarii..."
                         />
                       </label>
                     </div>
@@ -521,7 +677,7 @@ export default function HomeDashboardClient({ user }) {
                         disabled={savingId === machine.id}
                         onClick={() => submitReport(machine.id)}
                       >
-                        {savingId === machine.id ? "Zapisywanie..." : "Wyślij raport"}
+                        {savingId === machine.id ? "Zapisywanie..." : "Wyslij raport"}
                       </button>
                     </div>
                   </article>

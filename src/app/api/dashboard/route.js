@@ -142,6 +142,41 @@ export async function GET(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (user.role === "biuro") {
+    const [
+      { rows: machineRows },
+      { rows: budowyRows },
+      { rows: brygadyRows },
+      { rows: recentBudowy },
+    ] = await Promise.all([
+      pool.query(`SELECT id FROM maszyny ORDER BY id ASC`),
+      pool.query(`SELECT id, status FROM budowy`),
+      pool.query(`SELECT id FROM brygady`),
+      pool.query(
+        `SELECT id, numer, nazwa, lokalizacja, status, data_rozpoczecia
+         FROM budowy
+         ORDER BY COALESCE(data_rozpoczecia, created_at) DESC, id DESC
+         LIMIT 6`
+      ),
+    ]);
+
+    const visibleMachineIds = machineRows.map((row) => Number(row.id)).filter(Boolean);
+    const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
+
+    return Response.json({
+      ...machineDashboard,
+      summary: {
+        totalBudowy: budowyRows.length,
+        activeBudowy: budowyRows.filter((row) => row.status === "w_toku").length,
+        brygady: brygadyRows.length,
+        maszyny: visibleMachineIds.length,
+        awarie: machineDashboard.alerts.awarie.length,
+      },
+      recentBudowy,
+      roleDashboard: "biuro",
+    });
+  }
+
   if (user.role === "kierownik") {
     const { rows: managedBudowy } = await pool.query(
       `SELECT
@@ -209,6 +244,72 @@ export async function GET(req) {
       summary,
       managedBudowy,
       roleDashboard: "kierownik",
+    });
+  }
+
+  if (user.role === "brygadzista") {
+    const { rows: managedBrygady } = await pool.query(
+      `SELECT id, numer, brygadzista, created_at
+       FROM brygady
+       WHERE brygadzista = $1
+       ORDER BY numer ASC, id ASC`,
+      [user.username]
+    );
+
+    const brygadaIds = managedBrygady.map((row) => row.id);
+    const { rows: managedBudowy } = brygadaIds.length
+      ? await pool.query(
+          `SELECT DISTINCT
+             b.id,
+             b.numer,
+             b.nazwa,
+             b.lokalizacja,
+             b.status,
+             b.data_rozpoczecia
+           FROM budowy b
+           JOIN budowy_brygady bb
+             ON bb.budowa_id = b.id
+           WHERE bb.brygada_id = ANY($1::int[])
+           ORDER BY
+             CASE
+               WHEN b.status = 'w_toku' THEN 0
+               WHEN b.status = 'planowana' THEN 1
+               WHEN b.status = 'wstrzymana' THEN 2
+               ELSE 3
+             END,
+             COALESCE(b.data_rozpoczecia, b.created_at) DESC,
+             b.id DESC`,
+          [brygadaIds]
+        )
+      : { rows: [] };
+
+    const budowaIds = managedBudowy.map((row) => row.id);
+    const { rows: machineRows } = budowaIds.length
+      ? await pool.query(
+          `SELECT DISTINCT bm.maszyna_id
+           FROM budowy_maszyny bm
+           WHERE bm.budowa_id = ANY($1::int[])`,
+          [budowaIds]
+        )
+      : { rows: [] };
+
+    const visibleMachineIds = machineRows
+      .map((row) => Number(row.maszyna_id))
+      .filter((value) => Number.isInteger(value) && value > 0);
+
+    const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
+
+    return Response.json({
+      ...machineDashboard,
+      summary: {
+        brygady: managedBrygady.length,
+        budowy: managedBudowy.length,
+        maszyny: visibleMachineIds.length,
+        awarie: machineDashboard.alerts.awarie.length,
+      },
+      managedBrygady,
+      managedBudowy,
+      roleDashboard: "brygadzista",
     });
   }
 
