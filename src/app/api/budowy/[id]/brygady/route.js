@@ -41,6 +41,7 @@ export async function GET(req, { params }) {
        FROM budowy_brygady bb
        JOIN brygady b ON b.id = bb.brygada_id
        WHERE bb.budowa_id=$1
+         AND COALESCE(bb.data_do, '9999-12-31') >= CURRENT_DATE
        ORDER BY COALESCE(bb.data_od, bb.created_at) DESC, bb.id DESC`,
       [budowaId]
     );
