@@ -2,16 +2,9 @@ import pool from "../../../../db";
 import { getUserFromRequest } from "../../../lib/auth";
 import { getVisibleMachineIdsForUser } from "../../../lib/machine-access";
 
-export async function GET(req) {
-  const user = await getUserFromRequest(req);
-  if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const visibleMachineIds = await getVisibleMachineIdsForUser(user);
-
-  if (!visibleMachineIds.length) {
-    return Response.json({
+async function buildMachineDashboard(machineIds, user) {
+  if (!machineIds.length) {
+    return {
       user,
       assignedMachines: [],
       alerts: {
@@ -20,7 +13,7 @@ export async function GET(req) {
         serwisOverdue: [],
       },
       recentReports: [],
-    });
+    };
   }
 
   const { rows: machines } = await pool.query(
@@ -35,7 +28,7 @@ export async function GET(req) {
        ON u.id = mo.user_id
      WHERE m.id = ANY($1::int[])
      ORDER BY m.nr ASC, m.id ASC`,
-    [visibleMachineIds]
+    [machineIds]
   );
 
   const { rows: latestReports } = await pool.query(
@@ -47,7 +40,7 @@ export async function GET(req) {
      LEFT JOIN users u ON u.id = r.user_id
      WHERE r.maszyna_id = ANY($1::int[])
      ORDER BY r.maszyna_id, r.created_at DESC, r.id DESC`,
-    [visibleMachineIds]
+    [machineIds]
   );
 
   const { rows: latestActiveFailures } = await pool.query(
@@ -61,7 +54,7 @@ export async function GET(req) {
        AND r.awaria = true
        AND COALESCE(r.status_awarii, 'nowa') <> 'zamknieta'
      ORDER BY r.maszyna_id, r.created_at DESC, r.id DESC`,
-    [visibleMachineIds]
+    [machineIds]
   );
 
   const { rows: recentReports } = await pool.query(
@@ -74,7 +67,7 @@ export async function GET(req) {
      WHERE r.maszyna_id = ANY($1::int[])
      ORDER BY r.created_at DESC, r.id DESC
      LIMIT 8`,
-    [visibleMachineIds]
+    [machineIds]
   );
 
   const latestByMachineId = new Map(
@@ -131,7 +124,7 @@ export async function GET(req) {
     }
   }
 
-  return Response.json({
+  return {
     user,
     assignedMachines: user.role === "operator" ? machines : [],
     alerts: {
@@ -140,5 +133,85 @@ export async function GET(req) {
       serwisOverdue,
     },
     recentReports,
-  });
+  };
+}
+
+export async function GET(req) {
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (user.role === "kierownik") {
+    const { rows: managedBudowy } = await pool.query(
+      `SELECT
+         b.id,
+         b.numer,
+         b.nazwa,
+         b.lokalizacja,
+         b.status,
+         b.data_rozpoczecia,
+         b.data_zakonczenia,
+         COALESCE((
+           SELECT COUNT(*)
+           FROM budowy_brygady bb
+           WHERE bb.budowa_id = b.id
+         ), 0) AS brygady_count,
+         COALESCE((
+           SELECT COUNT(*)
+           FROM budowy_maszyny bm
+           WHERE bm.budowa_id = b.id
+         ), 0) AS maszyny_count
+       FROM budowy b
+       WHERE b.kierownik = $1
+       ORDER BY
+         CASE
+           WHEN b.status = 'w_toku' THEN 0
+           WHEN b.status = 'planowana' THEN 1
+           WHEN b.status = 'wstrzymana' THEN 2
+           ELSE 3
+         END,
+         COALESCE(b.data_rozpoczecia, b.created_at) DESC,
+         b.id DESC`,
+      [user.username]
+    );
+
+    const budowaIds = managedBudowy.map((row) => row.id);
+    const { rows: machineRows } = budowaIds.length
+      ? await pool.query(
+          `
+          SELECT DISTINCT bm.maszyna_id
+          FROM budowy_maszyny bm
+          WHERE bm.budowa_id = ANY($1::int[])
+          `,
+          [budowaIds]
+        )
+      : { rows: [] };
+
+    const visibleMachineIds = machineRows
+      .map((row) => Number(row.maszyna_id))
+      .filter((value) => Number.isInteger(value) && value > 0);
+
+    const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
+
+    const summary = {
+      activeBudowy: managedBudowy.filter((row) => row.status === "w_toku").length,
+      brygady: managedBudowy.reduce(
+        (sum, row) => sum + Number(row.brygady_count || 0),
+        0
+      ),
+      maszyny: visibleMachineIds.length,
+      awarie: machineDashboard.alerts.awarie.length,
+    };
+
+    return Response.json({
+      ...machineDashboard,
+      summary,
+      managedBudowy,
+      roleDashboard: "kierownik",
+    });
+  }
+
+  const visibleMachineIds = await getVisibleMachineIdsForUser(user);
+  return Response.json(await buildMachineDashboard(visibleMachineIds, user));
 }

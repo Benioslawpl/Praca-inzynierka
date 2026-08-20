@@ -31,6 +31,13 @@ function roleLabel(role) {
   return "użytkownik";
 }
 
+function statusLabel(status) {
+  if (status === "w_toku") return "w toku";
+  if (status === "wstrzymana") return "wstrzymana";
+  if (status === "zakonczona") return "zakończona";
+  return "planowana";
+}
+
 function buildRecentReports(rows) {
   const seenOkMachines = new Set();
   const output = [];
@@ -47,6 +54,153 @@ function buildRecentReports(rows) {
   }
 
   return output;
+}
+
+function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
+  return (
+    <article className="card sectionCard">
+      <div className="sectionCardHeader">
+        <div>
+          <h2>Najważniejsze alerty</h2>
+          <p className="mutedText">
+            {managerMode
+              ? "Awarie i serwisy dla maszyn przypisanych do Twoich budów."
+              : "Awarie i serwisy, które wymagają reakcji."}
+          </p>
+        </div>
+        <span className="metricBadge">{awariaAlerts.length + serviceAlerts.length}</span>
+      </div>
+
+      <div className="dashboardAlertStack">
+        <div className="dashboardAlertGroup">
+          <div className="dashboardAlertGroupHeader">
+            <strong>Aktywne awarie</strong>
+            <span className="mutedText">{awariaAlerts.length}</span>
+          </div>
+
+          <div className="compactList dashboardAlertList">
+            {awariaAlerts.length === 0 ? (
+              <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
+                <div className="compactListMain">
+                  <strong>Brak aktywnych awarii</strong>
+                  <span className="mutedText">
+                    {managerMode
+                      ? "Nie ma otwartych zgłoszeń na Twoich budowach."
+                      : "Na ten moment nie ma otwartych zgłoszeń."}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              awariaAlerts.map((item) => (
+                <Link
+                  href={`/pages/maszyny/${item.machineId}`}
+                  className="dashboardAlertLinkWrap"
+                  key={`awaria-${item.machineId}`}
+                >
+                  <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCard-awaria">
+                    <div className="dashboardAlertLead">
+                      <span className="dashboardAlertDot" aria-hidden="true" />
+                    </div>
+                    <div className="compactListMain">
+                      <strong>{item.title}</strong>
+                      <span className="dashboardAlertText">{item.description}</span>
+                      <span className="mutedText">{item.meta}</span>
+                    </div>
+                    <span className="pill bad">awaria</span>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="dashboardAlertGroup">
+          <div className="dashboardAlertGroupHeader">
+            <strong>{managerMode ? "Nadchodzące serwisy" : "Alerty serwisowe"}</strong>
+            <span className="mutedText">{serviceAlerts.length}</span>
+          </div>
+
+          <div className="dashboardServiceList">
+            {serviceAlerts.length === 0 ? (
+              <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
+                <div className="compactListMain">
+                  <strong>Brak pilnych serwisów</strong>
+                  <span className="mutedText">
+                    {managerMode
+                      ? "Żadna maszyna na Twoich budowach nie wymaga teraz reakcji serwisowej."
+                      : "Nie ma maszyn wymagających teraz przeglądu."}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              serviceAlerts.map((item) => (
+                <Link
+                  href={`/pages/maszyny/${item.machineId}`}
+                  className="dashboardAlertLinkWrap"
+                  key={`${item.kind}-${item.machineId}`}
+                >
+                  <div className={`dashboardServiceCard dashboardServiceCard-${item.kind}`}>
+                    <div className="dashboardServiceLink">
+                      <div className="dashboardAlertLead">
+                        <span className="dashboardAlertDot" aria-hidden="true" />
+                      </div>
+                      <div className="compactListMain">
+                        <strong>{item.title}</strong>
+                        <span className="dashboardAlertText">{item.description}</span>
+                        <span className="mutedText">{item.meta}</span>
+                      </div>
+                      <span className={`pill ${item.kind === "overdue" ? "bad" : ""}`}>
+                        {item.kind === "overdue" ? "pilne" : "wkrótce"}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function DashboardRecentReports({ reports }) {
+  return (
+    <article className="card sectionCard">
+      <div className="sectionCardHeader">
+        <div>
+          <h2>Ostatnie raporty</h2>
+          <p className="mutedText">Najnowsze wpisy operatorskie i awarie.</p>
+        </div>
+      </div>
+
+      <div className="compactList">
+        {reports.length === 0 ? (
+          <div className="compactListRow">
+            <div className="compactListMain">
+              <strong>Brak raportów</strong>
+              <span className="mutedText">Nie ma jeszcze żadnych wpisów operatorskich.</span>
+            </div>
+          </div>
+        ) : (
+          reports.map((report) => (
+            <div className="compactListRow" key={report.id}>
+              <div className="compactListMain">
+                <strong>{report.nr || `Maszyna #${report.maszyna_id}`}</strong>
+                <span className="mutedText">
+                  {report.username || "anon"} • {fmtDate(report.data_raportu)} •{" "}
+                  {report.motogodziny ?? "-"} mth
+                </span>
+              </div>
+              <span className={`pill ${report.awaria ? "bad" : "ok"}`}>
+                {report.awaria ? "awaria" : "ok"}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </article>
+  );
 }
 
 export default function HomeDashboardClient({ user }) {
@@ -161,6 +315,7 @@ export default function HomeDashboardClient({ user }) {
   ];
 
   const recentReports = buildRecentReports(data?.recentReports);
+  const isManagerDashboard = data?.roleDashboard === "kierownik";
 
   return (
     <section className="home dashboardHome">
@@ -168,7 +323,9 @@ export default function HomeDashboardClient({ user }) {
         <h1>Panel główny</h1>
         <p>
           Zalogowano jako <b>{user.username}</b> ({roleLabel(user.role)}). Tutaj widać
-          bieżące awarie, nadchodzące serwisy i ostatnie raporty z maszyn.
+          {isManagerDashboard
+            ? " podsumowanie budów, przypisanych zasobów oraz bieżących awarii i serwisów."
+            : " bieżące awarie, nadchodzące serwisy i ostatnie raporty z maszyn."}
         </p>
       </div>
 
@@ -176,147 +333,104 @@ export default function HomeDashboardClient({ user }) {
 
       <div className="statsGrid dashboardStats">
         <article className="statCard">
-          <span className="statLabel">Awarie aktywne</span>
-          <strong className="statValue">{data?.alerts?.awarie?.length ?? 0}</strong>
+          <span className="statLabel">
+            {isManagerDashboard ? "Aktywne budowy" : "Awarie aktywne"}
+          </span>
+          <strong className="statValue">
+            {isManagerDashboard
+              ? data?.summary?.activeBudowy ?? 0
+              : data?.alerts?.awarie?.length ?? 0}
+          </strong>
         </article>
         <article className="statCard">
-          <span className="statLabel">Serwis wkrótce</span>
-          <strong className="statValue">{data?.alerts?.serwisSoon?.length ?? 0}</strong>
+          <span className="statLabel">
+            {isManagerDashboard ? "Brygady na budowach" : "Serwis wkrótce"}
+          </span>
+          <strong className="statValue">
+            {isManagerDashboard
+              ? data?.summary?.brygady ?? 0
+              : data?.alerts?.serwisSoon?.length ?? 0}
+          </strong>
         </article>
         <article className="statCard">
-          <span className="statLabel">Serwis po terminie</span>
-          <strong className="statValue">{data?.alerts?.serwisOverdue?.length ?? 0}</strong>
+          <span className="statLabel">
+            {isManagerDashboard ? "Maszyny na budowach" : "Serwis po terminie"}
+          </span>
+          <strong className="statValue">
+            {isManagerDashboard
+              ? data?.summary?.maszyny ?? 0
+              : data?.alerts?.serwisOverdue?.length ?? 0}
+          </strong>
         </article>
+        {isManagerDashboard ? (
+          <article className="statCard">
+            <span className="statLabel">Otwarte awarie</span>
+            <strong className="statValue">{data?.summary?.awarie ?? 0}</strong>
+          </article>
+        ) : null}
       </div>
 
-      <div className="splitLayout dashboardLayout">
-        <article className="card sectionCard">
-          <div className="sectionCardHeader">
-            <div>
-              <h2>Najważniejsze alerty</h2>
-              <p className="mutedText">Awarie i serwisy, które wymagają reakcji.</p>
-            </div>
-            <span className="metricBadge">{awariaAlerts.length + serviceAlerts.length}</span>
-          </div>
-
-          <div className="dashboardAlertStack">
-            <div className="dashboardAlertGroup">
-              <div className="dashboardAlertGroupHeader">
-                <strong>Aktywne awarie</strong>
-                <span className="mutedText">{awariaAlerts.length}</span>
+      {isManagerDashboard ? (
+        <div className="splitLayout dashboardLayout">
+          <article className="card sectionCard">
+            <div className="sectionCardHeader">
+              <div>
+                <h2>Moje budowy</h2>
+                <p className="mutedText">Budowy przypisane do zalogowanego kierownika.</p>
               </div>
-
-              <div className="compactList dashboardAlertList">
-                {awariaAlerts.length === 0 ? (
-                  <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
-                    <div className="compactListMain">
-                      <strong>Brak aktywnych awarii</strong>
-                      <span className="mutedText">Na ten moment nie ma otwartych zgłoszeń.</span>
-                    </div>
-                  </div>
-                ) : (
-                  awariaAlerts.map((item) => (
-                    <Link
-                      href={`/pages/maszyny/${item.machineId}`}
-                      className="dashboardAlertLinkWrap"
-                      key={`awaria-${item.machineId}`}
-                    >
-                      <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCard-awaria">
-                        <div className="dashboardAlertLead">
-                          <span className="dashboardAlertDot" aria-hidden="true" />
-                        </div>
-                        <div className="compactListMain">
-                          <strong>{item.title}</strong>
-                          <span className="dashboardAlertText">{item.description}</span>
-                          <span className="mutedText">{item.meta}</span>
-                        </div>
-                        <span className="pill bad">awaria</span>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
+              <span className="metricBadge">{data?.managedBudowy?.length ?? 0}</span>
             </div>
 
-            <div className="dashboardAlertGroup">
-              <div className="dashboardAlertGroupHeader">
-                <strong>Alerty serwisowe</strong>
-                <span className="mutedText">{serviceAlerts.length}</span>
-              </div>
-
-              <div className="dashboardServiceList">
-                {serviceAlerts.length === 0 ? (
-                  <div className="compactListRow compactMetricRow dashboardAlertCard dashboardAlertCardOk">
-                    <div className="compactListMain">
-                      <strong>Brak pilnych serwisów</strong>
-                      <span className="mutedText">Nie ma maszyn wymagających teraz przeglądu.</span>
-                    </div>
-                  </div>
-                ) : (
-                  serviceAlerts.map((item) => (
-                    <Link
-                      href={`/pages/maszyny/${item.machineId}`}
-                      className="dashboardAlertLinkWrap"
-                      key={`${item.kind}-${item.machineId}`}
-                    >
-                      <div className={`dashboardServiceCard dashboardServiceCard-${item.kind}`}>
-                        <div className="dashboardServiceLink">
-                          <div className="dashboardAlertLead">
-                            <span className="dashboardAlertDot" aria-hidden="true" />
-                          </div>
-                          <div className="compactListMain">
-                            <strong>{item.title}</strong>
-                            <span className="dashboardAlertText">{item.description}</span>
-                            <span className="mutedText">{item.meta}</span>
-                          </div>
-                          <span className={`pill ${item.kind === "overdue" ? "bad" : ""}`}>
-                            {item.kind === "overdue" ? "pilne" : "wkrótce"}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <article className="card sectionCard">
-          <div className="sectionCardHeader">
-            <div>
-              <h2>Ostatnie raporty</h2>
-              <p className="mutedText">Najnowsze wpisy operatorskie i awarie.</p>
-            </div>
-          </div>
-
-          <div className="compactList">
-            {recentReports.length === 0 ? (
-              <div className="compactListRow">
-                <div className="compactListMain">
-                  <strong>Brak raportów</strong>
-                  <span className="mutedText">Nie ma jeszcze żadnych wpisów operatorskich.</span>
-                </div>
-              </div>
-            ) : (
-              recentReports.map((report) => (
-                <div className="compactListRow" key={report.id}>
+            <div className="compactList">
+              {(data?.managedBudowy || []).length === 0 ? (
+                <div className="compactListRow">
                   <div className="compactListMain">
-                    <strong>{report.nr || `Maszyna #${report.maszyna_id}`}</strong>
+                    <strong>Brak przypisanych budów</strong>
                     <span className="mutedText">
-                      {report.username || "anon"} • {fmtDate(report.data_raportu)} •{" "}
-                      {report.motogodziny ?? "-"} mth
+                      Na ten moment to konto nie ma żadnej budowy z przypisanym kierownikiem.
                     </span>
                   </div>
-                  <span className={`pill ${report.awaria ? "bad" : "ok"}`}>
-                    {report.awaria ? "awaria" : "ok"}
-                  </span>
                 </div>
-              ))
-            )}
-          </div>
-        </article>
-      </div>
+              ) : (
+                data.managedBudowy.map((budowa) => (
+                  <Link
+                    key={budowa.id}
+                    href={`/pages/budowy/${budowa.id}`}
+                    className="dashboardAlertLinkWrap"
+                  >
+                    <div className="compactListRow compactMetricRow">
+                      <div className="compactListMain">
+                        <strong>{budowa.numer}</strong>
+                        <span>{budowa.nazwa}</span>
+                        <span className="mutedText">
+                          {budowa.lokalizacja || "-"} • start: {fmtDate(budowa.data_rozpoczecia)}
+                        </span>
+                      </div>
+                      <div className="compactListMeta compactListMetaStack">
+                        <span className="pill">{statusLabel(budowa.status)}</span>
+                        <span className="mutedText">
+                          brygady: {budowa.brygady_count} • maszyny: {budowa.maszyny_count}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </article>
+
+          <DashboardAlerts
+            awariaAlerts={awariaAlerts}
+            serviceAlerts={serviceAlerts}
+            managerMode
+          />
+        </div>
+      ) : (
+        <div className="splitLayout dashboardLayout">
+          <DashboardAlerts awariaAlerts={awariaAlerts} serviceAlerts={serviceAlerts} />
+          <DashboardRecentReports reports={recentReports} />
+        </div>
+      )}
 
       {user.role === "operator" ? (
         <div className="stackSection">
