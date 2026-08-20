@@ -40,7 +40,8 @@ async function getBudowa(id) {
 }
 
 async function closeAssignmentsForFinishedBudowa(budowaId, endDate) {
-  const finalDate = endDate || new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  const finalDate = today;
 
   await pool.query(
     `UPDATE budowy_brygady

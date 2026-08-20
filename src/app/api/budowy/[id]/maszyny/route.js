@@ -43,7 +43,9 @@ export async function GET(req, { params }) {
          m.operator
        FROM budowy_maszyny bm
        JOIN maszyny m ON m.id = bm.maszyna_id
+       JOIN budowy bd ON bd.id = bm.budowa_id
        WHERE bm.budowa_id=$1
+         AND bd.status <> 'zakonczona'
          AND COALESCE(bm.data_do, '9999-12-31') >= CURRENT_DATE
        ORDER BY COALESCE(bm.data_od, bm.created_at) DESC, bm.id DESC`,
       [budowaId]
@@ -74,6 +76,9 @@ export async function POST(req, { params }) {
       `SELECT id
        FROM budowy_maszyny
        WHERE maszyna_id=$1
+         AND budowa_id IN (
+           SELECT id FROM budowy WHERE status <> 'zakonczona'
+         )
          AND COALESCE(data_do, '9999-12-31') >= COALESCE($2::date, '0001-01-01')
          AND COALESCE($3::date, '9999-12-31') >= COALESCE(data_od, '0001-01-01')
        LIMIT 1`,

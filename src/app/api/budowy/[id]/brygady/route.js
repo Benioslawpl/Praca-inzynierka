@@ -40,7 +40,9 @@ export async function GET(req, { params }) {
          b.brygadzista
        FROM budowy_brygady bb
        JOIN brygady b ON b.id = bb.brygada_id
+       JOIN budowy bd ON bd.id = bb.budowa_id
        WHERE bb.budowa_id=$1
+         AND bd.status <> 'zakonczona'
          AND COALESCE(bb.data_do, '9999-12-31') >= CURRENT_DATE
        ORDER BY COALESCE(bb.data_od, bb.created_at) DESC, bb.id DESC`,
       [budowaId]

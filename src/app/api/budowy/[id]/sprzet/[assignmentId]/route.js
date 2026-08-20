@@ -69,6 +69,9 @@ export async function PUT(req, { params }) {
        FROM budowy_sprzet
        WHERE sprzet_id=$1
          AND id <> $2
+         AND budowa_id IN (
+           SELECT id FROM budowy WHERE status <> 'zakonczona'
+         )
          AND COALESCE(data_do, '9999-12-31') >= COALESCE($3::date, '0001-01-01')
          AND COALESCE($4::date, '9999-12-31') >= COALESCE(data_od, '0001-01-01')
        LIMIT 1`,
