@@ -16,7 +16,10 @@ async function getMachineIdsForBudowy(budowaIds) {
   const { rows } = await pool.query(
     `SELECT DISTINCT bm.maszyna_id
      FROM budowy_maszyny bm
-     WHERE bm.budowa_id = ANY($1::int[])`,
+     JOIN budowy b ON b.id = bm.budowa_id
+     WHERE bm.budowa_id = ANY($1::int[])
+       AND b.status <> 'zakonczona'
+       AND COALESCE(bm.data_do, '9999-12-31') >= CURRENT_DATE`,
     [budowaIds]
   );
 
@@ -197,11 +200,13 @@ export async function GET(req) {
            SELECT COUNT(*)
            FROM budowy_brygady bb
            WHERE bb.budowa_id = b.id
+             AND COALESCE(bb.data_do, '9999-12-31') >= CURRENT_DATE
          ), 0) AS brygady_count,
          COALESCE((
            SELECT COUNT(*)
            FROM budowy_maszyny bm
            WHERE bm.budowa_id = b.id
+             AND COALESCE(bm.data_do, '9999-12-31') >= CURRENT_DATE
          ), 0) AS maszyny_count
        FROM budowy b
        WHERE b.kierownik = $1
@@ -263,6 +268,8 @@ export async function GET(req) {
            JOIN budowy_brygady bb
              ON bb.budowa_id = b.id
            WHERE bb.brygada_id = ANY($1::int[])
+             AND b.status <> 'zakonczona'
+             AND COALESCE(bb.data_do, '9999-12-31') >= CURRENT_DATE
            ORDER BY
              CASE
                WHEN b.status = 'w_toku' THEN 0
@@ -295,6 +302,13 @@ export async function GET(req) {
       `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista
        FROM sprzet
        WHERE operator = $1
+         AND id IN (
+           SELECT DISTINCT bs.sprzet_id
+           FROM budowy_sprzet bs
+           JOIN budowy b ON b.id = bs.budowa_id
+           WHERE b.status <> 'zakonczona'
+             AND COALESCE(bs.data_do, '9999-12-31') >= CURRENT_DATE
+         )
        ORDER BY nr ASC, id ASC`,
       [user.username]
     );
