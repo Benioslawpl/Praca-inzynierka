@@ -3,10 +3,22 @@
 export async function GET() {
   try {
     const { rows } = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista,
-              serwis_co_ile_mth, ostatni_serwis_mth, created_at
-       FROM sprzet
-       ORDER BY id ASC`
+      `SELECT s.id, s.nr, s.rodzaj, s.marka, s.model, s.operator AS brygadzista,
+              s.serwis_co_ile_mth, s.ostatni_serwis_mth, s.created_at,
+              (
+                SELECT MAX(d.przebieg)
+                FROM sprzet_details d
+                WHERE d.sprzet_id = s.id
+              ) AS aktualny_przebieg,
+              EXISTS (
+                SELECT 1
+                FROM sprzet_details d
+                WHERE d.sprzet_id = s.id
+                  AND d.awaria IS NOT NULL
+                  AND COALESCE(d.status_awarii, 'nowa') <> 'zamknieta'
+              ) AS ma_aktywna_awarie
+       FROM sprzet s
+       ORDER BY s.id ASC`
     );
 
     return Response.json(rows);

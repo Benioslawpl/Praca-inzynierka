@@ -168,7 +168,11 @@ export default function SprzetDetailsPage() {
       const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
         awaria: form.awaria?.trim() || null,
-        status_awarii: form.awaria?.trim() ? form.status_awarii : "brak",
+        status_awarii: form.awaria?.trim()
+          ? editId
+            ? form.status_awarii
+            : "nowa"
+          : "brak",
         wykonawca: form.wykonawca?.trim() || null,
         uwagi: form.uwagi?.trim() || null,
         data_zdarzenia: form.data_zdarzenia || null,
@@ -381,11 +385,11 @@ export default function SprzetDetailsPage() {
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
           <div>
-            <h2>{editId ? "Edytuj zdarzenie" : "Dodaj zdarzenie"}</h2>
+            <h2>{editId ? "Edytuj wpis" : "Zgłoś awarię lub licznik"}</h2>
             <p>
               {editId
-                ? "Zmień dane wybranego wpisu w historii."
-                : "Dodaj nowy wpis do historii zdarzeń tego sprzętu."}
+                ? "Zmień dane wybranego wpisu."
+                : "Zapisz aktualny licznik lub zgłoś problem wymagający naprawy."}
             </p>
           </div>
 
@@ -399,7 +403,7 @@ export default function SprzetDetailsPage() {
                   ? editId
                     ? "Tryb edycji"
                     : "Ukryj formularz"
-                  : "Dodaj zdarzenie"}
+                  : "Dodaj wpis"}
               </span>
             </span>
           </button>
@@ -419,7 +423,7 @@ export default function SprzetDetailsPage() {
               </label>
 
               <label>
-                <span>Przebieg / licznik</span>
+                <span>Aktualny licznik</span>
                 <input
                   type="number"
                   value={form.przebieg}
@@ -452,20 +456,6 @@ export default function SprzetDetailsPage() {
               </label>
 
               <label>
-                <span>Status awarii</span>
-                <select
-                  value={form.status_awarii}
-                  onChange={(e) => setForm({ ...form, status_awarii: e.target.value })}
-                  disabled={!form.awaria.trim()}
-                >
-                  <option value="brak">brak</option>
-                  <option value="nowa">nowa</option>
-                  <option value="w trakcie">w trakcie</option>
-                  <option value="zamknieta">naprawiona</option>
-                </select>
-              </label>
-
-              <label>
                 <span>Wykonawca</span>
                 <input
                   value={form.wykonawca}
@@ -481,14 +471,14 @@ export default function SprzetDetailsPage() {
                   value={form.uwagi}
                   onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
                   rows={3}
-                  placeholder="Krótki opis zdarzenia..."
+                  placeholder="Krótki opis lub dodatkowe informacje..."
                 />
               </label>
             </div>
 
             <div className="actions">
               <button type="submit" disabled={saving}>
-                {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+                {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Zapisz wpis"}
               </button>
 
               <button type="button" className="secondary" onClick={reset}>

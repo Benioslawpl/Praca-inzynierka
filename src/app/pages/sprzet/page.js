@@ -2,6 +2,29 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { getUpcomingServiceAlert } from "@/lib/client-utils";
+
+function getEquipmentStatus(row) {
+  if (row.ma_aktywna_awarie) {
+    return { label: "awaria", className: "historyBadgeDanger" };
+  }
+
+  const serviceAlert = getUpcomingServiceAlert({
+    interval: row.serwis_co_ile_mth,
+    lastService: row.ostatni_serwis_mth,
+    currentValue: row.aktualny_przebieg,
+  });
+
+  if (serviceAlert?.overdue) {
+    return { label: "serwis pilny", className: "historyBadgeDanger" };
+  }
+
+  if (serviceAlert) {
+    return { label: "serwis wkrótce", className: "historyBadgeInfo" };
+  }
+
+  return { label: "sprawny", className: "historyBadgeSuccess" };
+}
 
 export default function SprzetPage() {
   const [rows, setRows] = useState([]);
@@ -166,7 +189,7 @@ export default function SprzetPage() {
       <div className="sectionIntro listPageIntro">
         <span className="rowEyebrow">Ewidencja</span>
         <h1>Sprzęt</h1>
-        <p>Lista sprzętu przypisanego do brygadzistów wraz z szybkim wejściem w historię zdarzeń.</p>
+        <p>Prosta ewidencja sprzętu brygad wraz z bieżącym stanem, serwisem i awariami.</p>
       </div>
 
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
@@ -289,7 +312,7 @@ export default function SprzetPage() {
           <div className="sectionIntro">
             <span className="rowEyebrow">Lista</span>
             <h2>Sprzęt w ewidencji</h2>
-            <p>Wszystkie pozycje z czytelnymi akcjami i przejściem do szczegółów.</p>
+            <p>Stan pozycji jest widoczny od razu. Szczegóły zawierają serwis, awarie i historię.</p>
           </div>
         </div>
 
@@ -305,13 +328,15 @@ export default function SprzetPage() {
                   <th>Marka</th>
                   <th>Model</th>
                   <th>Brygadzista</th>
+                  <th>Stan</th>
                   <th>Serwis</th>
-                  <th style={{ width: 240 }}>Akcje</th>
+                  <th style={{ width: 200 }}>Akcje</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row, index) => {
                   const uiNr = row.nr || `S-${String(index + 1).padStart(2, "0")}`;
+                  const status = getEquipmentStatus(row);
 
                   return (
                     <tr key={row.id}>
@@ -320,6 +345,9 @@ export default function SprzetPage() {
                       <td data-label="Marka">{row.marka}</td>
                       <td data-label="Model">{row.model}</td>
                       <td data-label="Brygadzista">{row.brygadzista}</td>
+                      <td data-label="Stan">
+                        <span className={`historyBadge ${status.className}`}>{status.label}</span>
+                      </td>
                       <td data-label="Serwis">
                         {row.serwis_co_ile_mth ? `co ${row.serwis_co_ile_mth} mth` : "brak"}
                       </td>
