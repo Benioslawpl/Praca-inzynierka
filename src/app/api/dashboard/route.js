@@ -302,23 +302,10 @@ export async function GET(req) {
       : { rows: [] };
 
     const { rows: sprzetRows } = await pool.query(
-      `SELECT s.id, s.nr, s.rodzaj, s.marka, s.model,
-              s.serwis_co_ile_mth, s.ostatni_serwis_mth,
-              (
-                SELECT MAX(d.przebieg)
-                FROM sprzet_details d
-                WHERE d.sprzet_id = s.id
-              ) AS aktualny_przebieg,
-              EXISTS (
-                SELECT 1
-                FROM sprzet_details d
-                WHERE d.sprzet_id = s.id
-                  AND d.awaria IS NOT NULL
-                  AND COALESCE(d.status_awarii, 'nowa') <> 'zamknieta'
-              ) AS ma_aktywna_awarie
-       FROM sprzet s
-       WHERE s.operator = $1
-       ORDER BY s.nr ASC, s.id ASC`,
+      `SELECT id, nr, rodzaj, marka, model
+       FROM sprzet
+       WHERE operator = $1
+       ORDER BY nr ASC, id ASC`,
       [user.username]
     );
 

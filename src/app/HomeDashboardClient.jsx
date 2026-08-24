@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getUpcomingServiceAlert } from "@/lib/client-utils";
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -51,20 +50,6 @@ function buildBudowaMeta(budowa) {
   }
 
   return `${location} • start: ${fmtDate(budowa.data_rozpoczecia)}`;
-}
-
-function getSprzetLabel(item) {
-  if (item.ma_aktywna_awarie) return "awaria";
-
-  const serviceAlert = getUpcomingServiceAlert({
-    interval: item.serwis_co_ile_mth,
-    lastService: item.ostatni_serwis_mth,
-    currentValue: item.aktualny_przebieg,
-  });
-
-  if (serviceAlert?.overdue) return "serwis pilny";
-  if (serviceAlert) return "serwis wkrotce";
-  return "sprawny";
 }
 
 function getDashboardIntro(type) {
@@ -319,13 +304,8 @@ function ForemanPanel({ data }) {
                     <strong>{item.nr || `Sprzet #${item.id}`}</strong>
                     <span>{item.marka || "-"} {item.model || ""}</span>
                     <span className="mutedText">{item.rodzaj || "-"}</span>
-                    <span className="mutedText">
-                      {item.aktualny_przebieg === null || item.aktualny_przebieg === undefined
-                        ? "brak odczytu licznika"
-                        : `${item.aktualny_przebieg} mth`}
-                    </span>
                   </div>
-                  <span className="pill">{getSprzetLabel(item)}</span>
+                  <span className="pill">sprzet</span>
                 </div>
               </Link>
             ))
