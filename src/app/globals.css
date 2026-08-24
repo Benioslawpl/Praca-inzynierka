@@ -926,6 +926,18 @@ label {
   align-items: center;
 }
 
+/* A table cell must remain a table cell on desktop, otherwise its row can lose alignment. */
+.table tbody td.actionsCell {
+  display: table-cell;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table tbody td.actionsCell > .mutedText {
+  display: inline-block;
+  padding: 0 2px;
+}
+
 .actionsCell button,
 .actionsCell .info-btn {
   min-width: 0;

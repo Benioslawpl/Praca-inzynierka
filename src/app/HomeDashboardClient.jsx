@@ -22,15 +22,6 @@ function fmtDate(value) {
   }
 }
 
-function roleLabel(role) {
-  if (role === "admin") return "administrator";
-  if (role === "operator") return "operator";
-  if (role === "brygadzista") return "brygadzista";
-  if (role === "kierownik") return "kierownik";
-  if (role === "biuro") return "biuro";
-  return "uzytkownik";
-}
-
 function statusLabel(status) {
   if (status === "w_toku") return "w toku";
   if (status === "wstrzymana") return "wstrzymana";
@@ -50,22 +41,6 @@ function buildBudowaMeta(budowa) {
   }
 
   return `${location} • start: ${fmtDate(budowa.data_rozpoczecia)}`;
-}
-
-function getDashboardIntro(type) {
-  if (type === "kierownik") {
-    return "podsumowanie budow, przypisanych zasobow oraz biezacych awarii i serwisow.";
-  }
-
-  if (type === "brygadzista") {
-    return "budowy, ludzi i sprzet przypisany do Twoich brygad.";
-  }
-
-  if (type === "biuro") {
-    return "ogolny stan budow, brygad, maszyn oraz najwazniejsze informacje.";
-  }
-
-  return "biezace awarie, nadchodzace serwisy i szybkie zgloszenia z maszyn.";
 }
 
 function EmptyListRow({ title }) {
@@ -511,10 +486,6 @@ export default function HomeDashboardClient({ user }) {
     <section className="home dashboardHome">
       <div className="sectionIntro">
         <h1>Panel glowny</h1>
-        <p>
-          Zalogowano jako <b>{user.username}</b> ({roleLabel(user.role)}). Tutaj widac{" "}
-          {getDashboardIntro(dashboardType)}
-        </p>
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -547,7 +518,6 @@ export default function HomeDashboardClient({ user }) {
         <div className="stackSection">
           <div className="sectionIntro">
             <h2>Moje maszyny</h2>
-            <p>Wpisuj motogodziny i zglaszaj awarie bezposrednio ze swojego panelu.</p>
           </div>
 
           {(data?.assignedMachines || []).length === 0 ? (

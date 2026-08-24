@@ -426,7 +426,6 @@ export default function MaszynaDetails() {
 
       <div className="detailsHero">
         <div className="sectionIntro">
-          <span className="rowEyebrow">Maszyna</span>
           <h1>Szczegóły maszyny</h1>
           <p>Pełny podgląd danych maszyny oraz historia zdarzeń operatorskich i serwisowych.</p>
         </div>
