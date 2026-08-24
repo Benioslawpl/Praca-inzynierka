@@ -263,7 +263,7 @@ function ForemanPanel({ data }) {
 
 function OperatorScopePanel({ machines }) {
   return (
-    <article className="card sectionCard">
+    <article className="card sectionCard operatorScopePanel">
       <div className="sectionCardHeader">
         <h2>Twoj zakres</h2>
       </div>

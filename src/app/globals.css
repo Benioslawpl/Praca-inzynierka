@@ -1213,6 +1213,34 @@ label {
   padding: 10px 14px;
 }
 
+.operatorScopePanel {
+  padding: 18px !important;
+}
+
+.operatorScopePanel .sectionCardHeader {
+  margin-bottom: 10px;
+}
+
+.operatorScopePanel .sectionCardHeader h2 {
+  font-size: 1.35rem;
+}
+
+.operatorScopePanel .compactListRow {
+  min-height: 76px;
+  padding: 14px 16px;
+  border-left: 3px solid #93c5fd;
+  background: linear-gradient(135deg, #ffffff, #f6faff);
+}
+
+.operatorScopePanel .compactListMain {
+  gap: 3px;
+}
+
+.operatorScopePanel .compactListMain strong {
+  color: #1d4ed8;
+  font-size: 1.05rem;
+}
+
 .dashboardHome .stackSection {
   gap: 14px;
 }
