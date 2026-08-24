@@ -647,6 +647,7 @@ button[disabled] {
 
 .formPanelHeader p {
   color: #64748b;
+  display: none;
 }
 
 .formPanelHeader button {
