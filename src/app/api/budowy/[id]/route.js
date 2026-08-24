@@ -59,13 +59,6 @@ async function closeAssignmentsForFinishedBudowa(budowaId, endDate) {
     [budowaId, finalDate]
   );
 
-  await pool.query(
-    `UPDATE budowy_sprzet
-     SET data_do = COALESCE(data_do, $2::date)
-     WHERE budowa_id = $1
-       AND (data_do IS NULL OR data_do > $2::date)`,
-    [budowaId, finalDate]
-  );
 }
 
 export async function GET(req, ctx) {

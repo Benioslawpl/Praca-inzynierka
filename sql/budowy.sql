@@ -32,27 +32,11 @@ create table if not exists public.budowy_maszyny (
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.budowy_sprzet (
-  id bigserial primary key,
-  budowa_id bigint not null references public.budowy(id) on delete cascade,
-  sprzet_id bigint not null references public.sprzet(id) on delete cascade,
-  data_od date,
-  data_do date,
-  uwagi text,
-  created_at timestamptz not null default now()
-);
-
 create index if not exists idx_budowy_brygady_budowa_id
   on public.budowy_brygady(budowa_id);
 
 create index if not exists idx_budowy_maszyny_budowa_id
   on public.budowy_maszyny(budowa_id);
 
-create index if not exists idx_budowy_sprzet_budowa_id
-  on public.budowy_sprzet(budowa_id);
-
 create index if not exists idx_budowy_maszyny_maszyna_id
   on public.budowy_maszyny(maszyna_id);
-
-create index if not exists idx_budowy_sprzet_sprzet_id
-  on public.budowy_sprzet(sprzet_id);
