@@ -1,4 +1,5 @@
 import pool from "../../../../../../db";
+import { requireOperationalRole } from "../../../../../lib/api-auth";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -24,6 +25,9 @@ async function getBudowaNumer(budowaId) {
 
 export async function GET(req, { params }) {
   try {
+    const auth = await requireOperationalRole(req);
+    if (auth.error) return auth.error;
+
     const budowaId = getBudowaId(req, params);
     if (!budowaId) return Response.json({ error: "Bad id" }, { status: 400 });
 
@@ -59,6 +63,9 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
+    const auth = await requireOperationalRole(req);
+    if (auth.error) return auth.error;
+
     const budowaId = getBudowaId(req, params);
     if (!budowaId) return Response.json({ error: "Bad id" }, { status: 400 });
 
