@@ -12,6 +12,7 @@ export default function SprzetDetailsPage() {
   const [items, setItems] = useState([]);
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [entryType, setEntryType] = useState("licznik");
 
   const today = getTodayIso();
   const createEmptyForm = () => ({
@@ -150,6 +151,7 @@ export default function SprzetDetailsPage() {
 
   const reset = () => {
     setForm(createEmptyForm());
+    setEntryType("licznik");
     setEditId(null);
     setIsFormOpen(false);
     setErr("");
@@ -161,19 +163,27 @@ export default function SprzetDetailsPage() {
     setErr("");
 
     try {
-      if (form.awaria.trim() && !form.wykonawca.trim()) {
+      if (entryType === "awaria" && !form.awaria.trim()) {
+        throw new Error("Podaj opis awarii");
+      }
+
+      if (entryType === "awaria" && !form.wykonawca.trim()) {
         throw new Error("Przy awarii wymagany jest wykonawca");
+      }
+
+      if (entryType === "licznik" && form.przebieg === "") {
+        throw new Error("Podaj aktualny licznik");
       }
 
       const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
-        awaria: form.awaria?.trim() || null,
-        status_awarii: form.awaria?.trim()
+        awaria: entryType === "awaria" ? form.awaria.trim() : null,
+        status_awarii: entryType === "awaria"
           ? editId
             ? form.status_awarii
             : "nowa"
           : "brak",
-        wykonawca: form.wykonawca?.trim() || null,
+        wykonawca: entryType === "awaria" ? form.wykonawca.trim() : null,
         uwagi: form.uwagi?.trim() || null,
         data_zdarzenia: form.data_zdarzenia || null,
       };
@@ -204,6 +214,7 @@ export default function SprzetDetailsPage() {
   const edit = (item) => {
     setIsFormOpen(true);
     setEditId(item.id);
+    setEntryType(item.awaria ? "awaria" : "licznik");
     setForm({
       przebieg: item.przebieg ?? "",
       awaria: item.awaria ?? "",
@@ -315,6 +326,19 @@ export default function SprzetDetailsPage() {
     setErr("");
   };
 
+  const selectEntryType = (type) => {
+    setEntryType(type);
+
+    if (type === "licznik") {
+      setForm((current) => ({
+        ...current,
+        awaria: "",
+        status_awarii: "brak",
+        wykonawca: "",
+      }));
+    }
+  };
+
   const renderFailure = (value) => {
     if (!value) {
       return <span className="historyBadge historyBadgeSuccess">brak awarii</span>;
@@ -385,11 +409,11 @@ export default function SprzetDetailsPage() {
       <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
         <div className="formPanelHeader">
           <div>
-            <h2>{editId ? "Edytuj wpis" : "Zgłoś awarię lub licznik"}</h2>
+            <h2>{editId ? "Edytuj wpis" : "Nowy wpis"}</h2>
             <p>
               {editId
                 ? "Zmień dane wybranego wpisu."
-                : "Zapisz aktualny licznik lub zgłoś problem wymagający naprawy."}
+                : "Wybierz, czy chcesz dodać odczyt licznika, czy zgłosić awarię."}
             </p>
           </div>
 
@@ -411,6 +435,25 @@ export default function SprzetDetailsPage() {
 
         <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
           <form className="card" onSubmit={submit}>
+            {!editId ? (
+              <div className="actions">
+                <button
+                  type="button"
+                  className={entryType === "licznik" ? "" : "secondary"}
+                  onClick={() => selectEntryType("licznik")}
+                >
+                  Dodaj odczyt licznika
+                </button>
+                <button
+                  type="button"
+                  className={entryType === "awaria" ? "danger" : "secondary"}
+                  onClick={() => selectEntryType("awaria")}
+                >
+                  Zgłoś awarię
+                </button>
+              </div>
+            ) : null}
+
             <div className="grid">
               <label>
                 <span>Data zdarzenia</span>
@@ -430,40 +473,33 @@ export default function SprzetDetailsPage() {
                   onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
                   min="0"
                   placeholder="np. 320"
+                  required={entryType === "licznik"}
                 />
               </label>
 
-              <label>
-                <span>Awaria</span>
-                <input
-                  value={form.awaria}
-                  onChange={(e) =>
-                    setForm((current) => {
-                      const awaria = e.target.value.slice(0, 30);
-                      return {
-                        ...current,
-                        awaria,
-                        status_awarii: awaria
-                          ? current.status_awarii === "brak"
-                            ? "nowa"
-                            : current.status_awarii
-                          : "brak",
-                      };
-                    })
-                  }
-                  placeholder="np. Uszkodzony przewód"
-                />
-              </label>
+              {entryType === "awaria" ? (
+                <>
+                  <label>
+                    <span>Opis awarii</span>
+                    <input
+                      value={form.awaria}
+                      onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 80) })}
+                      placeholder="np. Uszkodzony przewód"
+                      required
+                    />
+                  </label>
 
-              <label>
-                <span>Wykonawca</span>
-                <input
-                  value={form.wykonawca}
-                  onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
-                  placeholder="np. Serwis wewnętrzny"
-                  required={Boolean(form.awaria.trim())}
-                />
-              </label>
+                  <label>
+                    <span>Wykonawca</span>
+                    <input
+                      value={form.wykonawca}
+                      onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
+                      placeholder="np. Serwis wewnętrzny"
+                      required
+                    />
+                  </label>
+                </>
+              ) : null}
 
               <label style={{ gridColumn: "1 / -1" }}>
                 <span>Uwagi</span>
@@ -471,14 +507,20 @@ export default function SprzetDetailsPage() {
                   value={form.uwagi}
                   onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
                   rows={3}
-                  placeholder="Krótki opis lub dodatkowe informacje..."
+                  placeholder={entryType === "awaria" ? "Dodatkowe informacje o awarii..." : "Opcjonalna notatka do odczytu..."}
                 />
               </label>
             </div>
 
             <div className="actions">
               <button type="submit" disabled={saving}>
-                {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Zapisz wpis"}
+                {saving
+                  ? "Zapisywanie..."
+                  : editId
+                    ? "Zapisz"
+                    : entryType === "awaria"
+                      ? "Zgłoś awarię"
+                      : "Zapisz odczyt"}
               </button>
 
               <button type="button" className="secondary" onClick={reset}>
