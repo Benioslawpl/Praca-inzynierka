@@ -143,8 +143,7 @@ function ManagerPanel({ title, budowy }) {
         <h2>{title}</h2>
       </div>
 
-      <div className="dashboardScopeStack">
-        <ScopeSection title="Budowy" count={budowy.length}>
+      <div className="compactList">
           {budowy.length === 0 ? (
             <EmptyListRow title="Brak budów" />
           ) : (
@@ -174,7 +173,6 @@ function ManagerPanel({ title, budowy }) {
               </Link>
             ))
           )}
-        </ScopeSection>
       </div>
     </article>
   );
