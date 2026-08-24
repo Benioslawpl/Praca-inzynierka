@@ -22,9 +22,11 @@ umieszczać w kodzie ani w repozytorium.
 
 Baza PostgreSQL działa w Supabase. Skrypty znajdują się w katalogu `sql`:
 
+- `schema.sql` - pełny schemat 12 aktualnych tabel, relacji i indeksów.
 - `budowy.sql` - budowy oraz przypisania brygad i maszyn.
 - `operatorzy-serwis.sql` - operatorzy, raporty i dane serwisowe.
 - `optymalizacja-bazy.sql` - indeksy i statystyki tabel.
+- `napraw-sprzet-nr.sql` - unikalność numeru sprzętu w istniejącej bazie.
 
 ## Role użytkowników
 

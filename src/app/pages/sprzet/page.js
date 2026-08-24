@@ -31,6 +31,7 @@ export default function SprzetPage() {
   const [brygady, setBrygady] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [form, setForm] = useState({
+    nr: "",
     rodzaj: "",
     marka: "",
     model: "",
@@ -93,6 +94,7 @@ export default function SprzetPage() {
 
   const reset = () => {
     setForm({
+      nr: "",
       rodzaj: "",
       marka: "",
       model: "",
@@ -113,6 +115,7 @@ export default function SprzetPage() {
       const url = editId ? `/api/sprzet/${editId}` : "/api/sprzet";
       const method = editId ? "PUT" : "POST";
       const payload = {
+        nr: form.nr.trim(),
         rodzaj: form.rodzaj.trim(),
         marka: form.marka.trim(),
         model: form.model.trim(),
@@ -145,6 +148,7 @@ export default function SprzetPage() {
     setIsFormOpen(true);
     setEditId(row.id);
     setForm({
+      nr: row.nr ?? "",
       rodzaj: row.rodzaj ?? "",
       marka: row.marka ?? "",
       model: row.model ?? "",
@@ -222,6 +226,16 @@ export default function SprzetPage() {
         <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
           <form className="card" onSubmit={submit}>
             <div className="grid">
+              <label>
+                <span>Numer*</span>
+                <input
+                  value={form.nr}
+                  onChange={(e) => setForm({ ...form, nr: e.target.value })}
+                  required
+                  placeholder="np. S-01"
+                />
+              </label>
+
               <label>
                 <span>Rodzaj*</span>
                 <input

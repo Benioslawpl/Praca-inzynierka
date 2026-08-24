@@ -99,7 +99,16 @@ export async function POST(req, ctx) {
       `INSERT INTO maszyny_details (
          maszyna_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, zrodlo, reporter_username
        )
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+       VALUES (
+         $1,
+         $2,
+         $3,
+         CASE WHEN $4 IS NULL THEN NULL ELSE 'Zgłoszona awaria' END,
+         $5,
+         $6,
+         $7,
+         $8
+       )`,
       [
         maszynaId,
         dataRaportu,

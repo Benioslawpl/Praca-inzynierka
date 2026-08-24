@@ -23,6 +23,13 @@ export async function GET() {
 
     return Response.json(rows);
   } catch (e) {
+    if (e.code === "23505") {
+      return Response.json(
+        { error: "Sprzęt o podanym numerze już istnieje" },
+        { status: 409 }
+      );
+    }
+
     return Response.json({ error: e.message }, { status: 500 });
   }
 }
@@ -30,6 +37,7 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json().catch(() => ({}));
+    const nr = body?.nr?.trim();
     const rodzaj = body?.rodzaj?.trim();
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
@@ -47,19 +55,20 @@ export async function POST(req) {
         ? null
         : Number(body.ostatni_serwis_mth);
 
-    if (!rodzaj || !marka || !model || !brygadzista) {
+    if (!nr || !rodzaj || !marka || !model || !brygadzista) {
       return Response.json(
-        { error: "Wymagane: rodzaj, marka, model, brygadzista" },
+        { error: "Wymagane: numer, rodzaj, marka, model, brygadzista" },
         { status: 400 }
       );
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO sprzet (rodzaj, marka, model, operator, serwis_co_ile_mth, ostatni_serwis_mth)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO sprzet (nr, rodzaj, marka, model, operator, serwis_co_ile_mth, ostatni_serwis_mth)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista,
                  serwis_co_ile_mth, ostatni_serwis_mth, created_at`,
       [
+        nr,
         rodzaj,
         marka,
         model,

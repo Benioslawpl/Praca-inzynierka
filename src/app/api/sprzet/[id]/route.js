@@ -38,6 +38,13 @@ export async function GET(req, ctx) {
 
     return Response.json(rows[0]);
   } catch (e) {
+    if (e.code === "23505") {
+      return Response.json(
+        { error: "Sprzęt o podanym numerze już istnieje" },
+        { status: 409 }
+      );
+    }
+
     return Response.json({ error: e.message }, { status: 500 });
   }
 }
@@ -63,6 +70,7 @@ export async function PUT(req, { params }) {
     }
 
     const body = await req.json().catch(() => ({}));
+    const nr = body?.nr?.trim();
     const rodzaj = body?.rodzaj?.trim();
     const marka = body?.marka?.trim();
     const model = body?.model?.trim();
@@ -80,21 +88,22 @@ export async function PUT(req, { params }) {
         ? before.ostatni_serwis_mth
         : Number(body.ostatni_serwis_mth);
 
-    if (!rodzaj || !marka || !model || !brygadzista) {
+    if (!nr || !rodzaj || !marka || !model || !brygadzista) {
       return Response.json(
-        { error: "Wymagane: rodzaj, marka, model, brygadzista" },
+        { error: "Wymagane: numer, rodzaj, marka, model, brygadzista" },
         { status: 400 }
       );
     }
 
     const { rows } = await pool.query(
       `UPDATE sprzet
-       SET rodzaj=$1, marka=$2, model=$3, operator=$4,
-           serwis_co_ile_mth=$5, ostatni_serwis_mth=$6
-       WHERE id=$7
+       SET nr=$1, rodzaj=$2, marka=$3, model=$4, operator=$5,
+           serwis_co_ile_mth=$6, ostatni_serwis_mth=$7
+       WHERE id=$8
        RETURNING id, nr, rodzaj, marka, model, operator AS brygadzista,
                  serwis_co_ile_mth, ostatni_serwis_mth`,
       [
+        nr,
         rodzaj,
         marka,
         model,
