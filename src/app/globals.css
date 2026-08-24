@@ -1159,7 +1159,38 @@ label {
 
 .dashboardAlertStack {
   display: grid;
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboardAlertStack .dashboardScopeGroup {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #fca5a5;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fffefe, #fff8f8);
+}
+
+.dashboardAlertStack .dashboardScopeGroup:nth-child(2) {
+  border-left-color: #93c5fd;
+  background: linear-gradient(135deg, #ffffff, #f6faff);
+}
+
+.dashboardAlertStack .compactList {
+  gap: 0;
+}
+
+.dashboardAlertStack .compactList > .compactListRow:not(.dashboardAlertCard) {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.dashboardAlertStack .compactList > .compactListRow:not(.dashboardAlertCard) strong {
+  font-size: 0.95rem;
 }
 
 .dashboardHome .sectionCard {
@@ -2142,6 +2173,10 @@ label {
 }
 
 @media (max-width: 600px) {
+  .dashboardAlertStack {
+    grid-template-columns: 1fr;
+  }
+
   .grid {
     grid-template-columns: 1fr;
   }
