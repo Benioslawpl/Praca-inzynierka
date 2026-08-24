@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const BASE_LINKS = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Strona główna" },
   { href: "/pages/budowy", label: "Budowy" },
   { href: "/pages/maszyny", label: "Maszyny" },
   { href: "/pages/brygady", label: "Brygady" },
@@ -17,7 +17,7 @@ const ADMIN_LINKS = [
 ];
 
 const OPERATOR_LINKS = [
-  { href: "/", label: "Home" },
+  { href: "/", label: "Strona główna" },
   { href: "/pages/maszyny", label: "Moja maszyna" },
 ];
 

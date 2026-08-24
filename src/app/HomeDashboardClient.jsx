@@ -69,7 +69,7 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
   return (
     <article className="card sectionCard">
       <div className="sectionCardHeader">
-        <h2>Najwazniejsze alerty</h2>
+        <h2>Najważniejsze alerty</h2>
       </div>
 
       <div className="dashboardAlertStack">
@@ -100,11 +100,11 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
         </ScopeSection>
 
         <ScopeSection
-          title={managerMode ? "Alerty serwisowe" : "Nadchodzace serwisy"}
+          title={managerMode ? "Alerty serwisowe" : "Nadchodzące serwisy"}
           count={serviceAlerts.length}
         >
           {serviceAlerts.length === 0 ? (
-            <EmptyListRow title="Brak pilnych serwisow" />
+            <EmptyListRow title="Brak pilnych serwisów" />
           ) : (
             serviceAlerts.map((item) => (
               <Link
@@ -123,7 +123,7 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
                       <span className="mutedText">{item.meta}</span>
                     </div>
                     <span className={`pill ${item.kind === "overdue" ? "bad" : ""}`}>
-                      {item.kind === "overdue" ? "pilne" : "wkrotce"}
+                      {item.kind === "overdue" ? "pilne" : "wkrótce"}
                     </span>
                   </div>
                 </div>
@@ -146,7 +146,7 @@ function ManagerPanel({ title, budowy }) {
       <div className="dashboardScopeStack">
         <ScopeSection title="Budowy" count={budowy.length}>
           {budowy.length === 0 ? (
-            <EmptyListRow title="Brak budow" />
+            <EmptyListRow title="Brak budów" />
           ) : (
             budowy.map((budowa) => (
               <Link
@@ -163,7 +163,7 @@ function ManagerPanel({ title, budowy }) {
                   <div className="compactListMeta compactListMetaStack">
                     <span className="pill">{statusLabel(budowa.status)}</span>
                     {budowa.status === "zakonczona" ? (
-                      <span className="mutedText">brygady i maszyny zostaly zwolnione</span>
+                      <span className="mutedText">brygady i maszyny zostały zwolnione</span>
                     ) : budowa.brygady_count !== undefined || budowa.maszyny_count !== undefined ? (
                       <span className="mutedText">
                         brygady: {budowa.brygady_count || 0} • maszyny: {budowa.maszyny_count || 0}
@@ -194,7 +194,7 @@ function ForemanPanel({ data }) {
       <div className="dashboardScopeStack">
         <ScopeSection title="Budowy" count={budowy.length}>
           {budowy.length === 0 ? (
-            <EmptyListRow title="Brak budow" />
+            <EmptyListRow title="Brak budów" />
           ) : (
             budowy.map((budowa) => (
               <Link
@@ -223,7 +223,7 @@ function ForemanPanel({ data }) {
               <div className="compactListRow compactMetricRow" key={member.id}>
                 <div className="compactListMain">
                   <strong>{member.imie} {member.nazwisko}</strong>
-                  <span>{member.rola || "czlonek brygady"}</span>
+                  <span>{member.rola || "członek brygady"}</span>
                   <span className="mutedText">
                     {member.telefon ? `tel. ${member.telefon}` : "brak telefonu"}
                   </span>
@@ -234,9 +234,9 @@ function ForemanPanel({ data }) {
           )}
         </ScopeSection>
 
-        <ScopeSection title="Sprzet" count={sprzet.length}>
+        <ScopeSection title="Sprzęt" count={sprzet.length}>
           {sprzet.length === 0 ? (
-            <EmptyListRow title="Brak sprzetu" />
+            <EmptyListRow title="Brak sprzętu" />
           ) : (
             sprzet.map((item) => (
               <Link
@@ -246,11 +246,11 @@ function ForemanPanel({ data }) {
               >
                 <div className="compactListRow compactMetricRow">
                   <div className="compactListMain">
-                    <strong>{item.nr || `Sprzet #${item.id}`}</strong>
+                    <strong>{item.nr || `Sprzęt #${item.id}`}</strong>
                     <span>{item.marka || "-"} {item.model || ""}</span>
                     <span className="mutedText">{item.rodzaj || "-"}</span>
                   </div>
-                  <span className="pill">sprzet</span>
+                  <span className="pill">sprzęt</span>
                 </div>
               </Link>
             ))
@@ -265,7 +265,7 @@ function OperatorScopePanel({ machines }) {
   return (
     <article className="card sectionCard operatorScopePanel">
       <div className="sectionCardHeader">
-        <h2>Twoj zakres</h2>
+        <h2>Twój zakres</h2>
       </div>
 
       <div className="compactList">
@@ -333,7 +333,7 @@ function getStatsForDashboard(type, data) {
     return [
       { label: "Budowy", value: data?.summary?.budowy ?? 0 },
       { label: "Ludzie", value: data?.summary?.ludzie ?? 0 },
-      { label: "Sprzet", value: data?.summary?.sprzet ?? 0 },
+      { label: "Sprzęt", value: data?.summary?.sprzet ?? 0 },
     ];
   }
 
@@ -347,7 +347,7 @@ function getStatsForDashboard(type, data) {
 
   return [
     { label: "Awarie aktywne", value: data?.alerts?.awarie?.length ?? 0 },
-    { label: "Serwis wkrotce", value: data?.alerts?.serwisSoon?.length ?? 0 },
+      { label: "Serwis wkrótce", value: data?.alerts?.serwisSoon?.length ?? 0 },
     { label: "Serwis po terminie", value: data?.alerts?.serwisOverdue?.length ?? 0 },
   ];
 }
@@ -366,7 +366,7 @@ export default function HomeDashboardClient({ user }) {
     const payload = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      throw new Error(payload?.error || "Blad pobierania dashboardu");
+      throw new Error(payload?.error || "Błąd pobierania dashboardu");
     }
 
     setData(payload);
@@ -387,7 +387,7 @@ export default function HomeDashboardClient({ user }) {
         await refreshDashboard();
       } catch (err) {
         setData(null);
-        setError(err.message || "Blad pobierania dashboardu");
+        setError(err.message || "Błąd pobierania dashboardu");
       }
     };
 
@@ -426,7 +426,7 @@ export default function HomeDashboardClient({ user }) {
 
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(payload?.error || "Nie udalo sie zapisac raportu");
+        throw new Error(payload?.error || "Nie udało się zapisać raportu");
       }
 
       await refreshDashboard();
@@ -435,7 +435,7 @@ export default function HomeDashboardClient({ user }) {
         [machineId]: EMPTY_REPORT,
       }));
     } catch (err) {
-      setError(err.message || "Nie udalo sie zapisac raportu");
+      setError(err.message || "Nie udało się zapisać raportu");
     } finally {
       setSavingId(null);
     }
@@ -445,7 +445,7 @@ export default function HomeDashboardClient({ user }) {
     return (
       <section className="home">
         <h1>Witamy w aplikacji do zarzadzania zapleczem</h1>
-        <p>Zaloguj sie, aby zobaczyc przypisane maszyny, alerty serwisowe i zgloszenia.</p>
+        <p>Zaloguj się, aby zobaczyć przypisane maszyny, alerty serwisowe i zgłoszenia.</p>
       </section>
     );
   }
@@ -459,8 +459,8 @@ export default function HomeDashboardClient({ user }) {
   const awariaAlerts = (data?.alerts?.awarie || []).map((item) => ({
     ...item,
     title: item.nr,
-    description: item.opis || "Aktywne zgloszenie awarii",
-    meta: `Zgloszono: ${fmtDate(item.date)}`,
+    description: item.opis || "Aktywne zgłoszenie awarii",
+    meta: `Zgłoszono: ${fmtDate(item.date)}`,
   }));
 
   const serviceAlerts = [
@@ -475,7 +475,7 @@ export default function HomeDashboardClient({ user }) {
       ...item,
       kind: "soon",
       title: item.nr,
-      description: `Do serwisu zostalo okolo ${Math.round(item.remaining)} mth`,
+      description: `Do serwisu zostało około ${Math.round(item.remaining)} mth`,
       meta: `Stan licznika: ${Math.round(item.currentHours)} mth • prog: ${Math.round(item.nextServiceAt)} mth`,
     })) || []),
   ];
@@ -485,7 +485,7 @@ export default function HomeDashboardClient({ user }) {
   return (
     <section className="home dashboardHome">
       <div className="sectionIntro">
-        <h1>Panel glowny</h1>
+        <h1>Panel główny</h1>
       </div>
 
       {error && <p className="error">{error}</p>}
