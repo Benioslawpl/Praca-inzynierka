@@ -1,4 +1,5 @@
 import pool from "../../../../../db";
+import { requireOperationalRole } from "../../../../lib/api-auth";
 
 function intOrNull(value) {
   const parsed = Number(value);
@@ -39,16 +40,15 @@ async function getBudowa(id) {
   return rows[0] || null;
 }
 
-async function closeAssignmentsForFinishedBudowa(budowaId, endDate) {
+async function closeAssignmentsForFinishedBudowa(budowaId) {
   const today = new Date().toISOString().slice(0, 10);
-  const finalDate = today;
 
   await pool.query(
     `UPDATE budowy_brygady
      SET data_do = COALESCE(data_do, $2::date)
      WHERE budowa_id = $1
        AND (data_do IS NULL OR data_do > $2::date)`,
-    [budowaId, finalDate]
+    [budowaId, today]
   );
 
   await pool.query(
@@ -56,13 +56,15 @@ async function closeAssignmentsForFinishedBudowa(budowaId, endDate) {
      SET data_do = COALESCE(data_do, $2::date)
      WHERE budowa_id = $1
        AND (data_do IS NULL OR data_do > $2::date)`,
-    [budowaId, finalDate]
+    [budowaId, today]
   );
-
 }
 
 export async function GET(req, ctx) {
   try {
+    const auth = await requireOperationalRole(req);
+    if (auth.error) return auth.error;
+
     const id = getId(req, ctx?.params);
     if (!id) return Response.json({ error: "Bad id" }, { status: 400 });
 
@@ -77,6 +79,9 @@ export async function GET(req, ctx) {
 
 export async function PUT(req, { params }) {
   try {
+    const auth = await requireOperationalRole(req);
+    if (auth.error) return auth.error;
+
     const id = getId(req, params);
     if (!id) return Response.json({ error: "Bad id" }, { status: 400 });
 
@@ -125,22 +130,11 @@ export async function PUT(req, { params }) {
          data_zakonczenia,
          uwagi,
          created_at`,
-      [
-        numer,
-        nazwa,
-        lokalizacja,
-        inwestor,
-        kierownik,
-        status,
-        dataRozpoczecia,
-        dataZakonczenia,
-        uwagi,
-        id,
-      ]
+      [numer, nazwa, lokalizacja, inwestor, kierownik, status, dataRozpoczecia, dataZakonczenia, uwagi, id]
     );
 
     if (status === "zakonczona") {
-      await closeAssignmentsForFinishedBudowa(id, dataZakonczenia);
+      await closeAssignmentsForFinishedBudowa(id);
     }
 
     return Response.json(rows[0]);
@@ -151,6 +145,9 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
+    const auth = await requireOperationalRole(req);
+    if (auth.error) return auth.error;
+
     const id = getId(req, params);
     if (!id) return Response.json({ error: "Bad id" }, { status: 400 });
 
