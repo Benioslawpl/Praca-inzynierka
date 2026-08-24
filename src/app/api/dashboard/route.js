@@ -152,7 +152,79 @@ export async function GET(req) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-  if (user.role === "biuro") {
+    if (user.role === "admin") {
+      const [
+        { rows: machineRows },
+        { rows: adminBudowy },
+        { rows: freeMachineRows },
+      ] = await Promise.all([
+        pool.query(`SELECT id FROM maszyny ORDER BY id ASC`),
+        pool.query(
+          `SELECT
+             b.id,
+             b.numer,
+             b.nazwa,
+             b.lokalizacja,
+             b.status,
+             b.data_rozpoczecia,
+             b.data_zakonczenia,
+             COALESCE((
+               SELECT COUNT(*)
+               FROM budowy_brygady bb
+               WHERE bb.budowa_id = b.id
+                 AND COALESCE(bb.data_do, '9999-12-31') >= CURRENT_DATE
+             ), 0) AS brygady_count,
+             COALESCE((
+               SELECT COUNT(*)
+               FROM budowy_maszyny bm
+               WHERE bm.budowa_id = b.id
+                 AND COALESCE(bm.data_do, '9999-12-31') >= CURRENT_DATE
+             ), 0) AS maszyny_count
+           FROM budowy b
+           WHERE b.status <> 'zakonczona'
+           ORDER BY
+             CASE
+               WHEN b.status = 'w_toku' THEN 0
+               WHEN b.status = 'planowana' THEN 1
+               ELSE 2
+             END,
+             COALESCE(b.data_rozpoczecia, b.created_at) DESC,
+             b.id DESC
+           LIMIT 6`
+        ),
+        pool.query(
+          `SELECT m.id
+           FROM maszyny m
+           WHERE NOT EXISTS (
+             SELECT 1
+             FROM budowy_maszyny bm
+             JOIN budowy b ON b.id = bm.budowa_id
+             WHERE bm.maszyna_id = m.id
+               AND b.status <> 'zakonczona'
+               AND COALESCE(bm.data_do, '9999-12-31') >= CURRENT_DATE
+           )`
+        ),
+      ]);
+
+      const visibleMachineIds = toPositiveIds(machineRows.map((row) => row.id));
+      const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
+
+      return Response.json({
+        ...machineDashboard,
+        summary: {
+          activeBudowy: countActiveBudowy(adminBudowy),
+          wolneMaszyny: freeMachineRows.length,
+          awarie: machineDashboard.alerts.awarie.length,
+          serwisy:
+            machineDashboard.alerts.serwisSoon.length +
+            machineDashboard.alerts.serwisOverdue.length,
+        },
+        adminBudowy,
+        roleDashboard: "admin",
+      });
+    }
+
+    if (user.role === "biuro") {
     const [
       { rows: machineRows },
       { rows: budowyRows },

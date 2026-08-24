@@ -295,6 +295,15 @@ function OperatorScopePanel({ machines }) {
 }
 
 function DashboardScopePanel({ dashboardType, data }) {
+  if (dashboardType === "admin") {
+    return (
+      <ManagerPanel
+        title="Aktywne budowy"
+        budowy={data?.adminBudowy || []}
+      />
+    );
+  }
+
   if (dashboardType === "kierownik") {
     return (
       <ManagerPanel
@@ -321,6 +330,15 @@ function DashboardScopePanel({ dashboardType, data }) {
 }
 
 function getStatsForDashboard(type, data) {
+  if (type === "admin") {
+    return [
+      { label: "Budowy w toku", value: data?.summary?.activeBudowy ?? 0 },
+      { label: "Wolne maszyny", value: data?.summary?.wolneMaszyny ?? 0 },
+      { label: "Aktywne awarie", value: data?.summary?.awarie ?? 0 },
+      { label: "Serwisy do wykonania", value: data?.summary?.serwisy ?? 0 },
+    ];
+  }
+
   if (type === "kierownik") {
     return [
       { label: "Aktywne budowy", value: data?.summary?.activeBudowy ?? 0 },
@@ -452,6 +470,7 @@ export default function HomeDashboardClient({ user }) {
 
   const dashboardType = data?.roleDashboard || "";
   const isRoleDashboard =
+    dashboardType === "admin" ||
     dashboardType === "kierownik" ||
     dashboardType === "brygadzista" ||
     dashboardType === "biuro";
