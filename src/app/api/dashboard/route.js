@@ -146,10 +146,11 @@ async function buildMachineDashboard(machineIds, user) {
 }
 
 export async function GET(req) {
-  const user = await getUserFromRequest(req);
-  if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
   if (user.role === "biuro") {
     const [
@@ -322,6 +323,13 @@ export async function GET(req) {
     });
   }
 
-  const visibleMachineIds = await getVisibleMachineIdsForUser(user);
-  return Response.json(await buildMachineDashboard(visibleMachineIds, user));
+    const visibleMachineIds = await getVisibleMachineIdsForUser(user);
+    return Response.json(await buildMachineDashboard(visibleMachineIds, user));
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    return Response.json(
+      { error: `Błąd dashboardu: ${error.message || "nieznany błąd"}` },
+      { status: 500 }
+    );
+  }
 }
