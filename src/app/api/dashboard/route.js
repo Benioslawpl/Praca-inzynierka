@@ -267,7 +267,8 @@ export async function GET(req) {
              b.nazwa,
              b.lokalizacja,
              b.status,
-             b.data_rozpoczecia
+             b.data_rozpoczecia,
+             b.created_at
            FROM budowy b
            JOIN budowy_brygady bb
              ON bb.budowa_id = b.id
