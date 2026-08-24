@@ -1,7 +1,11 @@
 ﻿import pool from "../../../../db";
+import { requireOperationalRole } from "../../../lib/api-auth";
 
-export async function GET() {
+export async function GET(req) {
   try {
+    const auth = await requireOperationalRole(req);
+    if (auth.error) return auth.error;
+
     const { rows } = await pool.query(
       `SELECT
          id,
@@ -27,6 +31,9 @@ export async function GET() {
 
 export async function POST(req) {
   try {
+    const auth = await requireOperationalRole(req);
+    if (auth.error) return auth.error;
+
     const body = await req.json().catch(() => ({}));
     const numer = String(body?.numer || "").trim();
     const nazwa = String(body?.nazwa || "").trim();
@@ -88,4 +95,3 @@ export async function POST(req) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
-
