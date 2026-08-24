@@ -467,6 +467,17 @@ export default function HomeDashboardClient({ user }) {
 
   const submitReport = async (machineId) => {
     const form = forms[machineId] || EMPTY_REPORT;
+
+    if (!form.awaria && form.motogodziny === "") {
+      setError("Podaj aktualne motogodziny");
+      return;
+    }
+
+    if (form.awaria && !form.opis.trim()) {
+      setError("Podaj opis awarii");
+      return;
+    }
+
     setSavingId(machineId);
     setError("");
 
@@ -599,6 +610,25 @@ export default function HomeDashboardClient({ user }) {
                       </div>
                     </div>
 
+                    <div className="actions">
+                      <button
+                        type="button"
+                        className={!form.awaria ? "" : "secondary"}
+                        onClick={() =>
+                          setFormFor(machine.id, { ...form, awaria: false, opis: "" })
+                        }
+                      >
+                        Dodaj odczyt motogodzin
+                      </button>
+                      <button
+                        type="button"
+                        className={form.awaria ? "danger" : "secondary"}
+                        onClick={() => setFormFor(machine.id, { ...form, awaria: true })}
+                      >
+                        Zgłoś awarię
+                      </button>
+                    </div>
+
                     <div className="grid">
                       <label>
                         <span>Data raportu</span>
@@ -625,33 +655,20 @@ export default function HomeDashboardClient({ user }) {
                         />
                       </label>
 
-                      <label>
-                        <span>Awaria</span>
-                        <select
-                          value={form.awaria ? "tak" : "nie"}
-                          onChange={(e) =>
-                            setFormFor(machine.id, {
-                              ...form,
-                              awaria: e.target.value === "tak",
-                            })
-                          }
-                        >
-                          <option value="nie">brak awarii</option>
-                          <option value="tak">zglos awarie</option>
-                        </select>
-                      </label>
-
-                      <label style={{ gridColumn: "1 / -1" }}>
-                        <span>Opis</span>
-                        <textarea
-                          rows={3}
-                          value={form.opis}
-                          onChange={(e) =>
-                            setFormFor(machine.id, { ...form, opis: e.target.value })
-                          }
-                          placeholder="Krotki opis pracy, przestoju albo awarii..."
-                        />
-                      </label>
+                      {form.awaria ? (
+                        <label style={{ gridColumn: "1 / -1" }}>
+                          <span>Opis awarii</span>
+                          <textarea
+                            rows={3}
+                            value={form.opis}
+                            onChange={(e) =>
+                              setFormFor(machine.id, { ...form, opis: e.target.value })
+                            }
+                            placeholder="Krótko opisz problem..."
+                            required
+                          />
+                        </label>
+                      ) : null}
                     </div>
 
                     <div className="actions">
@@ -660,7 +677,11 @@ export default function HomeDashboardClient({ user }) {
                         disabled={savingId === machine.id}
                         onClick={() => submitReport(machine.id)}
                       >
-                        {savingId === machine.id ? "Zapisywanie..." : "Wyslij raport"}
+                        {savingId === machine.id
+                          ? "Zapisywanie..."
+                          : form.awaria
+                            ? "Zgłoś awarię"
+                            : "Zapisz odczyt"}
                       </button>
                     </div>
                   </article>

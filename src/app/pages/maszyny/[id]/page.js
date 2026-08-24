@@ -21,6 +21,7 @@ export default function MaszynaDetails() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [entryType, setEntryType] = useState("licznik");
 
   const today = getTodayIso();
   const createEmptyForm = () => ({
@@ -205,6 +206,7 @@ export default function MaszynaDetails() {
 
   const reset = () => {
     setForm(createEmptyForm());
+    setEntryType("licznik");
     setEditId(null);
     setIsFormOpen(false);
     setErr("");
@@ -216,14 +218,22 @@ export default function MaszynaDetails() {
     setErr("");
 
     try {
-      if (form.awaria.trim() && !form.wykonawca.trim()) {
+      if (entryType === "awaria" && !form.awaria.trim()) {
+        throw new Error("Podaj opis awarii");
+      }
+
+      if (entryType === "awaria" && !form.wykonawca.trim()) {
         throw new Error("Przy awarii wymagany jest wykonawca");
+      }
+
+      if (entryType === "licznik" && form.przebieg === "") {
+        throw new Error("Podaj aktualne motogodziny");
       }
 
       const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
-        awaria: form.awaria?.trim() || null,
-        wykonawca: form.wykonawca?.trim() || null,
+        awaria: entryType === "awaria" ? form.awaria.trim() : null,
+        wykonawca: entryType === "awaria" ? form.wykonawca.trim() : null,
         uwagi: form.uwagi?.trim() || null,
         data_zdarzenia: form.data_zdarzenia || null,
       };
@@ -254,6 +264,7 @@ export default function MaszynaDetails() {
   const edit = (item) => {
     setIsFormOpen(true);
     setEditId(item.id);
+    setEntryType(item.awaria ? "awaria" : "licznik");
     setForm({
       przebieg: item.przebieg ?? "",
       awaria: item.awaria ?? "",
@@ -294,6 +305,18 @@ export default function MaszynaDetails() {
 
     setIsFormOpen(true);
     setErr("");
+  };
+
+  const selectEntryType = (type) => {
+    setEntryType(type);
+
+    if (type === "licznik") {
+      setForm((current) => ({
+        ...current,
+        awaria: "",
+        wykonawca: "",
+      }));
+    }
   };
 
   const submitService = async (e) => {
@@ -706,11 +729,11 @@ export default function MaszynaDetails() {
         <section className={`formPanel ${isFormOpen ? "formPanelOpen" : ""}`}>
           <div className="formPanelHeader">
             <div>
-              <h2>{editId ? "Edytuj zdarzenie" : "Dodaj zdarzenie"}</h2>
+              <h2>{editId ? "Edytuj wpis" : "Nowy wpis"}</h2>
               <p>
                 {editId
-                  ? "Zmień dane wybranego wpisu w historii."
-                  : "Dodaj nowy wpis do historii zdarzeń tej maszyny."}
+                  ? "Zmień dane wybranego wpisu."
+                  : "Wybierz, czy chcesz dodać odczyt motogodzin, czy zgłosić awarię."}
               </p>
             </div>
 
@@ -724,7 +747,7 @@ export default function MaszynaDetails() {
                     ? editId
                       ? "Tryb edycji"
                       : "Ukryj formularz"
-                    : "Dodaj zdarzenie"}
+                    : "Dodaj wpis"}
                 </span>
               </span>
             </button>
@@ -732,6 +755,25 @@ export default function MaszynaDetails() {
 
           <div className={`formPanelBody ${isFormOpen ? "formPanelBodyOpen" : ""}`}>
             <form className="card" onSubmit={submit}>
+              {!editId ? (
+                <div className="actions">
+                  <button
+                    type="button"
+                    className={entryType === "licznik" ? "" : "secondary"}
+                    onClick={() => selectEntryType("licznik")}
+                  >
+                    Dodaj odczyt motogodzin
+                  </button>
+                  <button
+                    type="button"
+                    className={entryType === "awaria" ? "danger" : "secondary"}
+                    onClick={() => selectEntryType("awaria")}
+                  >
+                    Zgłoś awarię
+                  </button>
+                </div>
+              ) : null}
+
               <div className="grid">
                 <label>
                   <span>Data zdarzenia</span>
@@ -744,34 +786,40 @@ export default function MaszynaDetails() {
                 </label>
 
                 <label>
-                  <span>Przebieg (mth)</span>
+                  <span>Aktualne motogodziny</span>
                   <input
                     type="number"
                     value={form.przebieg}
                     onChange={(e) => setForm({ ...form, przebieg: e.target.value })}
                     min="0"
                     placeholder="np. 12500"
+                    required={entryType === "licznik"}
                   />
                 </label>
 
-                <label>
-                  <span>Awaria</span>
-                  <input
-                    value={form.awaria}
-                    onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 30) })}
-                    placeholder="np. Uszkodzony wąż"
-                  />
-                </label>
+                {entryType === "awaria" ? (
+                  <>
+                    <label>
+                      <span>Opis awarii</span>
+                      <input
+                        value={form.awaria}
+                        onChange={(e) => setForm({ ...form, awaria: e.target.value.slice(0, 80) })}
+                        placeholder="np. Uszkodzony wąż"
+                        required
+                      />
+                    </label>
 
-                <label>
-                  <span>Wykonawca</span>
-                  <input
-                    value={form.wykonawca}
-                    onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
-                    placeholder="np. Serwis XYZ"
-                    required={Boolean(form.awaria.trim())}
-                  />
-                </label>
+                    <label>
+                      <span>Wykonawca</span>
+                      <input
+                        value={form.wykonawca}
+                        onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
+                        placeholder="np. Serwis XYZ"
+                        required
+                      />
+                    </label>
+                  </>
+                ) : null}
 
                 <label style={{ gridColumn: "1 / -1" }}>
                   <span>Uwagi</span>
@@ -779,14 +827,20 @@ export default function MaszynaDetails() {
                     value={form.uwagi}
                     onChange={(e) => setForm({ ...form, uwagi: e.target.value.slice(0, 200) })}
                     rows={3}
-                    placeholder="Krótki opis zdarzenia..."
+                    placeholder={entryType === "awaria" ? "Dodatkowe informacje o awarii..." : "Opcjonalna notatka do odczytu..."}
                   />
                 </label>
               </div>
 
               <div className="actions">
                 <button type="submit" disabled={saving}>
-                  {saving ? "Zapisywanie..." : editId ? "Zapisz" : "Dodaj"}
+                  {saving
+                    ? "Zapisywanie..."
+                    : editId
+                      ? "Zapisz"
+                      : entryType === "awaria"
+                        ? "Zgłoś awarię"
+                        : "Zapisz odczyt"}
                 </button>
 
                 <button type="button" className="secondary" onClick={reset}>
