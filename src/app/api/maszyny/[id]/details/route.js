@@ -74,13 +74,6 @@ export async function POST(req, { params }) {
     const zrodlo = body?.zrodlo?.trim() || "serwis";
     const reporterUsername = body?.reporter_username?.trim() || null;
 
-    if (awaria && !wykonawca) {
-      return Response.json(
-        { error: "Przy awarii wymagany jest wykonawca" },
-        { status: 400 }
-      );
-    }
-
     const maszynaResult = await pool.query(`SELECT nr FROM maszyny WHERE id=$1`, [
       maszynaId,
     ]);

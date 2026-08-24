@@ -222,10 +222,6 @@ export default function MaszynaDetails() {
         throw new Error("Podaj opis awarii");
       }
 
-      if (entryType === "awaria" && !form.wykonawca.trim()) {
-        throw new Error("Przy awarii wymagany jest wykonawca");
-      }
-
       if (entryType === "licznik" && form.przebieg === "") {
         throw new Error("Podaj aktualne motogodziny");
       }
@@ -233,7 +229,7 @@ export default function MaszynaDetails() {
       const body = {
         przebieg: form.przebieg === "" ? null : Number(form.przebieg),
         awaria: entryType === "awaria" ? form.awaria.trim() : null,
-        wykonawca: entryType === "awaria" ? form.wykonawca.trim() : null,
+        wykonawca: editId ? form.wykonawca.trim() || null : null,
         uwagi: form.uwagi?.trim() || null,
         data_zdarzenia: form.data_zdarzenia || null,
       };
@@ -809,15 +805,6 @@ export default function MaszynaDetails() {
                       />
                     </label>
 
-                    <label>
-                      <span>Wykonawca</span>
-                      <input
-                        value={form.wykonawca}
-                        onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
-                        placeholder="np. Serwis XYZ"
-                        required
-                      />
-                    </label>
                   </>
                 ) : null}
 

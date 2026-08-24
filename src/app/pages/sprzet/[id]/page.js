@@ -167,10 +167,6 @@ export default function SprzetDetailsPage() {
         throw new Error("Podaj opis awarii");
       }
 
-      if (entryType === "awaria" && !form.wykonawca.trim()) {
-        throw new Error("Przy awarii wymagany jest wykonawca");
-      }
-
       if (entryType === "licznik" && form.przebieg === "") {
         throw new Error("Podaj aktualny licznik");
       }
@@ -183,7 +179,7 @@ export default function SprzetDetailsPage() {
             ? form.status_awarii
             : "nowa"
           : "brak",
-        wykonawca: entryType === "awaria" ? form.wykonawca.trim() : null,
+        wykonawca: editId ? form.wykonawca.trim() || null : null,
         uwagi: form.uwagi?.trim() || null,
         data_zdarzenia: form.data_zdarzenia || null,
       };
@@ -489,15 +485,6 @@ export default function SprzetDetailsPage() {
                     />
                   </label>
 
-                  <label>
-                    <span>Wykonawca</span>
-                    <input
-                      value={form.wykonawca}
-                      onChange={(e) => setForm({ ...form, wykonawca: e.target.value })}
-                      placeholder="np. Serwis wewnętrzny"
-                      required
-                    />
-                  </label>
                 </>
               ) : null}
 
