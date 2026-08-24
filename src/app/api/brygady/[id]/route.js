@@ -1,4 +1,5 @@
 import pool from "../../../../../db";
+import { requireOperationalRole } from "../../../../lib/api-auth";
 
 function getId(req, params) {
   const fromParams = Number(params?.id);
@@ -16,17 +17,16 @@ function getId(req, params) {
 
 export async function PUT(req, { params }) {
   try {
+    const auth = await requireOperationalRole(req);
+    if (auth.error) return auth.error;
+
     const id = getId(req, params);
     if (!id) {
       return Response.json({ error: "Bad id", params }, { status: 400 });
     }
 
     const beforeResult = await pool.query(
-      `
-      SELECT id, numer, brygadzista, created_at
-      FROM brygady
-      WHERE id=$1
-      `,
+      `SELECT id, numer, brygadzista, created_at FROM brygady WHERE id=$1`,
       [id]
     );
     const before = beforeResult.rows[0];
@@ -45,12 +45,10 @@ export async function PUT(req, { params }) {
     }
 
     const { rows } = await pool.query(
-      `
-      UPDATE brygady
-      SET numer=$1, brygadzista=$2
-      WHERE id=$3
-      RETURNING id, numer, brygadzista, created_at
-      `,
+      `UPDATE brygady
+       SET numer=$1, brygadzista=$2
+       WHERE id=$3
+       RETURNING id, numer, brygadzista, created_at`,
       [numer.trim(), brygadzista.trim(), id]
     );
 
@@ -61,6 +59,9 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
+  const auth = await requireOperationalRole(req);
+  if (auth.error) return auth.error;
+
   const client = await pool.connect();
 
   try {
@@ -72,11 +73,7 @@ export async function DELETE(req, { params }) {
     await client.query("BEGIN");
 
     const beforeResult = await client.query(
-      `
-      SELECT id, numer, brygadzista, created_at
-      FROM brygady
-      WHERE id=$1
-      `,
+      `SELECT id, numer, brygadzista, created_at FROM brygady WHERE id=$1`,
       [id]
     );
     const before = beforeResult.rows[0];
