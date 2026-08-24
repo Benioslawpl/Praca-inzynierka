@@ -1137,7 +1137,7 @@ label {
 
 .dashboardHome {
   display: grid;
-  gap: 22px;
+  gap: 18px;
 }
 
 .dashboardHome > * {
@@ -1159,7 +1159,31 @@ label {
 
 .dashboardAlertStack {
   display: grid;
-  gap: 18px;
+  gap: 14px;
+}
+
+.dashboardHome .sectionCard {
+  padding: 22px;
+  border-radius: 20px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.055);
+}
+
+.dashboardHome .dashboardScopeGroup {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboardHome .dashboardScopeGroup .compactList {
+  gap: 6px;
+}
+
+.dashboardHome .dashboardScopeGroup .compactListRow {
+  min-height: 52px;
+  padding: 10px 14px;
+}
+
+.dashboardHome .stackSection {
+  gap: 14px;
 }
 
 .dashboardAlertGroup {
@@ -1321,7 +1345,19 @@ label {
 
 .operatorMachineCard {
   display: grid;
-  gap: 16px;
+  gap: 14px;
+  padding: 20px;
+  border-top: 3px solid #bfdbfe;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+}
+
+.operatorMachineCard .detailsSummaryContent {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.operatorMachineCard > .grid {
+  max-width: 880px;
 }
 
 .stackSection {
