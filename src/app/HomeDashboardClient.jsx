@@ -161,9 +161,8 @@ function ManagerPanel({ title, budowy }) {
                   </div>
                   <div className="compactListMeta compactListMetaStack">
                     <span className="pill">{statusLabel(budowa.status)}</span>
-                    {budowa.status === "zakonczona" ? (
-                      <span className="mutedText">brygady i maszyny zostały zwolnione</span>
-                    ) : budowa.brygady_count !== undefined || budowa.maszyny_count !== undefined ? (
+                    {budowa.status !== "zakonczona" &&
+                    (budowa.brygady_count !== undefined || budowa.maszyny_count !== undefined) ? (
                       <span className="mutedText">
                         brygady: {budowa.brygady_count || 0} • maszyny: {budowa.maszyny_count || 0}
                       </span>
