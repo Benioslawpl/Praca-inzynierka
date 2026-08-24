@@ -7,6 +7,17 @@ import pool from "../db";
 import { getJwtSecret } from "./lib/env";
 
 const SECRET = getJwtSecret();
+const OPERATIONAL_API_PREFIXES = [
+  "/api/budowy",
+  "/api/brygady",
+  "/api/sprzet",
+];
+const OPERATIONAL_ROLES = new Set([
+  "admin",
+  "brygadzista",
+  "kierownik",
+  "biuro",
+]);
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
@@ -17,6 +28,9 @@ export async function middleware(req) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/public");
+  const isOperationalApi = OPERATIONAL_API_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix)
+  );
 
   if (isAuthApi || isLoginPage || isPublicAsset) {
     return NextResponse.next();
@@ -36,7 +50,7 @@ export async function middleware(req) {
     }
 
     const { rows } = await pool.query(
-      `SELECT blocked
+      `SELECT blocked, role
        FROM users
        WHERE id=$1`,
       [userId]
@@ -52,6 +66,10 @@ export async function middleware(req) {
         maxAge: 0,
       });
       return response;
+    }
+
+    if (isOperationalApi && !OPERATIONAL_ROLES.has(rows[0].role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.next();
