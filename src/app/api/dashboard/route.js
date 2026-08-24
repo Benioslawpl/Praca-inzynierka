@@ -302,27 +302,27 @@ export async function GET(req) {
       : { rows: [] };
 
     const { rows: sprzetRows } = await pool.query(
-      `SELECT id, nr, rodzaj, marka, model, operator AS brygadzista
-       FROM sprzet
-       WHERE operator = $1
-         AND id IN (
-           SELECT DISTINCT bs.sprzet_id
-           FROM budowy_sprzet bs
-           JOIN budowy b ON b.id = bs.budowa_id
-           WHERE b.status <> 'zakonczona'
-             AND COALESCE(bs.data_do, '9999-12-31') >= CURRENT_DATE
-         )
-       ORDER BY nr ASC, id ASC`,
+      `SELECT s.id, s.nr, s.rodzaj, s.marka, s.model,
+              s.serwis_co_ile_mth, s.ostatni_serwis_mth,
+              (
+                SELECT MAX(d.przebieg)
+                FROM sprzet_details d
+                WHERE d.sprzet_id = s.id
+              ) AS aktualny_przebieg,
+              EXISTS (
+                SELECT 1
+                FROM sprzet_details d
+                WHERE d.sprzet_id = s.id
+                  AND d.awaria IS NOT NULL
+                  AND COALESCE(d.status_awarii, 'nowa') <> 'zamknieta'
+              ) AS ma_aktywna_awarie
+       FROM sprzet s
+       WHERE s.operator = $1
+       ORDER BY s.nr ASC, s.id ASC`,
       [user.username]
     );
 
-    const budowaIds = budowyRows.map((row) => row.id);
-    const visibleMachineIds = await getMachineIdsForBudowy(budowaIds);
-
-    const machineDashboard = await buildMachineDashboard(visibleMachineIds, user);
-
     return Response.json({
-      ...machineDashboard,
       summary: {
         budowy: budowyRows.length,
         ludzie: ludzieRows.length,
