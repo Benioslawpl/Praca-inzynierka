@@ -315,6 +315,7 @@ header {
 .listPageIntro p {
   max-width: 68ch;
   color: #5b6778;
+  display: none;
 }
 
 p {
@@ -475,6 +476,7 @@ button[disabled] {
 
 .machineDetailsPage .detailsHero .sectionIntro p {
   max-width: 62ch;
+  display: none;
 }
 
 .detailsSummaryGrid {
@@ -613,6 +615,7 @@ button[disabled] {
 
 .detailsSectionHeader p {
   color: #64748b;
+  display: none;
 }
 
 .formPanel {

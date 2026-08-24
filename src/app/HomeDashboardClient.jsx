@@ -68,12 +68,11 @@ function getDashboardIntro(type) {
   return "biezace awarie, nadchodzace serwisy i szybkie zgloszenia z maszyn.";
 }
 
-function EmptyListRow({ title, text }) {
+function EmptyListRow({ title }) {
   return (
     <div className="compactListRow">
       <div className="compactListMain">
         <strong>{title}</strong>
-        <span className="mutedText">{text}</span>
       </div>
     </div>
   );
@@ -95,24 +94,13 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
   return (
     <article className="card sectionCard">
       <div className="sectionCardHeader">
-        <div>
-          <h2>Najwazniejsze alerty</h2>
-          <p className="mutedText">
-            {managerMode
-              ? "Awarie i serwisy dla maszyn widocznych w Twoim zakresie."
-              : "Awarie i serwisy, ktore wymagaja reakcji."}
-          </p>
-        </div>
-        <span className="metricBadge">{awariaAlerts.length + serviceAlerts.length}</span>
+        <h2>Najwazniejsze alerty</h2>
       </div>
 
       <div className="dashboardAlertStack">
         <ScopeSection title="Aktywne awarie" count={awariaAlerts.length}>
           {awariaAlerts.length === 0 ? (
-            <EmptyListRow
-              title="Brak aktywnych awarii"
-              text="Na ten moment nie ma otwartych zgloszen."
-            />
+            <EmptyListRow title="Brak aktywnych awarii" />
           ) : (
             awariaAlerts.map((item) => (
               <Link
@@ -141,10 +129,7 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
           count={serviceAlerts.length}
         >
           {serviceAlerts.length === 0 ? (
-            <EmptyListRow
-              title="Brak pilnych serwisow"
-              text="Nie ma maszyn wymagajacych teraz przegladu."
-            />
+            <EmptyListRow title="Brak pilnych serwisow" />
           ) : (
             serviceAlerts.map((item) => (
               <Link
@@ -176,20 +161,17 @@ function DashboardAlerts({ awariaAlerts, serviceAlerts, managerMode = false }) {
   );
 }
 
-function ManagerPanel({ title, text, budowy }) {
+function ManagerPanel({ title, budowy }) {
   return (
     <article className="card sectionCard">
       <div className="sectionCardHeader">
-        <div>
-          <h2>{title}</h2>
-          <p className="mutedText">{text}</p>
-        </div>
+        <h2>{title}</h2>
       </div>
 
       <div className="dashboardScopeStack">
         <ScopeSection title="Budowy" count={budowy.length}>
           {budowy.length === 0 ? (
-            <EmptyListRow title="Brak budow" text="Brak pozycji do wyswietlenia." />
+            <EmptyListRow title="Brak budow" />
           ) : (
             budowy.map((budowa) => (
               <Link
@@ -231,19 +213,13 @@ function ForemanPanel({ data }) {
   return (
     <article className="card sectionCard">
       <div className="sectionCardHeader">
-        <div>
-          <h2>Panel brygadzisty</h2>
-          <p className="mutedText">Tutaj widzisz swoje budowy, ludzi i sprzet.</p>
-        </div>
+        <h2>Panel brygadzisty</h2>
       </div>
 
       <div className="dashboardScopeStack">
         <ScopeSection title="Budowy" count={budowy.length}>
           {budowy.length === 0 ? (
-            <EmptyListRow
-              title="Brak budow"
-              text="Nie ma jeszcze budow przypisanych do Twojej brygady."
-            />
+            <EmptyListRow title="Brak budow" />
           ) : (
             budowy.map((budowa) => (
               <Link
@@ -266,10 +242,7 @@ function ForemanPanel({ data }) {
 
         <ScopeSection title="Ludzie" count={ludzie.length}>
           {ludzie.length === 0 ? (
-            <EmptyListRow
-              title="Brak ludzi w brygadzie"
-              text="Nie dodano jeszcze czlonkow do Twojej brygady."
-            />
+            <EmptyListRow title="Brak ludzi w brygadzie" />
           ) : (
             ludzie.map((member) => (
               <div className="compactListRow compactMetricRow" key={member.id}>
@@ -288,10 +261,7 @@ function ForemanPanel({ data }) {
 
         <ScopeSection title="Sprzet" count={sprzet.length}>
           {sprzet.length === 0 ? (
-            <EmptyListRow
-              title="Brak sprzetu"
-              text="Nie ma jeszcze sprzetu przypisanego do Twojej brygady."
-            />
+            <EmptyListRow title="Brak sprzetu" />
           ) : (
             sprzet.map((item) => (
               <Link
@@ -320,19 +290,12 @@ function OperatorScopePanel({ machines }) {
   return (
     <article className="card sectionCard">
       <div className="sectionCardHeader">
-        <div>
-          <h2>Twoj zakres</h2>
-          <p className="mutedText">Szybki podglad maszyn przypisanych do tego konta.</p>
-        </div>
-        <span className="metricBadge">{machines.length}</span>
+        <h2>Twoj zakres</h2>
       </div>
 
       <div className="compactList">
         {machines.length === 0 ? (
-          <EmptyListRow
-            title="Brak przypisanych maszyn"
-            text="To konto nie ma jeszcze aktywnego przypisania do maszyny."
-          />
+          <EmptyListRow title="Brak przypisanych maszyn" />
         ) : (
           machines.map((machine) => (
             <Link
@@ -361,7 +324,6 @@ function DashboardScopePanel({ dashboardType, data }) {
     return (
       <ManagerPanel
         title="Moje budowy"
-        text="Tutaj widzisz budowy przypisane do Twojego konta."
         budowy={data?.managedBudowy || []}
       />
     );
@@ -375,7 +337,6 @@ function DashboardScopePanel({ dashboardType, data }) {
     return (
       <ManagerPanel
         title="Panel biura"
-        text="Tutaj widzisz ogolny stan budow i firmy."
         budowy={data?.recentBudowy || []}
       />
     );
