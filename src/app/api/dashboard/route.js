@@ -261,7 +261,7 @@ export async function GET(req) {
     const brygadaIds = brygadyRows.map((row) => row.id);
     const { rows: budowyRows } = brygadaIds.length
       ? await pool.query(
-          `SELECT DISTINCT
+          `SELECT
              b.id,
              b.numer,
              b.nazwa,
@@ -270,11 +270,14 @@ export async function GET(req) {
              b.data_rozpoczecia,
              b.created_at
            FROM budowy b
-           JOIN budowy_brygady bb
-             ON bb.budowa_id = b.id
-           WHERE bb.brygada_id = ANY($1::int[])
-             AND b.status <> 'zakonczona'
-             AND COALESCE(bb.data_do, '9999-12-31') >= CURRENT_DATE
+           WHERE b.status <> 'zakonczona'
+             AND EXISTS (
+               SELECT 1
+               FROM budowy_brygady bb
+               WHERE bb.budowa_id = b.id
+                 AND bb.brygada_id = ANY($1::int[])
+                 AND COALESCE(bb.data_do, '9999-12-31') >= CURRENT_DATE
+             )
            ORDER BY
              CASE
                WHEN b.status = 'w_toku' THEN 0
