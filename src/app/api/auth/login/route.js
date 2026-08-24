@@ -3,9 +3,8 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
 import pool from "../../../../../db";
+import { getJwtSecret } from "../../../../lib/env";
 import { normalizeRole } from "../../../../lib/roles";
-
-const SECRET = process.env.JWT_SECRET || "Test123!";
 
 export async function POST(req) {
   try {
@@ -54,7 +53,7 @@ export async function POST(req) {
     );
     const token = jwt.sign(
       { id: user.id, username: user.username, role },
-      SECRET,
+      getJwtSecret(),
       { expiresIn: "8h" }
     );
 

@@ -2,12 +2,11 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
 import pool from "../../db";
+import { getJwtSecret } from "./env";
 import { canViewOperationalData, isAdminRole } from "./roles";
 
-const JWT_SECRET = process.env.JWT_SECRET || "Test123!";
-
 export function verifyJwt(token) {
-  return jwt.verify(token, JWT_SECRET);
+  return jwt.verify(token, getJwtSecret());
 }
 
 async function getActiveUserByPayload(payload) {

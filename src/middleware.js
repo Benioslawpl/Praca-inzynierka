@@ -4,8 +4,9 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
 import pool from "../db";
+import { getJwtSecret } from "./lib/env";
 
-const SECRET = process.env.JWT_SECRET || "Test123!";
+const SECRET = getJwtSecret();
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
