@@ -25,10 +25,6 @@ export function isAdminRole(role) {
   return role === "admin";
 }
 
-export function isOperatorRole(role) {
-  return role === "operator";
-}
-
 export function canViewOperationalData(role) {
   return MANAGER_ROLES.has(role);
 }

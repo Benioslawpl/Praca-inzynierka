@@ -29,7 +29,6 @@ async function getMachineIdsForBudowy(budowaIds) {
 async function buildMachineDashboard(machineIds, user) {
   if (!machineIds.length) {
     return {
-      user,
       assignedMachines: [],
       alerts: {
         awarie: [],
@@ -135,7 +134,6 @@ async function buildMachineDashboard(machineIds, user) {
   }
 
   return {
-    user,
     assignedMachines: user.role === "operator" ? machines : [],
     alerts: {
       awarie,
@@ -157,6 +155,7 @@ export async function GET(req) {
         { rows: machineRows },
         { rows: adminBudowy },
         { rows: freeMachineRows },
+        { rows: adminSummaryRows },
       ] = await Promise.all([
         pool.query(`SELECT id FROM maszyny ORDER BY id ASC`),
         pool.query(
@@ -204,6 +203,10 @@ export async function GET(req) {
                AND COALESCE(bm.data_do, '9999-12-31') >= CURRENT_DATE
            )`
         ),
+        pool.query(
+          `SELECT COUNT(*) FILTER (WHERE status = 'w_toku') AS active_budowy
+           FROM budowy`
+        ),
       ]);
 
       const visibleMachineIds = toPositiveIds(machineRows.map((row) => row.id));
@@ -212,7 +215,7 @@ export async function GET(req) {
       return Response.json({
         ...machineDashboard,
         summary: {
-          activeBudowy: countActiveBudowy(adminBudowy),
+          activeBudowy: Number(adminSummaryRows[0]?.active_budowy || 0),
           wolneMaszyny: freeMachineRows.length,
           awarie: machineDashboard.alerts.awarie.length,
           serwisy:

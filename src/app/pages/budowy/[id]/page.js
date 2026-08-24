@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 const today = new Date().toISOString().slice(0, 10);
@@ -52,9 +52,6 @@ export default function BudowaDetailsPage() {
   });
 
   const validId = Number.isInteger(Number(id)) && Number(id) > 0;
-
-  const availableBrygady = useMemo(() => brygady, [brygady]);
-  const availableMaszyny = useMemo(() => maszyny, [maszyny]);
 
   const loadAssignments = async () => {
     if (!validId) return;
@@ -474,7 +471,7 @@ export default function BudowaDetailsPage() {
           "brygady",
           "brygada_id",
           "Brygadę",
-          availableBrygady,
+          brygady,
           (option) => `${option.numer} - ${option.brygadzista || "bez brygadzisty"}`
         )}
 
@@ -538,7 +535,7 @@ export default function BudowaDetailsPage() {
           "maszyny",
           "maszyna_id",
           "Maszynę",
-          availableMaszyny,
+          maszyny,
           (option) => `${option.nr || "-"} - ${option.rodzaj} ${option.marka} ${option.model}`
         )}
 

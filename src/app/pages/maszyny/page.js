@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 const EMPTY_FORM = {
   nr: "",
@@ -54,8 +54,6 @@ export default function MaszynyPage() {
   }, []);
 
   const canManage = me?.role !== "operator";
-
-  const operatorOptions = useMemo(() => operators, [operators]);
 
   const reset = () => {
     setForm(EMPTY_FORM);
@@ -226,7 +224,7 @@ export default function MaszynyPage() {
                     required
                   >
                     <option value="">Wybierz operatora</option>
-                    {operatorOptions.map((item) => (
+                    {operators.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.username}
                       </option>
