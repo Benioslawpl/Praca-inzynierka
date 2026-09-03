@@ -1138,7 +1138,9 @@ label {
 
 .dashboardHome {
   display: grid;
-  gap: 18px;
+  gap: 22px;
+  padding: clamp(20px, 3vw, 34px);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .dashboardHome > * {
@@ -1146,7 +1148,37 @@ label {
 }
 
 .dashboardStats {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.dashboardIntro {
+  gap: 5px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dashboardIntro h1 {
+  margin-bottom: 2px;
+}
+
+.dashboardIntro p {
+  margin: 0;
+  color: #64748b;
+}
+
+.dashboardEyebrow {
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.dashboardScopeStack {
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .dashboardLayout {
@@ -1195,14 +1227,16 @@ label {
 }
 
 .dashboardHome .sectionCard {
-  padding: 22px;
+  padding: 20px;
   border-radius: 20px;
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.055);
 }
 
 .dashboardHome .dashboardScopeGroup {
   display: grid;
-  gap: 6px;
+  align-content: start;
+  gap: 9px;
+  min-width: 0;
 }
 
 .dashboardHome .dashboardScopeGroup .compactList {
@@ -1210,8 +1244,19 @@ label {
 }
 
 .dashboardHome .dashboardScopeGroup .compactListRow {
-  min-height: 52px;
-  padding: 10px 14px;
+  min-height: 64px;
+  padding: 11px 13px;
+}
+
+.dashboardScopeStack .dashboardScopeGroup {
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.dashboardScopeStack .compactListRow {
+  background: #fff;
 }
 
 .operatorScopePanel {
@@ -1258,9 +1303,42 @@ label {
   gap: 12px;
 }
 
+.dashboardAlertGroupHeader strong {
+  color: #334155;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.dashboardCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .dashboardAlertLinkWrap {
+  display: block;
   text-decoration: none;
   color: inherit;
+}
+
+.dashboardAlertLinkWrap .compactListRow {
+  transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+}
+
+.dashboardAlertLinkWrap:hover .compactListRow {
+  border-color: #bfdbfe;
+  background: #f8fbff;
+  transform: translateY(-1px);
 }
 
 .dashboardAlertCard {
@@ -1451,6 +1529,22 @@ label {
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
 }
 
+.dashboardHome .statCard {
+  position: relative;
+  overflow: hidden;
+  min-height: 96px;
+  padding: 17px 18px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.045);
+}
+
+.dashboardHome .statCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: #3b82f6;
+}
+
 .statLabel {
   font-size: 12px;
   letter-spacing: 0.04em;
@@ -1486,6 +1580,16 @@ label {
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 14px;
+}
+
+.dashboardHome .sectionCardHeader {
+  align-items: center;
+  padding-bottom: 13px;
+  border-bottom: 1px solid #e8edf3;
+}
+
+.dashboardHome .sectionCardHeader h2 {
+  margin: 0;
 }
 
 .mutedText {
@@ -1979,6 +2083,14 @@ label {
   .detailsAlertGrid {
     grid-template-columns: 1fr;
   }
+
+  .dashboardScopeStack {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboardScopeStack .dashboardScopeGroup:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2208,6 +2320,14 @@ label {
 
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .dashboardScopeStack {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardScopeStack .dashboardScopeGroup:last-child:nth-child(odd) {
+    grid-column: auto;
   }
 }
 

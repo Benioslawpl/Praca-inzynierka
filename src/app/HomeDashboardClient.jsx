@@ -58,7 +58,11 @@ function ScopeSection({ title, count, children }) {
     <div className="dashboardScopeGroup">
       <div className="dashboardAlertGroupHeader">
         <strong>{title}</strong>
-        {typeof count === "number" ? <span className="mutedText">{count}</span> : null}
+        {typeof count === "number" ? (
+          <span className="dashboardCount" aria-label={`Liczba elementów: ${count}`}>
+            {count}
+          </span>
+        ) : null}
       </div>
       <div className="compactList">{children}</div>
     </div>
@@ -367,6 +371,34 @@ function getStatsForDashboard(type, data) {
   ];
 }
 
+const DASHBOARD_COPY = {
+  admin: {
+    eyebrow: "Administracja",
+    title: "Panel główny",
+    description: "Najważniejsze informacje o budowach, maszynach i serwisie.",
+  },
+  kierownik: {
+    eyebrow: "Kierownik",
+    title: "Panel główny",
+    description: "Szybki podgląd prowadzonych budów i przydzielonych zasobów.",
+  },
+  brygadzista: {
+    eyebrow: "Brygadzista",
+    title: "Panel główny",
+    description: "Twój aktualny zakres: budowy, zespół i przypisany sprzęt.",
+  },
+  biuro: {
+    eyebrow: "Biuro",
+    title: "Panel główny",
+    description: "Bieżący przegląd budów oraz najważniejszych zdarzeń.",
+  },
+  operator: {
+    eyebrow: "Operator",
+    title: "Panel główny",
+    description: "Przypisane maszyny, raporty oraz alerty serwisowe.",
+  },
+};
+
 export default function HomeDashboardClient({ user }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -497,11 +529,14 @@ export default function HomeDashboardClient({ user }) {
   ];
 
   const stats = getStatsForDashboard(dashboardType, data);
+  const dashboardCopy = DASHBOARD_COPY[dashboardType] || DASHBOARD_COPY.operator;
 
   return (
-    <section className="home dashboardHome">
-      <div className="sectionIntro">
-        <h1>Panel główny</h1>
+    <section className={`home dashboardHome dashboard-${dashboardType || "operator"}`}>
+      <div className="sectionIntro dashboardIntro">
+        <span className="dashboardEyebrow">{dashboardCopy.eyebrow}</span>
+        <h1>{dashboardCopy.title}</h1>
+        <p>{dashboardCopy.description}</p>
       </div>
 
       {error && <p className="error">{error}</p>}
