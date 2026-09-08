@@ -481,7 +481,6 @@ export default function HomeDashboardClient({ user }) {
         throw new Error(payload?.error || "Nie udało się zapisać raportu");
       }
 
-      await refreshDashboard();
       setSuccess({
         machineId,
         text: isFailureReport
@@ -492,6 +491,13 @@ export default function HomeDashboardClient({ user }) {
         ...current,
         [machineId]: EMPTY_REPORT,
       }));
+
+      try {
+        await refreshDashboard();
+      } catch {
+        // Raport jest już zapisany. Nie pokazuj błędu zapisu tylko dlatego,
+        // że nie udało się od razu odświeżyć danych podsumowania.
+      }
     } catch (err) {
       setError(err.message || "Nie udało się zapisać raportu");
     } finally {

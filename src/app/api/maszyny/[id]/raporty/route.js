@@ -94,33 +94,5 @@ export async function POST(req, ctx) {
     [maszynaId, user.id, dataRaportu, motogodziny, awaria, opis || null, statusAwarii]
   );
 
-  if (motogodziny !== null || awaria || opis) {
-    await pool.query(
-      `INSERT INTO maszyny_details (
-         maszyna_id, data_zdarzenia, przebieg, awaria, wykonawca, uwagi, zrodlo, reporter_username
-       )
-       VALUES (
-         $1,
-         $2,
-         $3,
-         CASE WHEN $4 IS NULL THEN NULL ELSE 'Zgłoszona awaria' END,
-         $5,
-         $6,
-         $7,
-         $8
-       )`,
-      [
-        maszynaId,
-        dataRaportu,
-        motogodziny,
-        awaria ? opis || "Zgłoszenie awarii od operatora" : null,
-        user.username || "operator",
-        opis || null,
-        "operator",
-        user.username || null,
-      ]
-    );
-  }
-
   return Response.json(rows[0], { status: 201 });
 }
