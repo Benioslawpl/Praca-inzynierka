@@ -167,9 +167,16 @@ function ManagerPanel({ title, budowy }) {
                     <span className="pill">{statusLabel(budowa.status)}</span>
                     {budowa.status !== "zakonczona" &&
                     (budowa.brygady_count !== undefined || budowa.maszyny_count !== undefined) ? (
-                      <span className="mutedText">
-                        brygady: {budowa.brygady_count || 0} • maszyny: {budowa.maszyny_count || 0}
-                      </span>
+                      <div className="compactResourceCounts">
+                        <span className="compactResourceStat">
+                          <strong>{budowa.brygady_count || 0}</strong>
+                          <span>brygady</span>
+                        </span>
+                        <span className="compactResourceStat">
+                          <strong>{budowa.maszyny_count || 0}</strong>
+                          <span>maszyny</span>
+                        </span>
+                      </div>
                     ) : null}
                   </div>
                 </div>

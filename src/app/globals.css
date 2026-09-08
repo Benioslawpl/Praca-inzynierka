@@ -1707,6 +1707,37 @@ label {
   background: #fff;
 }
 
+.compactListMetaStack {
+  display: grid;
+  justify-items: end;
+  gap: 9px;
+  flex: 0 0 auto;
+  min-width: 174px;
+}
+
+.compactResourceCounts {
+  display: flex;
+  gap: 7px;
+}
+
+.compactResourceStat {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 78px;
+  padding: 6px 9px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.74rem;
+}
+
+.compactResourceStat strong {
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
 .metricBadge {
   display: inline-flex;
   align-items: center;
@@ -2504,6 +2535,12 @@ label {
   .compactListRow {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .compactListMetaStack {
+    justify-items: start;
+    width: 100%;
+    min-width: 0;
   }
 
   .dashboardAlertLead {
