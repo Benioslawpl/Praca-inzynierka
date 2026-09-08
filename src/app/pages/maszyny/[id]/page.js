@@ -176,7 +176,52 @@ export default function MaszynaDetails() {
     [activeFailures]
   );
 
-  const filteredItems = items.filter((item) => {
+  const historyItems = useMemo(() => {
+    const operatorDetails = new Set(
+      items
+        .filter((item) => item?.zrodlo === "operator")
+        .map(
+          (item) =>
+            `${String(item.data_zdarzenia || "").slice(0, 10)}|${item.przebieg ?? ""}|${
+              item.uwagi || ""
+            }|${item.reporter_username || item.wykonawca || ""}`
+        )
+    );
+
+    const reportHistory = reports
+      .filter((report) => {
+        const key = `${String(report.data_raportu || "").slice(0, 10)}|${
+          report.motogodziny ?? ""
+        }|${report.opis || ""}|${
+          report.username || ""
+        }`;
+        return !operatorDetails.has(key);
+      })
+      .map((report) => ({
+        id: `report-${report.id}`,
+        reportOnly: true,
+        data_zdarzenia: report.data_raportu,
+        przebieg: report.motogodziny,
+        awaria: report.awaria
+          ? report.opis || "Zgłoszenie awarii od operatora"
+          : null,
+        wykonawca: report.username || "operator",
+        uwagi: report.opis || null,
+        zrodlo: "operator",
+        reporter_username: report.username || null,
+        created_at: report.created_at,
+      }));
+
+    return [...items, ...reportHistory].sort((a, b) => {
+      const dateOrder = String(b.data_zdarzenia || "").localeCompare(
+        String(a.data_zdarzenia || "")
+      );
+      if (dateOrder !== 0) return dateOrder;
+      return String(b.created_at || b.id).localeCompare(String(a.created_at || a.id));
+    });
+  }, [items, reports]);
+
+  const filteredItems = historyItems.filter((item) => {
     if (sourceFilter === "all") return true;
     return (item?.zrodlo || "serwis") === sourceFilter;
   });
@@ -612,7 +657,7 @@ export default function MaszynaDetails() {
                         <span>Status: {report.status_awarii || "nowa"}</span>
                         <span>Motogodziny: {report.motogodziny ?? "brak"}</span>
                       </div>
-                      {canManage ? (
+                      {canManage && !item.reportOnly ? (
                         <>
                           <div className="actions">
                             <button
@@ -931,6 +976,8 @@ export default function MaszynaDetails() {
                             Usuń
                           </button>
                         </>
+                      ) : item.reportOnly ? (
+                        <span className="mutedText">Raport operatora</span>
                       ) : (
                         <span className="mutedText">Tylko podgląd</span>
                       )}
