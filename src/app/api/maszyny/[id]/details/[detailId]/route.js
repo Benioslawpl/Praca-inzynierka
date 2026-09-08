@@ -34,9 +34,10 @@ export async function PUT(req, { params }) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { maszynaId, detailId } = getIds(req, params);
+    const resolvedParams = await params;
+    const { maszynaId, detailId } = getIds(req, resolvedParams);
     if (!maszynaId || !detailId) {
-      return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
+      return Response.json({ error: "Bad id" }, { status: 400 });
     }
 
     const beforeResult = await pool.query(
@@ -96,9 +97,10 @@ export async function DELETE(req, { params }) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { maszynaId, detailId } = getIds(req, params);
+    const resolvedParams = await params;
+    const { maszynaId, detailId } = getIds(req, resolvedParams);
     if (!maszynaId || !detailId) {
-      return Response.json({ error: "Bad id", params: params ?? null }, { status: 400 });
+      return Response.json({ error: "Bad id" }, { status: 400 });
     }
 
     const { rows } = await pool.query(
