@@ -53,15 +53,21 @@ async function buildMachineDashboard(machineIds, user) {
     [machineIds]
   );
 
-  const { rows: latestReports } = await pool.query(
-    `SELECT DISTINCT ON (r.maszyna_id)
-            r.id, r.maszyna_id, r.data_raportu, r.motogodziny, r.awaria,
-            r.opis, r.status_awarii, r.created_at,
-            u.username
-     FROM maszyna_raporty r
-     LEFT JOIN users u ON u.id = r.user_id
-     WHERE r.maszyna_id = ANY($1::int[])
-     ORDER BY r.maszyna_id, r.created_at DESC, r.id DESC`,
+  const { rows: latestMeterReadings } = await pool.query(
+    `SELECT DISTINCT ON (reading.maszyna_id)
+            reading.maszyna_id, reading.motogodziny
+     FROM (
+       SELECT r.maszyna_id, r.motogodziny, r.data_raportu AS event_date, r.created_at, r.id
+       FROM maszyna_raporty r
+       WHERE r.maszyna_id = ANY($1::int[]) AND r.motogodziny IS NOT NULL
+       UNION ALL
+       SELECT d.maszyna_id, d.przebieg AS motogodziny, d.data_zdarzenia AS event_date,
+              d.created_at, d.id
+       FROM maszyny_details d
+       WHERE d.maszyna_id = ANY($1::int[]) AND d.przebieg IS NOT NULL
+     ) reading
+     ORDER BY reading.maszyna_id, reading.event_date DESC NULLS LAST,
+              reading.created_at DESC, reading.id DESC`,
     [machineIds]
   );
 
@@ -79,11 +85,25 @@ async function buildMachineDashboard(machineIds, user) {
     [machineIds]
   );
 
-  const latestByMachineId = new Map(
-    latestReports.map((row) => [row.maszyna_id, row])
+  const { rows: detailFailures } = await pool.query(
+    `SELECT DISTINCT ON (d.maszyna_id)
+            d.id, d.maszyna_id, d.data_zdarzenia, d.awaria, d.created_at
+     FROM maszyny_details d
+     WHERE d.maszyna_id = ANY($1::int[])
+       AND NULLIF(BTRIM(d.awaria), '') IS NOT NULL
+       AND COALESCE(d.zrodlo, 'serwis') <> 'operator'
+     ORDER BY d.maszyna_id, d.data_zdarzenia DESC NULLS LAST, d.created_at DESC, d.id DESC`,
+    [machineIds]
   );
+
   const latestFailureByMachineId = new Map(
     latestActiveFailures.map((row) => [row.maszyna_id, row])
+  );
+  const latestReadingByMachineId = new Map(
+    latestMeterReadings.map((row) => [row.maszyna_id, row])
+  );
+  const detailFailureByMachineId = new Map(
+    detailFailures.map((row) => [row.maszyna_id, row])
   );
 
   const awarie = [];
@@ -91,22 +111,23 @@ async function buildMachineDashboard(machineIds, user) {
   const serwisOverdue = [];
 
   for (const machine of machines) {
-    const latest = latestByMachineId.get(machine.id) || null;
     const latestFailure = latestFailureByMachineId.get(machine.id) || null;
+    const detailFailure = detailFailureByMachineId.get(machine.id) || null;
+    const visibleFailure = latestFailure || detailFailure;
 
-    if (latestFailure) {
+    if (visibleFailure) {
       awarie.push({
         machineId: machine.id,
         nr: machine.nr,
-        opis: latestFailure.opis || "Aktywne zgłoszenie awarii",
-        status: latestFailure.status_awarii || "nowa",
-        date: latestFailure.data_raportu,
+        opis: visibleFailure.opis || visibleFailure.awaria || "Aktywne zgłoszenie awarii",
+        status: visibleFailure.status_awarii || "nowa",
+        date: visibleFailure.data_raportu || visibleFailure.data_zdarzenia,
       });
     }
 
     const interval = Number(machine.serwis_co_ile_mth);
     const lastService = Number(machine.ostatni_serwis_mth);
-    const currentHours = Number(latest?.motogodziny);
+    const currentHours = Number(latestReadingByMachineId.get(machine.id)?.motogodziny);
 
     if (
       Number.isFinite(interval) &&
