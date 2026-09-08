@@ -402,6 +402,7 @@ const DASHBOARD_COPY = {
 export default function HomeDashboardClient({ user }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(null);
   const [savingId, setSavingId] = useState(null);
   const [forms, setForms] = useState({});
 
@@ -442,6 +443,7 @@ export default function HomeDashboardClient({ user }) {
   }, [user]);
 
   const setFormFor = (machineId, next) => {
+    if (success?.machineId === machineId) setSuccess(null);
     setForms((current) => ({
       ...current,
       [machineId]: next,
@@ -450,6 +452,9 @@ export default function HomeDashboardClient({ user }) {
 
   const submitReport = async (machineId) => {
     const form = forms[machineId] || EMPTY_REPORT;
+    const isFailureReport = form.awaria;
+
+    setSuccess(null);
 
     if (!form.awaria && form.motogodziny === "") {
       setError("Podaj aktualne motogodziny");
@@ -477,6 +482,12 @@ export default function HomeDashboardClient({ user }) {
       }
 
       await refreshDashboard();
+      setSuccess({
+        machineId,
+        text: isFailureReport
+          ? "Awaria została pomyślnie zgłoszona."
+          : "Odczyt motogodzin został pomyślnie zapisany.",
+      });
       setForms((current) => ({
         ...current,
         [machineId]: EMPTY_REPORT,
@@ -666,6 +677,13 @@ export default function HomeDashboardClient({ user }) {
                             : "Zapisz odczyt"}
                       </button>
                     </div>
+
+                    {success?.machineId === machine.id ? (
+                      <p className="saveSuccess" role="status" aria-live="polite">
+                        <span aria-hidden="true">✓</span>
+                        {success.text}
+                      </p>
+                    ) : null}
                   </article>
                 );
               })}

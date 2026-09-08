@@ -1121,6 +1121,33 @@ label {
   color: var(--color-danger);
 }
 
+.saveSuccess {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid #a7f3d0;
+  border-radius: 12px;
+  background: #ecfdf5;
+  color: #065f46 !important;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.saveSuccess span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #059669;
+  color: #fff;
+  font-size: 0.78rem;
+}
+
 .home {
   display: grid;
   gap: 18px;
