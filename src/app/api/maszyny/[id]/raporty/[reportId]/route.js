@@ -29,7 +29,8 @@ export async function PUT(req, { params }) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { machineId, reportId } = getIds(req, params);
+  const resolvedParams = await params;
+  const { machineId, reportId } = getIds(req, resolvedParams);
   if (!machineId || !reportId) {
     return Response.json({ error: "Bad id" }, { status: 400 });
   }
@@ -56,6 +57,17 @@ export async function PUT(req, { params }) {
   const wykonawca = String(body?.wykonawca || "").trim();
   const uwagi = String(body?.uwagi || "").trim();
   const dataZdarzenia = String(body?.data_zdarzenia || "").trim() || null;
+  const isHistoryEdit = Object.prototype.hasOwnProperty.call(body, "data_raportu");
+  const dataRaportu = isHistoryEdit
+    ? String(body.data_raportu || "").trim() || before.data_raportu
+    : before.data_raportu;
+  const motogodziny = isHistoryEdit
+    ? body.motogodziny === "" || body.motogodziny === null
+      ? null
+      : Number(body.motogodziny)
+    : before.motogodziny;
+  const czyAwaria = isHistoryEdit ? Boolean(body.awaria) : before.awaria;
+  const opis = isHistoryEdit ? String(body.opis || "").trim() || null : before.opis;
 
   if (statusAwarii === "zamknieta" && !wykonawca) {
     return Response.json(
@@ -66,10 +78,10 @@ export async function PUT(req, { params }) {
 
   const { rows } = await pool.query(
     `UPDATE maszyna_raporty
-     SET status_awarii=$1
-     WHERE id=$2 AND maszyna_id=$3
+     SET status_awarii=$1, data_raportu=$2, motogodziny=$3, awaria=$4, opis=$5
+     WHERE id=$6 AND maszyna_id=$7
      RETURNING id, maszyna_id, user_id, data_raportu, motogodziny, awaria, opis, status_awarii`,
-    [statusAwarii, reportId, machineId]
+    [statusAwarii, dataRaportu, motogodziny, czyAwaria, opis, reportId, machineId]
   );
 
   if (statusAwarii === "zamknieta" && before.awaria) {
@@ -95,4 +107,30 @@ export async function PUT(req, { params }) {
   }
 
   return Response.json(rows[0]);
+}
+
+export async function DELETE(req, { params }) {
+  const user = await getUserFromRequest(req);
+  if (!user?.isAdmin && !user?.canViewOperations) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const resolvedParams = await params;
+  const { machineId, reportId } = getIds(req, resolvedParams);
+  if (!machineId || !reportId) {
+    return Response.json({ error: "Bad id" }, { status: 400 });
+  }
+
+  const { rows } = await pool.query(
+    `DELETE FROM maszyna_raporty
+     WHERE id=$1 AND maszyna_id=$2
+     RETURNING id`,
+    [reportId, machineId]
+  );
+
+  if (!rows[0]) {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  return Response.json({ ok: true });
 }

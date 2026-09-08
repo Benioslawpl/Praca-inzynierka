@@ -281,15 +281,27 @@ export default function MaszynaDetails() {
         data_zdarzenia: form.data_zdarzenia || null,
       };
 
-      const url = editId
-        ? `/api/maszyny/${id}/details/${editId}`
+      const isReportEdit = String(editId || "").startsWith("report-");
+      const reportId = isReportEdit ? String(editId).slice("report-".length) : null;
+      const url = isReportEdit
+        ? `/api/maszyny/${id}/raporty/${reportId}`
+        : editId
+          ? `/api/maszyny/${id}/details/${editId}`
         : `/api/maszyny/${id}/details`;
       const method = editId ? "PUT" : "POST";
+      const requestBody = isReportEdit
+        ? {
+            data_raportu: body.data_zdarzenia,
+            motogodziny: body.przebieg,
+            awaria: entryType === "awaria",
+            opis: body.awaria || body.uwagi,
+          }
+        : body;
 
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -322,7 +334,10 @@ export default function MaszynaDetails() {
   const del = async (detailId) => {
     if (!confirm("Usunąć wpis?")) return;
 
-    const res = await fetch(`/api/maszyny/${id}/details/${detailId}`, {
+    const isReport = String(detailId).startsWith("report-");
+    const recordId = isReport ? String(detailId).slice("report-".length) : detailId;
+    const resource = isReport ? "raporty" : "details";
+    const res = await fetch(`/api/maszyny/${id}/${resource}/${recordId}`, {
       method: "DELETE",
     });
 
@@ -659,7 +674,7 @@ export default function MaszynaDetails() {
                         <span>Status: {report.status_awarii || "nowa"}</span>
                         <span>Motogodziny: {report.motogodziny ?? "brak"}</span>
                       </div>
-                      {canManage && !item.reportOnly ? (
+                      {canManage ? (
                         <>
                           <div className="actions">
                             <button
