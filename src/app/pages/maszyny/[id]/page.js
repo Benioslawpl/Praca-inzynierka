@@ -177,8 +177,10 @@ export default function MaszynaDetails() {
   );
 
   const historyItems = useMemo(() => {
+    const validItems = items.filter((item) => item && typeof item === "object");
+    const validReports = reports.filter((report) => report && typeof report === "object");
     const operatorDetails = new Set(
-      items
+      validItems
         .filter((item) => item?.zrodlo === "operator")
         .map(
           (item) =>
@@ -188,7 +190,7 @@ export default function MaszynaDetails() {
         )
     );
 
-    const reportHistory = reports
+    const reportHistory = validReports
       .filter((report) => {
         const key = `${String(report.data_raportu || "").slice(0, 10)}|${
           report.motogodziny ?? ""
@@ -212,7 +214,7 @@ export default function MaszynaDetails() {
         created_at: report.created_at,
       }));
 
-    return [...items, ...reportHistory].sort((a, b) => {
+    return [...validItems, ...reportHistory].sort((a, b) => {
       const dateOrder = String(b.data_zdarzenia || "").localeCompare(
         String(a.data_zdarzenia || "")
       );
