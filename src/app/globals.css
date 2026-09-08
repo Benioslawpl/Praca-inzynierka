@@ -1121,31 +1121,78 @@ label {
   color: var(--color-danger);
 }
 
-.saveSuccess {
+.dashboardToast {
+  position: fixed;
+  top: 78px;
+  right: 20px;
+  z-index: 50;
   display: flex;
   align-items: center;
-  gap: 9px;
-  margin: 0;
-  padding: 11px 13px;
-  border: 1px solid #a7f3d0;
-  border-radius: 12px;
-  background: #ecfdf5;
-  color: #065f46 !important;
-  font-size: 0.9rem;
-  font-weight: 700;
+  gap: 11px;
+  width: min(390px, calc(100vw - 32px));
+  padding: 13px 15px;
+  border: 1px solid;
+  border-radius: 14px;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.16);
+  animation: dashboardToastIn 0.2s ease-out;
 }
 
-.saveSuccess span {
+.dashboardToast > div {
+  display: grid;
+  gap: 2px;
+}
+
+.dashboardToast strong,
+.dashboardToast span {
+  line-height: 1.3;
+}
+
+.dashboardToast > div > span {
+  font-size: 0.88rem;
+}
+
+.dashboardToastIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
-  background: #059669;
   color: #fff;
-  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.dashboardToastSuccess {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #14532d;
+}
+
+.dashboardToastSuccess .dashboardToastIcon {
+  background: #16a34a;
+}
+
+.dashboardToastError {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #7f1d1d;
+}
+
+.dashboardToastError .dashboardToastIcon {
+  background: #dc2626;
+}
+
+@keyframes dashboardToastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .home {

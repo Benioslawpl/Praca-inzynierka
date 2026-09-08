@@ -550,7 +550,25 @@ export default function HomeDashboardClient({ user }) {
         <p>{dashboardCopy.description}</p>
       </div>
 
-      {error && <p className="error">{error}</p>}
+      {success ? (
+        <div className="dashboardToast dashboardToastSuccess" role="status" aria-live="polite">
+          <span className="dashboardToastIcon" aria-hidden="true">✓</span>
+          <div>
+            <strong>Zapisano</strong>
+            <span>{success.text}</span>
+          </div>
+        </div>
+      ) : null}
+
+      {error ? (
+        <div className="dashboardToast dashboardToastError" role="alert">
+          <span className="dashboardToastIcon" aria-hidden="true">!</span>
+          <div>
+            <strong>Nie udało się zapisać</strong>
+            <span>{error}</span>
+          </div>
+        </div>
+      ) : null}
 
       <div className="statsGrid dashboardStats">
         {stats.map((item) => (
@@ -678,12 +696,6 @@ export default function HomeDashboardClient({ user }) {
                       </button>
                     </div>
 
-                    {success?.machineId === machine.id ? (
-                      <p className="saveSuccess" role="status" aria-live="polite">
-                        <span aria-hidden="true">✓</span>
-                        {success.text}
-                      </p>
-                    ) : null}
                   </article>
                 );
               })}
