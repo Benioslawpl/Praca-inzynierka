@@ -1730,6 +1730,41 @@ label {
   text-align: left;
 }
 
+.brigadeTable {
+  table-layout: fixed;
+}
+
+.brigadeTable .brigadeNumberColumn {
+  width: 22%;
+}
+
+.brigadeTable .brigadeForemanColumn {
+  width: 48%;
+}
+
+.brigadeTable .brigadeActionsColumn {
+  width: 30%;
+}
+
+.brigadeTable th:first-child,
+.brigadeTable td:first-child {
+  text-align: center;
+}
+
+.brigadeTable th:nth-child(2),
+.brigadeTable td:nth-child(2) {
+  text-align: left;
+}
+
+.brigadeTable th:last-child {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.brigadeTable td.actionsCell {
+  justify-content: flex-end;
+}
+
 .pill {
   display: inline-block;
   padding: 4px 10px;

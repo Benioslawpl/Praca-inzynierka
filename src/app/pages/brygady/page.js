@@ -236,12 +236,17 @@ export default function BrygadyPage() {
           ) : list.length === 0 ? (
             <p>Brak brygad</p>
           ) : (
-            <table className="table tableCenter">
+            <table className="table brigadeTable">
+              <colgroup>
+                <col className="brigadeNumberColumn" />
+                <col className="brigadeForemanColumn" />
+                <col className="brigadeActionsColumn" />
+              </colgroup>
               <thead>
                 <tr>
-                  <th style={{ width: 160 }}>Numer brygady</th>
+                  <th>Numer brygady</th>
                   <th>Brygadzista</th>
-                  <th style={{ width: 360 }}>Akcje</th>
+                  <th>Akcje</th>
                 </tr>
               </thead>
               <tbody>
